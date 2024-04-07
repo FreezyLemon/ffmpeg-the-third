@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use std::slice;
 
 use crate::ffi::*;
-use libc::{c_double, c_int};
+use std::ffi::{c_double, c_int};
 
 pub struct Vector<'a> {
     ptr: *mut SwsVector,

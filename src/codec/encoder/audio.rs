@@ -3,7 +3,7 @@ use std::ptr;
 
 use crate::ffi::*;
 #[cfg(not(feature = "ffmpeg_5_0"))]
-use libc::c_int;
+use std::ffi::c_int;
 
 use super::Encoder as Super;
 use crate::codec::{traits, Context};

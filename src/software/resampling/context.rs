@@ -4,12 +4,15 @@ use super::Delay;
 use crate::ffi::*;
 use crate::util::format;
 use crate::Dictionary;
-use crate::{frame, ChannelLayoutMask, Error};
-use libc::c_int;
+use crate::{frame, Error};
+use std::ffi::c_int;
 use std::ffi::c_void;
 
 #[cfg(feature = "ffmpeg_5_1")]
 use crate::ChannelLayout;
+
+#[cfg(not(feature = "ffmpeg_7_0"))]
+use crate::ChannelLayoutMask;
 
 #[derive(Eq, PartialEq, Copy, Clone)]
 pub struct Definition {

@@ -8,7 +8,7 @@ use super::{threading, Compliance, Debug, Flags, Id, Parameters};
 use crate::ffi::*;
 use crate::media;
 use crate::{Codec, Error};
-use libc::c_int;
+use std::ffi::c_int;
 
 pub struct Context {
     ptr: *mut AVCodecContext,

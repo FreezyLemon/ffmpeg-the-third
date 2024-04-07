@@ -3,7 +3,7 @@ use crate::codec::{self, packet};
 use crate::ffi::*;
 use crate::format::context::common::Context;
 use crate::{DictionaryRef, Discard, Rational};
-use libc::c_int;
+use std::ffi::c_int;
 
 #[derive(Debug)]
 pub struct Stream<'a> {

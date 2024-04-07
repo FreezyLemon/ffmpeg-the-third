@@ -6,13 +6,13 @@ use super::Frame;
 use crate::ffi::*;
 use crate::util::format;
 use crate::ChannelLayoutMask;
-use libc::c_int;
+use std::ffi::c_int;
 
 #[cfg(feature = "ffmpeg_5_1")]
 use crate::ChannelLayout;
 
 #[cfg(not(feature = "ffmpeg_7_0"))]
-use libc::c_ulonglong;
+use std::ffi::c_ulonglong;
 
 #[derive(PartialEq, Eq)]
 pub struct Audio(Frame);

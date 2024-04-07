@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::ffi::*;
-use libc::c_int;
+use std::ffi::c_int;
 
 use super::Opened;
 use crate::codec::Context;

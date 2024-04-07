@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::ffi::*;
-use libc::c_int;
+use std::ffi::c_int;
 
 use super::{slice, Opened};
 use crate::codec::Context;

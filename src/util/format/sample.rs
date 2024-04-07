@@ -6,9 +6,9 @@ use std::str::from_utf8_unchecked;
 
 use crate::ffi::AVSampleFormat::*;
 use crate::ffi::*;
-use libc::{c_int, c_void};
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
+use std::ffi::{c_int, c_void};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]

@@ -5,7 +5,7 @@ use crate::device;
 use crate::ffi::*;
 use crate::format::context::common::Context;
 use crate::Error;
-use libc::c_int;
+use std::ffi::c_int;
 
 impl Context {
     pub fn devices(&self) -> Result<DeviceIter, Error> {

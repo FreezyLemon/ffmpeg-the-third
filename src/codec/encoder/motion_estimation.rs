@@ -1,6 +1,6 @@
-use libc::c_int;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
+use std::ffi::c_int;
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]

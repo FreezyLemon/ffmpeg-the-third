@@ -6,7 +6,7 @@ use std::rc::Rc;
 use super::destructor::{self, Destructor};
 use crate::ffi::*;
 use crate::{media, Chapter, ChapterMut, DictionaryRef, Stream, StreamMut};
-use libc::{c_int, c_uint};
+use std::ffi::{c_int, c_uint};
 
 pub struct Context {
     ptr: *mut AVFormatContext,

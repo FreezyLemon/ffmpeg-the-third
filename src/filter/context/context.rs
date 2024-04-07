@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use super::{Sink, Source};
 use crate::ffi::*;
 use crate::{format, option};
-use libc::c_void;
+use std::ffi::c_void;
 
 #[cfg(feature = "ffmpeg_5_1")]
 use crate::ChannelLayout;

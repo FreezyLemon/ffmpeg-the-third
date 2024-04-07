@@ -6,7 +6,7 @@ use std::mem;
 use crate::ffi::*;
 use crate::util::format;
 use crate::{Error, Rational};
-use libc::{c_int, c_void};
+use std::ffi::{c_int, c_void};
 
 #[cfg(not(feature = "ffmpeg_7_0"))]
 use crate::ChannelLayoutMask;
