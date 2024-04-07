@@ -977,8 +977,8 @@ fn main() {
     // to bindgen, and lets you build up options for
     // the resulting bindings.
     let mut builder = bindgen::Builder::default()
+        .use_core()
         .clang_args(clang_includes)
-        .ctypes_prefix("libc")
         // Not trivially copyable
         .no_copy("AVChannelLayout")
         // We need/want to implement Debug by hand for some types

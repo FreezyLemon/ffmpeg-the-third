@@ -1,9 +1,8 @@
-use libc::c_int;
-
 use crate::AVChannel::*;
 use crate::*;
 use crate::{AVChannelLayout, AVChannelOrder};
 
+use std::ffi::c_int;
 use std::fmt;
 use std::mem::{align_of, size_of};
 use std::ptr::null_mut;
