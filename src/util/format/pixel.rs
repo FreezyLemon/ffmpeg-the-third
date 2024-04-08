@@ -225,7 +225,7 @@ pub enum Pixel {
     VIDEOTOOLBOX,
 
     // --- defaults
-    #[cfg(feature = "ffmpeg_4_0")]
+    #[cfg(all(feature = "ffmpeg_4_0", not(feature = "ffmpeg_7_0")))]
     XVMC,
 
     RGB32,
@@ -498,7 +498,7 @@ impl From<AVPixelFormat> for Pixel {
             AV_PIX_FMT_YUVJ420P => Pixel::YUVJ420P,
             AV_PIX_FMT_YUVJ422P => Pixel::YUVJ422P,
             AV_PIX_FMT_YUVJ444P => Pixel::YUVJ444P,
-            #[cfg(feature = "ffmpeg_4_0")]
+            #[cfg(all(feature = "ffmpeg_4_0", not(feature = "ffmpeg_7_0")))]
             AV_PIX_FMT_XVMC => Pixel::XVMC,
             #[cfg(all(feature = "ff_api_xvmc", not(feature = "ffmpeg_5_0")))]
             AV_PIX_FMT_XVMC_MPEG2_MC => Pixel::XVMC_MPEG2_MC,
@@ -1062,7 +1062,7 @@ impl From<Pixel> for AVPixelFormat {
             Pixel::VIDEOTOOLBOX => AV_PIX_FMT_VIDEOTOOLBOX,
 
             // --- defaults
-            #[cfg(feature = "ffmpeg_4_0")]
+            #[cfg(all(feature = "ffmpeg_4_0", not(feature = "ffmpeg_7_0")))]
             Pixel::XVMC => AV_PIX_FMT_XVMC,
 
             Pixel::RGB32 => AV_PIX_FMT_RGB32,
