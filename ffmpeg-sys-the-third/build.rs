@@ -75,6 +75,13 @@ static AVUTIL_FEATURES: &[AVFeature] = &[
     AVFeature::new("PKT_PTS"),
     AVFeature::new("ERROR_FRAME"),
     AVFeature::new("FRAME_QP"),
+    AVFeature::new("HDR_VIVID_THREE_SPLINE"),
+    AVFeature::new("FRAME_PKT"),
+    AVFeature::new("INTERLACED_FRAME"),
+    AVFeature::new("FRAME_KEY"),
+    AVFeature::new("PALETTE_HAS_CHANGED"),
+    AVFeature::new("VULKAN_CONTIGUOUS_MEMORY"),
+    AVFeature::new("H274_FILM_GRAIN_VCS"),
 ];
 
 static AVCODEC_FEATURES: &[AVFeature] = &[
@@ -138,6 +145,13 @@ static AVCODEC_FEATURES: &[AVFeature] = &[
     AVFeature::new("VBV_DELAY"),
     AVFeature::new("SIDEDATA_ONLY_PKT"),
     AVFeature::new("AVPICTURE"),
+    AVFeature::new("INIT_PACKET"),
+    AVFeature::new("SUBFRAMES"),
+    AVFeature::new("TICKS_PER_FRAME"),
+    AVFeature::new("DROPCHANGED"),
+    AVFeature::new("AVCODEC_CLOSE"),
+    AVFeature::new("BUFFER_MIN_SIZE"),
+    AVFeature::new("VDPAU_ALLOC_GET_SET"),
 ];
 
 static AVFORMAT_FEATURES: &[AVFeature] = &[
@@ -147,9 +161,18 @@ static AVFORMAT_FEATURES: &[AVFeature] = &[
     AVFeature::new("PROBESIZE_32"),
     AVFeature::new("LAVF_AVCTX"),
     AVFeature::new("OLD_OPEN_CALLBACKS"),
+    AVFeature::new("COMPUTE_PKT_FIELDS2"),
+    AVFeature::new("LAVF_SHORTEST"),
+    AVFeature::new("ALLOW_FLUSH"),
+    AVFeature::new("AVSTREAM_SIDE_DATA"),
+    AVFeature::new("GET_DUR_ESTIMATE_METHOD"),
 ];
 
-static AVDEVICE_FEATURES: &[AVFeature] = &[];
+static AVDEVICE_FEATURES: &[AVFeature] = &[
+    AVFeature::new("BKTR_DEVICE"),
+    AVFeature::new("OPENGL_DEVICE"),
+    AVFeature::new("SDL2_DEVICE"),
+];
 
 static AVFILTER_FEATURES: &[AVFeature] = &[
     AVFeature::new("AVFILTERPAD_PUBLIC"),
@@ -160,6 +183,7 @@ static AVFILTER_FEATURES: &[AVFeature] = &[
     AVFeature::new("OLD_FILTER_REGISTER"),
     AVFeature::new("OLD_GRAPH_PARSE"),
     AVFeature::new("NOCONST_GET_NAME"),
+    AVFeature::new("LINK_PUBLIC"),
 ];
 
 static AVRESAMPLE_FEATURES: &[AVFeature] = &[AVFeature::new("RESAMPLE_CLOSE_OPEN")];
