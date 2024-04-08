@@ -555,6 +555,25 @@ fn add_pkg_config_path() {}
 static VERSION_CHECKS: &[(&'static str, RangeInclusive<i32>, RangeInclusive<i32>)] =
     &[("avcodec", 56..=62, 0..=108)];
 
+// (ffmpeg_feature_name, lavc_major_ver, lavc_minor_ver)
+static LAVC_VERSIONS: &[(&'static str, i32, i32)] = &[
+    ("ffmpeg_3_0", 57, 24),
+    ("ffmpeg_3_1", 57, 48),
+    ("ffmpeg_3_2", 57, 64),
+    ("ffmpeg_3_3", 57, 89),
+    ("ffmpeg_3_1", 57, 107),
+    ("ffmpeg_4_0", 58, 18),
+    ("ffmpeg_4_1", 58, 35),
+    ("ffmpeg_4_2", 58, 54),
+    ("ffmpeg_4_3", 58, 91),
+    ("ffmpeg_4_4", 58, 100),
+    ("ffmpeg_5_0", 59, 18),
+    ("ffmpeg_5_1", 59, 37),
+    ("ffmpeg_6_0", 60, 3),
+    ("ffmpeg_6_1", 60, 31),
+    ("ffmpeg_7_0", 61, 3),
+];
+
 fn check_features(include_paths: &[PathBuf]) {
     let mut includes_code = String::new();
     let mut main_code = String::new();
@@ -724,37 +743,18 @@ fn check_features(include_paths: &[PathBuf]) {
         }
     }
 
-    let ffmpeg_lavc_versions = [
-        ("ffmpeg_3_0", 57, 24),
-        ("ffmpeg_3_1", 57, 48),
-        ("ffmpeg_3_2", 57, 64),
-        ("ffmpeg_3_3", 57, 89),
-        ("ffmpeg_3_1", 57, 107),
-        ("ffmpeg_4_0", 58, 18),
-        ("ffmpeg_4_1", 58, 35),
-        ("ffmpeg_4_2", 58, 54),
-        ("ffmpeg_4_3", 58, 91),
-        ("ffmpeg_4_4", 58, 100),
-        ("ffmpeg_5_0", 59, 18),
-        ("ffmpeg_5_1", 59, 37),
-        ("ffmpeg_6_0", 60, 3),
-        ("ffmpeg_6_1", 60, 31),
-    ];
-    for &(ffmpeg_version_flag, lavc_version_major, lavc_version_minor) in
-        ffmpeg_lavc_versions.iter()
-    {
+    for &(ffmpeg_version_flag, lavc_version_major, lavc_version_minor) in LAVC_VERSIONS {
         let search_str = format!(
-            "[avcodec_version_greater_than_{lavc_version_major}_{lavc_version_minor}]",
-            lavc_version_major = lavc_version_major,
-            lavc_version_minor = lavc_version_minor - 1
+            "[avcodec_version_greater_than_{lavc_version_major}_{}]",
+            lavc_version_minor - 1
         );
         let pos = stdout
             .find(&search_str)
             .expect("Variable not found in output")
             + search_str.len();
         if &stdout[pos..pos + 1] == "1" {
-            println!(r#"cargo:rustc-cfg=feature="{}""#, ffmpeg_version_flag);
-            println!(r#"cargo:{}=true"#, ffmpeg_version_flag);
+            println!(r#"cargo:rustc-cfg=feature="{ffmpeg_version_flag}""#);
+            println!(r#"cargo:{ffmpeg_version_flag}=true"#);
         }
     }
 }
