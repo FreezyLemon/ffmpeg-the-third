@@ -29,6 +29,16 @@ pub enum Type {
     ChannelLayout,
     c_ulong,
     bool,
+
+    /// May be combined with another regular option type to declare
+    /// an array option.
+    /// 
+    /// For array options, AVOption.offset should refer to a pointer
+    /// corresponding to the option type. The pointer should be immediately
+    /// followed by an unsigned int that will store the number of elements
+    /// in the array.
+    #[cfg(feature = "ffmpeg_7_0")]
+    FlagArray = 1 << 16,
 }
 
 impl From<AVOptionType> for Type {
@@ -53,9 +63,13 @@ impl From<AVOptionType> for Type {
             AV_OPT_TYPE_VIDEO_RATE => Type::VideoRate,
             AV_OPT_TYPE_DURATION => Type::Duration,
             AV_OPT_TYPE_COLOR => Type::Color,
+            #[cfg(not(feature = "ffmpeg_7_0"))]
             AV_OPT_TYPE_CHANNEL_LAYOUT => Type::ChannelLayout,
             #[cfg(feature = "ffmpeg_5_1")]
             AV_OPT_TYPE_CHLAYOUT => Type::ChannelLayout,
+
+            #[cfg(feature = "ffmpeg_7_0")]
+            AV_OPT_TYPE_FLAG_ARRAY => Type::FlagArray,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -85,7 +99,10 @@ impl From<Type> for AVOptionType {
             Type::VideoRate => AV_OPT_TYPE_VIDEO_RATE,
             Type::Duration => AV_OPT_TYPE_DURATION,
             Type::Color => AV_OPT_TYPE_COLOR,
+            #[cfg(not(feature = "ffmpeg_7_0"))]
             Type::ChannelLayout => AV_OPT_TYPE_CHANNEL_LAYOUT,
+            #[cfg(feature = "ffmpeg_7_0")]
+            Type::ChannelLayout => AV_OPT_TYPE_CHLAYOUT,
         }
     }
 }
