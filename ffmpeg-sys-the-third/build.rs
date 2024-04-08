@@ -6,6 +6,7 @@ use std::env;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Write};
+use std::ops::RangeInclusive;
 use std::path::PathBuf;
 use std::process::Command;
 use std::str;
@@ -527,6 +528,9 @@ fn add_pkg_config_path() {
 #[cfg(not(target_os = "macos"))]
 fn add_pkg_config_path() {}
 
+static VERSION_CHECKS: &[(&'static str, RangeInclusive<i32>, RangeInclusive<i32>)] =
+    &[("avcodec", 56..=62, 0..=108)];
+
 fn check_features(include_paths: &[PathBuf]) {
     let mut includes_code = String::new();
     let mut main_code = String::new();
@@ -568,12 +572,9 @@ fn check_features(include_paths: &[PathBuf]) {
             );
         }
     }
-    let version_check_info = [("avcodec", 56, 61, 0, 108)];
-    for &(lib, begin_version_major, end_version_major, begin_version_minor, end_version_minor) in
-        version_check_info.iter()
-    {
-        for version_major in begin_version_major..end_version_major {
-            for version_minor in begin_version_minor..end_version_minor {
+    for (lib, version_major_range, version_minor_range) in VERSION_CHECKS {
+        for version_major in version_major_range.clone() {
+            for version_minor in version_minor_range.clone() {
                 let _ = write!(
                     main_code,
                     r#"printf("[{lib}_version_greater_than_{version_major}_{version_minor}]%d\n", LIB{lib_uppercase}_VERSION_MAJOR > {version_major} || (LIB{lib_uppercase}_VERSION_MAJOR == {version_major} && LIB{lib_uppercase}_VERSION_MINOR > {version_minor}));
@@ -674,11 +675,9 @@ fn check_features(include_paths: &[PathBuf]) {
         }
     }
 
-    for &(lib, begin_version_major, end_version_major, begin_version_minor, end_version_minor) in
-        version_check_info.iter()
-    {
-        for version_major in begin_version_major..end_version_major {
-            for version_minor in begin_version_minor..end_version_minor {
+    for (lib, version_major_range, version_minor_range) in VERSION_CHECKS {
+        for version_major in version_major_range.clone() {
+            for version_minor in version_minor_range.clone() {
                 let search_str = format!(
                     "[{lib}_version_greater_than_{version_major}_{version_minor}]",
                     version_major = version_major,
