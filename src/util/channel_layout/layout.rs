@@ -3,7 +3,7 @@ use std::ffi::{CStr, CString};
 use crate::{ffi::*, Error};
 use libc::{c_char, c_int, c_uint};
 
-use super::mask::ChannelLayout;
+use super::{channel::Channel, mask::ChannelLayout};
 
 #[derive(Clone)]
 #[repr(transparent)]
@@ -59,8 +59,12 @@ impl ChannelLayoutInfo {
         }
     }
 
-    pub fn channel_from_index(&self, idx: c_uint) -> AVChannel {
-        
+    pub fn channel_from_index(&self, idx: c_uint) -> Channel {
+        Channel::from(unsafe { av_channel_layout_channel_from_index(&self.0 as _, idx) })
+    }
+
+    pub fn index_from_channel(&self, channel: Channel) -> c_int {
+        unsafe { av_channel_layout_index_from_channel(&self.0 as _, AVChannel::from(channel)) }
     }
 }
 
