@@ -1,3 +1,6 @@
+// TODO: Add API for av_channel_layout_standard
+// Should be Iterator over &'static ChannelLayout
+
 // use crate::ffi::*;
 // use std::ptr::null_mut;
 

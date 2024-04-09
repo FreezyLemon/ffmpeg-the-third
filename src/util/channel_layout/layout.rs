@@ -9,6 +9,9 @@ use super::{channel::Channel, mask::ChannelMask};
 #[repr(transparent)]
 pub struct ChannelLayout(AVChannelLayout);
 
+// TODO: Builder pattern for creating the underlying AVChannelOrder.
+// Invariants are mostly based on the AVChannelOrder.
+
 impl ChannelLayout {
     pub fn default_for_channels(channels: c_int) -> Self {
         let mut layout = AVChannelLayout::empty();
@@ -40,6 +43,10 @@ impl ChannelLayout {
             AVERROR_INVALIDDATA => None,
             r => panic!("unexpected return value {r}"),
         }
+    }
+
+    pub fn count(&self) -> c_int {
+        self.0.nb_channels
     }
 
     pub fn describe(&self) -> Result<String, Error> {
