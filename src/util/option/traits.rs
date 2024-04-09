@@ -130,14 +130,14 @@ pub trait Settable: Target {
         }
     }
 
-    fn set_channel_layout(&mut self, name: &str, layout: ChannelMask) -> Result<(), Error> {
+    fn set_channel_mask(&mut self, name: &str, mask: ChannelMask) -> Result<(), Error> {
         unsafe {
             let name = CString::new(name).unwrap();
 
             check!(av_opt_set_channel_layout(
                 self.as_mut_ptr(),
                 name.as_ptr(),
-                layout.bits() as i64,
+                mask.bits() as i64,
                 AV_OPT_SEARCH_CHILDREN
             ))
         }

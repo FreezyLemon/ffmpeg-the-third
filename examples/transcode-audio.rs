@@ -18,7 +18,7 @@ fn filter(
         decoder.time_base(),
         decoder.rate(),
         decoder.format().name(),
-        decoder.channel_layout().bits()
+        decoder.channel_mask().bits()
     );
 
     filter.add(&filter::find("abuffer").unwrap(), "in", &args)?;
@@ -28,7 +28,7 @@ fn filter(
         let mut out = filter.get("out").unwrap();
 
         out.set_sample_format(encoder.format());
-        out.set_channel_layout(encoder.channel_layout());
+        out.set_channel_mask(encoder.channel_mask());
         out.set_sample_rate(encoder.rate());
     }
 
@@ -89,16 +89,16 @@ fn transcoder<P: AsRef<Path>>(
     let mut encoder = context.encoder().audio()?;
 
     let channel_layout = codec
-        .channel_layouts()
-        .map(|cls| cls.best(decoder.channel_layout().channels()))
-        .unwrap_or(ffmpeg::channel_layout::ChannelLayout::STEREO);
+        .channel_masks()
+        .map(|cls| cls.best(decoder.channel_mask().channels()))
+        .unwrap_or(ffmpeg::channel_layout::mask::ChannelMask::STEREO);
 
     if global {
         encoder.set_flags(ffmpeg::codec::flag::Flags::GLOBAL_HEADER);
     }
 
     encoder.set_rate(decoder.rate() as i32);
-    encoder.set_channel_layout(channel_layout);
+    encoder.set_channel_mask(channel_layout);
     encoder.set_channels(channel_layout.channels());
     encoder.set_format(
         codec

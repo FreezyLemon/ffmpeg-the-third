@@ -49,7 +49,7 @@ impl<'a> Context<'a> {
         let _ = option::Settable::set(self, "sample_rates", &i64::from(value));
     }
 
-    pub fn set_channel_layout(&mut self, value: ChannelMask) {
+    pub fn set_channel_mask(&mut self, value: ChannelMask) {
         let _ = option::Settable::set(self, "channel_layouts", &value.bits());
     }
 }

@@ -12,7 +12,7 @@ impl frame::Audio {
     ) -> Result<Context, Error> {
         Context::get(
             self.format(),
-            self.channel_layout(),
+            self.channel_mask(),
             unsafe { (*self.as_ptr()).sample_rate as u32 },
             format,
             channel_layout,
@@ -31,7 +31,7 @@ impl decoder::Audio {
     ) -> Result<Context, Error> {
         Context::get(
             self.format(),
-            self.channel_layout(),
+            self.channel_mask(),
             self.rate(),
             format,
             channel_layout,

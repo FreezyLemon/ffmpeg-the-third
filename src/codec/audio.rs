@@ -36,14 +36,12 @@ impl Audio {
         }
     }
 
-    pub fn channel_layouts(&self) -> Option<ChannelLayoutIter> {
+    pub fn channel_masks(&self) -> Option<ChannelMaskIter> {
         unsafe {
             if (*self.codec.as_ptr()).channel_layouts.is_null() {
                 None
             } else {
-                Some(ChannelLayoutIter::new(
-                    (*self.codec.as_ptr()).channel_layouts,
-                ))
+                Some(ChannelMaskIter::new((*self.codec.as_ptr()).channel_layouts))
             }
         }
     }
@@ -111,13 +109,13 @@ impl Iterator for FormatIter {
     }
 }
 
-pub struct ChannelLayoutIter {
+pub struct ChannelMaskIter {
     ptr: *const u64,
 }
 
-impl ChannelLayoutIter {
+impl ChannelMaskIter {
     pub fn new(ptr: *const u64) -> Self {
-        ChannelLayoutIter { ptr }
+        ChannelMaskIter { ptr }
     }
 
     pub fn best(self, max: i32) -> ChannelMask {
@@ -131,7 +129,7 @@ impl ChannelLayoutIter {
     }
 }
 
-impl Iterator for ChannelLayoutIter {
+impl Iterator for ChannelMaskIter {
     type Item = ChannelMask;
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
@@ -140,10 +138,10 @@ impl Iterator for ChannelLayoutIter {
                 return None;
             }
 
-            let layout = ChannelMask::from_bits_truncate(*self.ptr);
+            let mask = ChannelMask::from_bits_truncate(*self.ptr);
             self.ptr = self.ptr.offset(1);
 
-            Some(layout)
+            Some(mask)
         }
     }
 }

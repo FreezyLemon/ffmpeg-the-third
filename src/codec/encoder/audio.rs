@@ -93,13 +93,13 @@ impl Audio {
         unsafe { format::Sample::from((*self.as_ptr()).sample_fmt) }
     }
 
-    pub fn set_channel_layout(&mut self, value: ChannelMask) {
+    pub fn set_channel_mask(&mut self, value: ChannelMask) {
         unsafe {
             (*self.as_mut_ptr()).channel_layout = value.bits();
         }
     }
 
-    pub fn channel_layout(&self) -> ChannelMask {
+    pub fn channel_mask(&self) -> ChannelMask {
         unsafe { ChannelMask::from_bits_truncate((*self.as_ptr()).channel_layout) }
     }
 
