@@ -3,7 +3,7 @@ use std::ffi::{CStr, CString};
 use crate::{ffi::*, Error};
 use libc::{c_char, c_int, c_uint};
 
-use super::{channel::Channel, mask::ChannelLayout};
+use super::{channel::Channel, mask::ChannelMask};
 
 #[derive(Clone)]
 #[repr(transparent)]
@@ -19,7 +19,7 @@ impl ChannelLayoutInfo {
         Self(layout)
     }
 
-    pub fn from_mask(layout_mask: ChannelLayout) -> Option<Self> {
+    pub fn from_mask(layout_mask: ChannelMask) -> Option<Self> {
         let mut layout = AVChannelLayout::empty();
         let ret = unsafe { av_channel_layout_from_mask(&mut layout as _, layout_mask.bits()) };
 

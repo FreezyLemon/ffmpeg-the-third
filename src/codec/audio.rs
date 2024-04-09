@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use super::codec::Codec;
 use crate::ffi::*;
-use crate::{format, ChannelLayout};
+use crate::{format, ChannelMask};
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Audio {
@@ -120,8 +120,8 @@ impl ChannelLayoutIter {
         ChannelLayoutIter { ptr }
     }
 
-    pub fn best(self, max: i32) -> ChannelLayout {
-        self.fold(ChannelLayout::MONO, |acc, cur| {
+    pub fn best(self, max: i32) -> ChannelMask {
+        self.fold(ChannelMask::MONO, |acc, cur| {
             if cur.channels() > acc.channels() && cur.channels() <= max {
                 cur
             } else {
@@ -132,7 +132,7 @@ impl ChannelLayoutIter {
 }
 
 impl Iterator for ChannelLayoutIter {
-    type Item = ChannelLayout;
+    type Item = ChannelMask;
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
         unsafe {
@@ -140,7 +140,7 @@ impl Iterator for ChannelLayoutIter {
                 return None;
             }
 
-            let layout = ChannelLayout::from_bits_truncate(*self.ptr);
+            let layout = ChannelMask::from_bits_truncate(*self.ptr);
             self.ptr = self.ptr.offset(1);
 
             Some(layout)
