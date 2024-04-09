@@ -1,15 +1,15 @@
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 
 use crate::{ffi::*, Error};
-use libc::{c_char, c_int, c_uint};
+use libc::{c_int, c_uint};
 
 use super::{channel::Channel, mask::ChannelMask};
 
 #[derive(Clone)]
 #[repr(transparent)]
-pub struct ChannelLayoutInfo(AVChannelLayout);
+pub struct ChannelLayout(AVChannelLayout);
 
-impl ChannelLayoutInfo {
+impl ChannelLayout {
     pub fn default_for_channels(channels: c_int) -> Self {
         let mut layout = AVChannelLayout::empty();
         unsafe {
@@ -68,14 +68,14 @@ impl ChannelLayoutInfo {
     }
 }
 
-impl From<AVChannelLayout> for ChannelLayoutInfo {
+impl From<AVChannelLayout> for ChannelLayout {
     fn from(value: AVChannelLayout) -> Self {
         Self(value)
     }
 }
 
-impl From<ChannelLayoutInfo> for AVChannelLayout {
-    fn from(value: ChannelLayoutInfo) -> Self {
+impl From<ChannelLayout> for AVChannelLayout {
+    fn from(value: ChannelLayout) -> Self {
         value.0
     }
 }
