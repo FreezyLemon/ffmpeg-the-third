@@ -1,5 +1,7 @@
-use crate::ffi::AVChannel::*;
+use std::ffi::CString;
+
 use crate::ffi::*;
+use crate::{ffi::AVChannel::*, Error};
 use Channel::*;
 
 #[cfg(feature = "serialize")]
@@ -50,6 +52,49 @@ pub enum Channel {
     AmbisonicBase,
     /// Defines the end of channel IDs when using Ambisonic.
     AmbisonicEnd,
+}
+
+impl Channel {
+    /// Get an abbreviated, human-readable string describing this channel.
+    pub fn name(self) -> Result<String, Error> {
+        let mut buf = vec![0u8; 32];
+
+        unsafe {
+            let ret_val = av_channel_name(buf.as_mut_ptr() as _, buf.len(), AVChannel::from(self));
+
+            match usize::try_from(ret_val) {
+                Ok(out_len) => {
+                    buf.truncate(out_len);
+                    Ok(String::from_utf8_unchecked(buf))
+                }
+                Err(_) => Err(Error::from(ret_val)),
+            }
+        }
+    }
+
+    /// Get a human-readable string describing this channel.
+    pub fn description(self) -> Result<String, Error> {
+        let mut buf = vec![0u8; 256];
+
+        unsafe {
+            let ret_val =
+                av_channel_description(buf.as_mut_ptr() as _, buf.len(), AVChannel::from(self));
+
+            match usize::try_from(ret_val) {
+                Ok(out_len) => {
+                    buf.truncate(out_len);
+                    Ok(String::from_utf8_unchecked(buf))
+                }
+                Err(_) => Err(Error::from(ret_val)),
+            }
+        }
+    }
+
+    /// This is the inverse function of [`name`][Channel::name].
+    pub fn from_string<S: Into<Vec<u8>>>(name: S) -> Self {
+        let cstr = CString::new(name).expect("no nul byte in name");
+        Self::from(unsafe { av_channel_from_string(cstr.as_ptr()) })
+    }
 }
 
 impl From<AVChannel> for Channel {

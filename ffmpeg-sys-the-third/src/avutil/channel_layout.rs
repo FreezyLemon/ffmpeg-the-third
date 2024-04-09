@@ -42,6 +42,14 @@ impl Clone for AVChannelLayout {
     }
 }
 
+impl PartialEq for AVChannelLayout {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe {
+            av_channel_layout_compare(self as _, other as _) == 0
+        }
+    }
+}
+
 // Here until https://github.com/rust-lang/rust-bindgen/issues/2192 /
 // https://github.com/rust-lang/rust-bindgen/issues/258 is fixed.
 

@@ -5,7 +5,7 @@ use libc::{c_int, c_uint};
 
 use super::{channel::Channel, mask::ChannelMask};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 #[repr(transparent)]
 pub struct ChannelLayout(AVChannelLayout);
 
@@ -65,6 +65,32 @@ impl ChannelLayout {
 
     pub fn index_from_channel(&self, channel: Channel) -> c_int {
         unsafe { av_channel_layout_index_from_channel(&self.0 as _, AVChannel::from(channel)) }
+    }
+
+    pub fn index_from_string<S: Into<Vec<u8>>>(&self, name: S) -> Result<c_uint, Error> {
+        let cstr = CString::new(name).expect("no nul byte in name");
+        let ret = unsafe { av_channel_layout_index_from_string(&self.0 as _, cstr.as_ptr()) };
+
+        match c_uint::try_from(ret) {
+            Ok(idx) => Ok(idx),
+            Err(_) => Err(Error::from(ret)),
+        }
+    }
+
+    pub fn channel_from_string<S: Into<Vec<u8>>>(&self, name: S) -> Channel {
+        let cstr = CString::new(name).expect("no nul byte in name");
+
+        Channel::from(unsafe { av_channel_layout_channel_from_string(&self.0 as _, cstr.as_ptr()) })
+    }
+
+    pub fn subset(&self, mask: ChannelMask) -> ChannelMask {
+        ChannelMask::from_bits_truncate(unsafe {
+            av_channel_layout_subset(&self.0 as _, mask.bits())
+        })
+    }
+
+    pub fn check(&self) -> bool {
+        unsafe { av_channel_layout_check(&self.0 as _) != 0 }
     }
 }
 
