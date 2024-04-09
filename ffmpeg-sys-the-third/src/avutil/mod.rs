@@ -1,3 +1,6 @@
+mod channel_layout;
+pub use self::channel_layout::*;
+
 mod error;
 pub use self::error::*;
 
@@ -9,8 +12,3 @@ pub use self::rational::*;
 
 mod pixfmt;
 pub use self::pixfmt::*;
-
-#[cfg(feature = "ffmpeg_5_1")]
-mod channel_layout;
-#[cfg(feature = "ffmpeg_5_1")]
-pub use self::channel_layout::*;

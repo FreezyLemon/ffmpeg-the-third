@@ -1,6 +1,46 @@
 use libc::c_int;
 
-use crate::{AVChannel::*, AVChannelLayout, AVChannelOrder};
+use crate::*;
+use crate::AVChannel::*;
+use crate::{AVChannelLayout, AVChannelOrder};
+
+use std::alloc::{handle_alloc_error, Layout};
+use std::mem::{align_of, size_of};
+use std::ptr::null_mut;
+
+impl AVChannelLayout {
+    #[inline]
+    pub fn empty() -> Self {
+        Self {
+            order: AVChannelOrder::AV_CHANNEL_ORDER_UNSPEC,
+            nb_channels: 0,
+            u: AVChannelLayout__bindgen_ty_1 { mask: 0 },
+            opaque: null_mut(),
+        }
+    }
+}
+
+impl Clone for AVChannelLayout {
+    fn clone(&self) -> Self {
+        #[cold]
+        fn clone_failed(channels: c_int) -> ! {
+            let alloc_size = channels as usize * size_of::<AVChannelCustom>();
+            let layout =
+                Layout::from_size_align(alloc_size, align_of::<AVChannelCustom>())
+                    .unwrap();
+            handle_alloc_error(layout)
+        }
+
+        let mut cloned = Self::empty();
+        let ret = unsafe { av_channel_layout_copy(&mut cloned as _, self as _) };
+
+        if ret < 0 {
+            clone_failed(self.nb_channels)
+        }
+
+        cloned
+    }
+}
 
 // Here until https://github.com/rust-lang/rust-bindgen/issues/2192 /
 // https://github.com/rust-lang/rust-bindgen/issues/258 is fixed.
