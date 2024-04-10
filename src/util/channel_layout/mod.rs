@@ -1,5 +1,3 @@
-mod consts;
-
 pub mod channel;
 pub mod iter;
 pub mod layout;

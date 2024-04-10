@@ -1,5 +1,4 @@
-mod channel_layout;
-pub use self::channel_layout::*;
+pub mod channel_layout;
 
 mod error;
 pub use self::error::*;

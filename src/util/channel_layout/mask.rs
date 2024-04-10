@@ -1,4 +1,6 @@
+use crate::ffi::channel_layout::*;
 use crate::ffi::*;
+
 use libc::c_ulonglong;
 
 bitflags! {
@@ -81,9 +83,9 @@ impl ChannelMask {
         unsafe { av_get_channel_layout_nb_channels(self.bits()) }
     }
 
-    pub fn default(number: i32) -> ChannelMask {
+    pub fn default(channels: i32) -> ChannelMask {
         unsafe {
-            ChannelMask::from_bits_truncate(av_get_default_channel_layout(number) as c_ulonglong)
+            ChannelMask::from_bits_truncate(av_get_default_channel_layout(channels) as c_ulonglong)
         }
     }
 }
