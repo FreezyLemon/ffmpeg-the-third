@@ -1,3 +1,4 @@
+#[cfg(feature = "ffmpeg_5_1")]
 use crate::ffi::channel_layout::*;
 use crate::ffi::*;
 
