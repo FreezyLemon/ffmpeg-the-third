@@ -27,3 +27,21 @@ impl Iterator for ChannelLayoutInfoIter {
         }
     }
 }
+
+impl<'a> ChannelLayoutInfo<'a> {
+    pub fn all() -> ChannelLayoutInfoIter {
+        ChannelLayoutInfoIter::new()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn iter() {
+        for layout in ChannelLayoutInfo::all() {
+            println!("{layout:?}");
+        }
+    }
+}
