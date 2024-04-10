@@ -6,8 +6,10 @@ use super::Frame;
 use crate::ffi::*;
 use crate::util::format;
 use crate::ChannelLayout;
-use crate::ChannelLayoutInfo;
 use libc::{c_int, c_ulonglong};
+
+#[cfg(feature = "ffmpeg_5_1")]
+use crate::ChannelLayoutInfo;
 
 #[derive(PartialEq, Eq)]
 pub struct Audio(Frame);

@@ -14,6 +14,9 @@ use crate::util::format;
 use crate::{packet, Error};
 use crate::{AudioService, ChannelLayout};
 
+#[cfg(feature = "ffmpeg_5_1")]
+use crate::ChannelLayoutInfo;
+
 pub struct Audio(pub Opened);
 
 impl Audio {
@@ -48,7 +51,13 @@ impl Audio {
     }
 
     pub fn channels(&self) -> u16 {
-        unsafe { (*self.as_ptr()).channels as u16 }
+        #[cfg(not(feature = "ffmpeg_7_0"))]
+        let channels = unsafe { (*self.as_ptr()).channels };
+
+        #[cfg(feature = "ffmpeg_7_0")]
+        let channels = self.ch_layout().count();
+
+        channels as u16
     }
 
     pub fn format(&self) -> format::Sample {
@@ -82,6 +91,20 @@ impl Audio {
     pub fn request_channel_layout(&mut self, value: ChannelLayout) {
         unsafe {
             (*self.as_mut_ptr()).request_channel_layout = value.bits();
+        }
+    }
+
+    #[cfg(feature = "ffmpeg_5_1")]
+    #[inline]
+    pub fn ch_layout(&self) -> ChannelLayoutInfo<'_> {
+        unsafe { ChannelLayoutInfo::from(&(*self.as_ptr()).ch_layout) }
+    }
+
+    #[cfg(feature = "ffmpeg_5_1")]
+    #[inline]
+    pub fn set_ch_layout(&mut self, value: ChannelLayoutInfo<'_>) {
+        unsafe {
+            (*self.as_mut_ptr()).ch_layout = value.into_owned();
         }
     }
 
