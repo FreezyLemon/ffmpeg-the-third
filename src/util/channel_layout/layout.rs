@@ -9,12 +9,12 @@ use super::{channel::Channel, mask::ChannelMask};
 
 #[derive(Clone, PartialEq)]
 #[repr(transparent)]
-pub struct ChannelLayout(AVChannelLayout);
+pub struct ChannelLayoutInfo(AVChannelLayout);
 
 // TODO: Builder pattern for creating the underlying AVChannelLayout.
 // Invariants are mostly based on the AVChannelOrder.
 
-impl ChannelLayout {
+impl ChannelLayoutInfo {
     pub fn default_for_channels(channels: c_int) -> Self {
         let mut layout = AVChannelLayout::empty();
         unsafe {
@@ -103,20 +103,20 @@ impl ChannelLayout {
     }
 }
 
-impl From<AVChannelLayout> for ChannelLayout {
+impl From<AVChannelLayout> for ChannelLayoutInfo {
     fn from(value: AVChannelLayout) -> Self {
         Self(value)
     }
 }
 
-impl From<ChannelLayout> for AVChannelLayout {
-    fn from(value: ChannelLayout) -> Self {
+impl From<ChannelLayoutInfo> for AVChannelLayout {
+    fn from(value: ChannelLayoutInfo) -> Self {
         value.0
     }
 }
 
 // Constants
-impl ChannelLayout {
+impl ChannelLayoutInfo {
     pub const MONO: Self = Self(AV_CHANNEL_LAYOUT_MONO);
     pub const STEREO: Self = Self(AV_CHANNEL_LAYOUT_STEREO);
     pub const _2POINT1: Self = Self(AV_CHANNEL_LAYOUT_2POINT1);
