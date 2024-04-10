@@ -1,4 +1,4 @@
-use crate::ffi::channel_masks::*;
+use crate::ffi::channel_layout::*;
 use crate::ffi::*;
 
 use libc::c_ulonglong;
