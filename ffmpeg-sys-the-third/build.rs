@@ -962,6 +962,7 @@ fn main() {
         .ctypes_prefix("libc")
         // This type is not trivially copyable
         .no_copy("AVChannelLayout")
+        .no_debug("AVChannelCustom")
         // https://github.com/rust-lang/rust-bindgen/issues/550
         .blocklist_type("max_align_t")
         .blocklist_function("_.*")

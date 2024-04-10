@@ -86,6 +86,18 @@ impl fmt::Debug for AVChannelLayout {
     }
 }
 
+impl fmt::Debug for AVChannelCustom {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unsafe {
+            f.debug_struct("AVChannelCustom")
+                .field("id", &self.id)
+                .field("name", &std::ffi::CStr::from_ptr(self.name.as_ptr()))
+                .field("opaque", &self.opaque)
+                .finish()
+        }
+    }
+}
+
 // Audio channel layouts as AVChannelLayout
 pub const fn AV_CHANNEL_LAYOUT_MASK(nb_channels: c_int, channel_mask: u64) -> AVChannelLayout {
     AVChannelLayout {
