@@ -6,6 +6,7 @@ use super::Frame;
 use crate::ffi::*;
 use crate::util::format;
 use crate::ChannelLayout;
+use crate::ChannelLayoutInfoRef;
 use libc::{c_int, c_ulonglong};
 
 #[derive(PartialEq, Eq)]
@@ -83,6 +84,10 @@ impl Audio {
         unsafe {
             (*self.as_mut_ptr()).channels = i32::from(value);
         }
+    }
+
+    pub fn ch_layout<'a>(&'a self) -> ChannelLayoutInfoRef<'a> {
+        unsafe { ChannelLayoutInfoRef::from(&(*self.as_ptr()).ch_layout) }
     }
 
     #[inline]

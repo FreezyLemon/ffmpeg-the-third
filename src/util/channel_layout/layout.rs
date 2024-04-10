@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+use std::borrow::BorrowMut;
 use std::ffi::CString;
 
 use crate::ffi::channel_layout::*;
@@ -112,6 +114,18 @@ impl From<AVChannelLayout> for ChannelLayoutInfo {
 impl From<ChannelLayoutInfo> for AVChannelLayout {
     fn from(value: ChannelLayoutInfo) -> Self {
         value.0
+    }
+}
+
+impl<'a> Borrow<AVChannelLayout> for ChannelLayoutInfo {
+    fn borrow(&self) -> &AVChannelLayout {
+        &self.0
+    }
+}
+
+impl<'a> BorrowMut<AVChannelLayout> for ChannelLayoutInfo {
+    fn borrow_mut(&mut self) -> &mut AVChannelLayout {
+        &mut self.0
     }
 }
 

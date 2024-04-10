@@ -18,7 +18,9 @@ pub use crate::sys as ffi;
 
 #[macro_use]
 pub mod util;
-pub use crate::util::channel_layout::{self, ChannelLayout};
+pub use crate::util::channel_layout::{
+    self, ChannelLayout, ChannelLayoutInfo, ChannelLayoutInfoRef,
+};
 pub use crate::util::chroma;
 pub use crate::util::color;
 pub use crate::util::dictionary;
