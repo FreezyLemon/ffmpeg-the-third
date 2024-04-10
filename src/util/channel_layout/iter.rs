@@ -14,16 +14,21 @@ impl ChannelLayoutInfoIter {
     }
 }
 
+impl Default for ChannelLayoutInfoIter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Iterator for ChannelLayoutInfoIter {
     type Item = ChannelLayoutInfo<'static>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // We assume that the returned pointer is valid and the layout has a 'static lifetime
-        let layout_ptr = unsafe { av_channel_layout_standard(addr_of_mut!(self.opaque)) };
-
-        match unsafe { layout_ptr.as_ref() } {
-            Some(layout_ref) => Some(ChannelLayoutInfo::from(layout_ref)),
-            None => None,
+        unsafe {
+            av_channel_layout_standard(addr_of_mut!(self.opaque))
+                .as_ref()
+                .map(ChannelLayoutInfo::from)
         }
     }
 }
