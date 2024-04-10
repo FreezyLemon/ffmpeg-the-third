@@ -140,10 +140,10 @@ impl Iterator for ChannelLayoutIter {
                 return None;
             }
 
-            let mask = ChannelLayout::from_bits_truncate(*self.ptr);
+            let layout = ChannelLayout::from_bits_truncate(*self.ptr);
             self.ptr = self.ptr.offset(1);
 
-            Some(mask)
+            Some(layout)
         }
     }
 }
