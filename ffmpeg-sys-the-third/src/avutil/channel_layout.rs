@@ -66,7 +66,7 @@ impl fmt::Debug for AVChannelLayout {
 
         unsafe {
             match self.order {
-                AVChannelOrder::AV_CHANNEL_ORDER_UNSPEC => {}
+                AVChannelOrder::AV_CHANNEL_ORDER_UNSPEC => {} // no other valid fields
                 AVChannelOrder::AV_CHANNEL_ORDER_NATIVE
                 | AVChannelOrder::AV_CHANNEL_ORDER_AMBISONIC => {
                     dbg.field("mask", &format_args!("0x{:X}", self.u.mask));
@@ -77,6 +77,8 @@ impl fmt::Debug for AVChannelLayout {
                         &std::slice::from_raw_parts(self.u.map, self.nb_channels as usize),
                     );
                 }
+                // Not part of public API, but we have to exhaustively match
+                AVChannelOrder::FF_CHANNEL_ORDER_NB => {}
             }
         }
 
