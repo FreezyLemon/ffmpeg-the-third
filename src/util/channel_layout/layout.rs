@@ -48,6 +48,13 @@ impl<'a> ChannelLayoutInfo<'a> {
         }
     }
 
+    /// Extracts the owned AVChannelLayout.
+    ///
+    /// Clones it if not already owned.
+    pub fn into_owned(self) -> AVChannelLayout {
+        self.0.into_owned()
+    }
+
     pub fn count(&self) -> c_int {
         self.0.nb_channels
     }

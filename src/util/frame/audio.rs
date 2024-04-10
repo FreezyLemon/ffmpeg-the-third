@@ -76,9 +76,16 @@ impl Audio {
 
     #[inline]
     pub fn channels(&self) -> u16 {
-        unsafe { (*self.as_ptr()).channels as u16 }
+        #[cfg(not(feature = "ffmpeg_7_0"))]
+        let channels = unsafe { (*self.as_ptr()).channels };
+
+        #[cfg(feature = "ffmpeg_7_0")]
+        let channels = self.ch_layout().count();
+
+        channels as u16
     }
 
+    #[cfg(not(feature = "ffmpeg_7_0"))]
     #[inline]
     pub fn set_channels(&mut self, value: u16) {
         unsafe {
@@ -86,8 +93,18 @@ impl Audio {
         }
     }
 
-    pub fn ch_layout<'a>(&'a self) -> ChannelLayoutInfo<'a> {
+    #[cfg(feature = "ffmpeg_5_1")]
+    #[inline]
+    pub fn ch_layout(&self) -> ChannelLayoutInfo<'_> {
         unsafe { ChannelLayoutInfo::from(&(*self.as_ptr()).ch_layout) }
+    }
+
+    #[cfg(feature = "ffmpeg_5_1")]
+    #[inline]
+    pub fn set_ch_layout(&mut self, value: ChannelLayoutInfo<'_>) {
+        unsafe {
+            (*self.as_mut_ptr()).ch_layout = value.into_owned();
+        }
     }
 
     #[inline]
