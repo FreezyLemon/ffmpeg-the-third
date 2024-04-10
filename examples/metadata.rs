@@ -77,7 +77,7 @@ fn main() -> Result<(), ffmpeg::Error> {
                         println!("\taudio.format: {:?}", audio.format());
                         println!("\taudio.frames: {}", audio.frames());
                         println!("\taudio.align: {}", audio.align());
-                        println!("\taudio.channel_layout: {:?}", audio.channel_mask());
+                        println!("\taudio.channel_layout: {:?}", audio.channel_layout());
                     }
                 }
             }

@@ -130,7 +130,7 @@ pub trait Settable: Target {
         }
     }
 
-    fn set_channel_mask(&mut self, name: &str, mask: ChannelLayout) -> Result<(), Error> {
+    fn set_channel_layout(&mut self, name: &str, mask: ChannelLayout) -> Result<(), Error> {
         unsafe {
             let name = CString::new(name).unwrap();
 

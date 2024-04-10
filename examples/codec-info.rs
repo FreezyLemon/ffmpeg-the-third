@@ -47,7 +47,7 @@ fn main() {
                     println!("\t formats: any");
                 }
 
-                if let Some(layouts) = audio.channel_masks() {
+                if let Some(layouts) = audio.channel_layouts() {
                     println!("\t channel_layouts: {:?}", layouts.collect::<Vec<_>>());
                 } else {
                     println!("\t channel_layouts: any");
@@ -97,7 +97,7 @@ fn main() {
                     println!("\t formats: any");
                 }
 
-                if let Some(layouts) = audio.channel_masks() {
+                if let Some(layouts) = audio.channel_layouts() {
                     println!("\t channel_layouts: {:?}", layouts.collect::<Vec<_>>());
                 } else {
                     println!("\t channel_layouts: any");

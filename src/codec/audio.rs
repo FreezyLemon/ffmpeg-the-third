@@ -36,7 +36,7 @@ impl Audio {
         }
     }
 
-    pub fn channel_masks(&self) -> Option<ChannelMaskIter> {
+    pub fn channel_layouts(&self) -> Option<ChannelMaskIter> {
         unsafe {
             if (*self.codec.as_ptr()).channel_layouts.is_null() {
                 None

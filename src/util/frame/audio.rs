@@ -21,7 +21,7 @@ impl Audio {
     pub unsafe fn alloc(&mut self, format: format::Sample, samples: usize, layout: ChannelLayout) {
         self.set_format(format);
         self.set_samples(samples);
-        self.set_channel_mask(layout);
+        self.set_channel_layout(layout);
 
         av_frame_get_buffer(self.as_mut_ptr(), 0);
     }
@@ -62,12 +62,12 @@ impl Audio {
     }
 
     #[inline]
-    pub fn channel_mask(&self) -> ChannelLayout {
+    pub fn channel_layout(&self) -> ChannelLayout {
         unsafe { ChannelLayout::from_bits_truncate((*self.as_ptr()).channel_layout as c_ulonglong) }
     }
 
     #[inline]
-    pub fn set_channel_mask(&mut self, value: ChannelLayout) {
+    pub fn set_channel_layout(&mut self, value: ChannelLayout) {
         unsafe {
             (*self.as_mut_ptr()).channel_layout = value.bits() as u64;
         }
@@ -218,7 +218,7 @@ impl ::std::fmt::Debug for Audio {
 
 impl Clone for Audio {
     fn clone(&self) -> Self {
-        let mut cloned = Audio::new(self.format(), self.samples(), self.channel_mask());
+        let mut cloned = Audio::new(self.format(), self.samples(), self.channel_layout());
         cloned.clone_from(self);
 
         cloned
