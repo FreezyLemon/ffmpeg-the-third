@@ -6,7 +6,7 @@ use super::Frame;
 use crate::ffi::*;
 use crate::util::format;
 use crate::ChannelLayout;
-use crate::ChannelLayoutInfoRef;
+use crate::ChannelLayoutInfo;
 use libc::{c_int, c_ulonglong};
 
 #[derive(PartialEq, Eq)]
@@ -86,8 +86,8 @@ impl Audio {
         }
     }
 
-    pub fn ch_layout<'a>(&'a self) -> ChannelLayoutInfoRef<'a> {
-        unsafe { ChannelLayoutInfoRef::from(&(*self.as_ptr()).ch_layout) }
+    pub fn ch_layout<'a>(&'a self) -> ChannelLayoutInfo<'a> {
+        unsafe { ChannelLayoutInfo::from(&(*self.as_ptr()).ch_layout) }
     }
 
     #[inline]
