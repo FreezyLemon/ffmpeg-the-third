@@ -5,7 +5,7 @@ use std::slice;
 use super::Frame;
 use crate::ffi::*;
 use crate::util::format;
-use crate::ChannelMask;
+use crate::ChannelLayout;
 use libc::{c_int, c_ulonglong};
 
 #[derive(PartialEq, Eq)]
@@ -18,7 +18,7 @@ impl Audio {
     }
 
     #[inline]
-    pub unsafe fn alloc(&mut self, format: format::Sample, samples: usize, layout: ChannelMask) {
+    pub unsafe fn alloc(&mut self, format: format::Sample, samples: usize, layout: ChannelLayout) {
         self.set_format(format);
         self.set_samples(samples);
         self.set_channel_mask(layout);
@@ -34,7 +34,7 @@ impl Audio {
     }
 
     #[inline]
-    pub fn new(format: format::Sample, samples: usize, layout: ChannelMask) -> Self {
+    pub fn new(format: format::Sample, samples: usize, layout: ChannelLayout) -> Self {
         unsafe {
             let mut frame = Audio::empty();
             frame.alloc(format, samples, layout);
@@ -62,12 +62,12 @@ impl Audio {
     }
 
     #[inline]
-    pub fn channel_mask(&self) -> ChannelMask {
-        unsafe { ChannelMask::from_bits_truncate((*self.as_ptr()).channel_layout as c_ulonglong) }
+    pub fn channel_mask(&self) -> ChannelLayout {
+        unsafe { ChannelLayout::from_bits_truncate((*self.as_ptr()).channel_layout as c_ulonglong) }
     }
 
     #[inline]
-    pub fn set_channel_mask(&mut self, value: ChannelMask) {
+    pub fn set_channel_mask(&mut self, value: ChannelLayout) {
         unsafe {
             (*self.as_mut_ptr()).channel_layout = value.bits() as u64;
         }

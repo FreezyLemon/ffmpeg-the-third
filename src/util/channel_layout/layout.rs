@@ -5,7 +5,7 @@ use crate::ffi::*;
 use crate::Error;
 use libc::{c_int, c_uint};
 
-use super::{channel::Channel, mask::ChannelMask};
+use super::{channel::Channel, mask::ChannelLayout};
 
 #[derive(Clone, PartialEq)]
 #[repr(transparent)]
@@ -24,7 +24,7 @@ impl ChannelLayoutInfo {
         Self(layout)
     }
 
-    pub fn from_mask(layout_mask: ChannelMask) -> Option<Self> {
+    pub fn from_mask(layout_mask: ChannelLayout) -> Option<Self> {
         let mut layout = AVChannelLayout::empty();
         let ret = unsafe { av_channel_layout_from_mask(&mut layout as _, layout_mask.bits()) };
 
@@ -92,8 +92,8 @@ impl ChannelLayoutInfo {
         Channel::from(unsafe { av_channel_layout_channel_from_string(&self.0 as _, cstr.as_ptr()) })
     }
 
-    pub fn subset(&self, mask: ChannelMask) -> ChannelMask {
-        ChannelMask::from_bits_truncate(unsafe {
+    pub fn subset(&self, mask: ChannelLayout) -> ChannelLayout {
+        ChannelLayout::from_bits_truncate(unsafe {
             av_channel_layout_subset(&self.0 as _, mask.bits())
         })
     }
