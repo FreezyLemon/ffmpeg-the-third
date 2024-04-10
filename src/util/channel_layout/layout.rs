@@ -48,7 +48,7 @@ impl<'a> ChannelLayoutInfo<'a> {
         }
     }
 
-    /// Extracts the owned AVChannelLayout.
+    /// Extracts the owned `AVChannelLayout`.
     ///
     /// Clones it if not already owned.
     pub fn into_owned(self) -> AVChannelLayout {
@@ -59,8 +59,8 @@ impl<'a> ChannelLayoutInfo<'a> {
         self.0.nb_channels
     }
 
-    // helper to call FFI functions
-    fn as_ptr(&self) -> *const AVChannelLayout {
+    /// Exposes a pointer the contained `AVChannelLayout` for FFI purposes.
+    pub fn as_ptr(&self) -> *const AVChannelLayout {
         self.0.as_ref() as _
     }
 
