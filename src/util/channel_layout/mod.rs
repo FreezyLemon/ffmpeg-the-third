@@ -1,13 +1,15 @@
 pub mod mask;
-pub mod order;
-
 pub use mask::ChannelLayout;
-pub use order::ChannelOrder;
 
 #[cfg(feature = "ffmpeg_5_1")]
 pub mod channel;
 #[cfg(feature = "ffmpeg_5_1")]
 pub use channel::Channel;
+
+#[cfg(feature = "ffmpeg_5_1")]
+pub mod order;
+#[cfg(feature = "ffmpeg_5_1")]
+pub use order::ChannelOrder;
 
 // TODO:
 #[cfg(feature = "ffmpeg_5_1")]
