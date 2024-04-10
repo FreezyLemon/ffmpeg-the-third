@@ -8,7 +8,7 @@ use libc::{c_int, c_uint};
 
 use super::{channel::Channel, mask::ChannelLayout};
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 #[repr(transparent)]
 pub struct ChannelLayoutInfo<'a>(Cow<'a, AVChannelLayout>);
 
