@@ -1,3 +1,4 @@
+#[cfg(feature = "ffmpeg_5_1")]
 pub mod channel_layout;
 
 mod error;
