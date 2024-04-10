@@ -15,6 +15,9 @@ impl From<AVChannelOrder> for ChannelOrder {
             AV_CHANNEL_ORDER_NATIVE => ChannelOrder::Native,
             AV_CHANNEL_ORDER_CUSTOM => ChannelOrder::Custom,
             AV_CHANNEL_ORDER_AMBISONIC => ChannelOrder::Ambisonic,
+
+            #[cfg(feature = "non-exhaustive-enums")]
+            _ => unimplemented!(),
         }
     }
 }
