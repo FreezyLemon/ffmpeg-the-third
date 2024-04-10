@@ -1,6 +1,8 @@
 #[cfg(feature = "ffmpeg_5_1")]
 pub mod channel_layout;
 
+pub mod channel_masks;
+
 mod error;
 pub use self::error::*;
 
