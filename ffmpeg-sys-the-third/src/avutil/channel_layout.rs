@@ -77,8 +77,9 @@ impl fmt::Debug for AVChannelLayout {
                         &std::slice::from_raw_parts(self.u.map, self.nb_channels as usize),
                     );
                 }
+                // Starting with FFmpeg 7.0:
                 // Not part of public API, but we have to exhaustively match
-                AVChannelOrder::FF_CHANNEL_ORDER_NB => {}
+                // AVChannelOrder::FF_CHANNEL_ORDER_NB => {}
             }
         }
 
@@ -340,20 +341,25 @@ mod test {
     }
 
     fn custom() -> AVChannelLayout {
+        let mut my_data = vec![0u8; 200];
+
         let channels = [
             custom_ch(AVChannel::AV_CHAN_FRONT_LEFT, b"front left"),
             custom_ch(AVChannel::AV_CHAN_TOP_FRONT_RIGHT, b"top front right"),
             custom_ch(AVChannel::AV_CHAN_FRONT_RIGHT, b"front right"),
             custom_ch(AVChannel::AV_CHAN_BOTTOM_FRONT_RIGHT, b"btm frt right"),
             custom_ch(AVChannel::AV_CHAN_TOP_SIDE_LEFT, b"top side left"),
+            AVChannelCustom {
+                id: AVChannel::AV_CHAN_LOW_FREQUENCY,
+                name: c_string(b"subwoofer"),
+                opaque: my_data.as_mut_ptr() as _,
+            },
         ];
 
         let mut layout = AVChannelLayout::empty();
         layout.order = AVChannelOrder::AV_CHANNEL_ORDER_CUSTOM;
         layout.nb_channels = channels.len() as c_int;
         unsafe {
-            // this leaks, but it doesn't matter for tests
-            // feel free to fix this if it bothers you
             layout.u.map = av_calloc(channels.len(), size_of::<AVChannelCustom>()) as _;
             assert!(!layout.u.map.is_null());
         }
@@ -365,6 +371,23 @@ mod test {
         }
 
         layout
+    }
+
+    #[test]
+    fn check() {
+        let tests = [
+            (EMPTY, false),
+            (UNSPEC, true),
+            (NATIVE, true),
+            (custom(), true),
+        ];
+
+        for (i, (layout, valid)) in tests.iter().enumerate() {
+            unsafe {
+                println!("{i}");
+                assert!((av_channel_layout_check(layout as _) != 0) == *valid);
+            }
+        }
     }
 
     #[test]
