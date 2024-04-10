@@ -11,7 +11,6 @@ pub mod order;
 #[cfg(feature = "ffmpeg_5_1")]
 pub use order::ChannelOrder;
 
-// TODO:
 #[cfg(feature = "ffmpeg_5_1")]
 pub mod iter;
 

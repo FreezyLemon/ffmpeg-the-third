@@ -1,30 +1,29 @@
-// TODO: Add API for av_channel_layout_standard
-// Should be Iterator over &'static ChannelLayout
+use crate::ffi::*;
 
-// use crate::ffi::*;
-// use std::ptr::null_mut;
+use super::ChannelLayoutInfo;
+use libc::c_void;
+use std::ptr::{addr_of_mut, null_mut};
 
-// use libc::c_void;
+pub struct ChannelLayoutInfoIter {
+    opaque: *mut c_void,
+}
 
-// pub struct StandardChannelLayoutIter {
-//     opaque: *mut c_void,
-// }
+impl ChannelLayoutInfoIter {
+    pub fn new() -> Self {
+        Self { opaque: null_mut() }
+    }
+}
 
-// impl StandardChannelLayoutIter {
-//     pub fn new() -> Self {
-//         Self { opaque: null_mut() }
-//     }
-// }
+impl Iterator for ChannelLayoutInfoIter {
+    type Item = ChannelLayoutInfo<'static>;
 
-// impl Iterator for StandardChannelLayoutIter {
-//     type Item = &'static ChannelLayoutInfo;
+    fn next(&mut self) -> Option<Self::Item> {
+        // We assume that the returned pointer is valid and the layout has a 'static lifetime
+        let layout_ptr = unsafe { av_channel_layout_standard(addr_of_mut!(self.opaque)) };
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         let layout_ptr = unsafe { av_channel_layout_standard(addr_of_mut!(self.opaque)) };
-
-//         match unsafe { layout_ptr.as_ref() } {
-//             Some(layout_ref) => Some(&ChannelLayoutInfo(*layout_ref)),
-//             None => None,
-//         }
-//     }
-// }
+        match unsafe { layout_ptr.as_ref() } {
+            Some(layout_ref) => Some(ChannelLayoutInfo::from(layout_ref)),
+            None => None,
+        }
+    }
+}
