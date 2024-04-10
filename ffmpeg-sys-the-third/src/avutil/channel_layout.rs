@@ -42,6 +42,14 @@ impl Clone for AVChannelLayout {
     }
 }
 
+impl Drop for AVChannelLayout {
+    fn drop(&mut self) {
+        unsafe {
+            av_channel_layout_uninit(self as _)
+        }
+    }
+}
+
 impl PartialEq for AVChannelLayout {
     fn eq(&self, other: &Self) -> bool {
         unsafe {
