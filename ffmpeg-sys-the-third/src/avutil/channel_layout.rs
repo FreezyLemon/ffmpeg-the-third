@@ -22,6 +22,13 @@ impl AVChannelLayout {
 
 impl Clone for AVChannelLayout {
     fn clone(&self) -> Self {
+        let mut cloned = Self::empty();
+        cloned.clone_from(self);
+
+        cloned
+    }
+
+    fn clone_from(&mut self, source: &Self) {
         #[cold]
         fn clone_failed(channels: c_int) -> ! {
             let alloc_size = channels as usize * size_of::<AVChannelCustom>();
@@ -31,14 +38,13 @@ impl Clone for AVChannelLayout {
             handle_alloc_error(layout)
         }
 
-        let mut cloned = Self::empty();
-        let ret = unsafe { av_channel_layout_copy(&mut cloned as _, self as _) };
+        let ret = unsafe {
+            av_channel_layout_copy(self as _, source as _)
+        };
 
         if ret < 0 {
-            clone_failed(self.nb_channels)
+            clone_failed(self.nb_channels);
         }
-
-        cloned
     }
 }
 
