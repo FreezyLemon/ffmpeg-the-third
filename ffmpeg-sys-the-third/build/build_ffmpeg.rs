@@ -1,9 +1,12 @@
 use std::env;
+use std::fs::File;
 use std::io;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 
-use crate::ffmpeg_version;
 use crate::util::*;
 use crate::Library;
 
@@ -103,14 +106,33 @@ pub fn fetch(source_dir: &Path, ffmpeg_version: &str) -> io::Result<()> {
     }
 }
 
-pub fn build(source_dir: &Path, install_dir: &Path, libraries: &[Library]) -> io::Result<()> {
-    fetch(source_dir, &ffmpeg_version())?;
+pub fn build(
+    out_dir: &Path,
+    ffmpeg_version: &str,
+    libraries: &[Library],
+) -> io::Result<Vec<PathBuf>> {
+    let install_dir = out_dir.join("dist");
+    let source_dir = out_dir.join(format!("ffmpeg-{ffmpeg_version}"));
+    let include_dir = install_dir.join("include");
+
+    println!(
+        "cargo:rustc-link-search=native={}",
+        install_dir.join("lib").to_string_lossy()
+    );
+
+    if install_dir.join("lib").join("libavutil.a").exists() {
+        // Already built
+        rustc_link_extralibs(&source_dir);
+        return Ok(vec![include_dir]);
+    }
+
+    fetch(&source_dir, ffmpeg_version)?;
 
     // Command's path is not relative to command's current_dir
     let configure_path = source_dir.join("configure");
     assert!(configure_path.exists());
     let mut configure = Command::new(&configure_path);
-    configure.current_dir(source_dir);
+    configure.current_dir(&source_dir);
 
     configure.arg(format!("--prefix={}", install_dir.to_string_lossy()));
 
@@ -211,7 +233,7 @@ pub fn build(source_dir: &Path, install_dir: &Path, libraries: &[Library]) -> io
     // run make
     if !Command::new("make")
         .arg(format!("-j{num_jobs}"))
-        .current_dir(source_dir)
+        .current_dir(&source_dir)
         .status()?
         .success()
     {
@@ -220,7 +242,7 @@ pub fn build(source_dir: &Path, install_dir: &Path, libraries: &[Library]) -> io
 
     // run make install
     if !Command::new("make")
-        .current_dir(source_dir)
+        .current_dir(&source_dir)
         .arg("install")
         .status()?
         .success()
@@ -228,5 +250,27 @@ pub fn build(source_dir: &Path, install_dir: &Path, libraries: &[Library]) -> io
         return Err(io::Error::new(io::ErrorKind::Other, "make install failed"));
     }
 
-    Ok(())
+    rustc_link_extralibs(&source_dir);
+
+    Ok(vec![include_dir])
+}
+
+fn rustc_link_extralibs(source_dir: &Path) {
+    let config_mak = source_dir.join("ffbuild/config.mak");
+    let file = File::open(config_mak).unwrap();
+    let reader = BufReader::new(file);
+    let extra_libs = reader
+        .lines()
+        .find(|line| line.as_ref().unwrap().starts_with("EXTRALIBS"))
+        .map(|line| line.unwrap())
+        .unwrap();
+
+    let linker_args = extra_libs.split('=').last().unwrap().split(' ');
+    let include_libs = linker_args
+        .filter(|v| v.starts_with("-l"))
+        .map(|flag| &flag[2..]);
+
+    for lib in include_libs {
+        println!("cargo:rustc-link-lib={lib}");
+    }
 }

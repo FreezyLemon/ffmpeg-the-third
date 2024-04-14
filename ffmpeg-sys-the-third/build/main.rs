@@ -8,7 +8,7 @@ extern crate pkg_config;
 use std::env;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Write};
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::str;
@@ -570,45 +570,14 @@ fn link_to_libraries(statik: bool) {
 }
 
 fn main() {
+    let out_dir = output();
     let statik = cargo_feature_enabled("static");
+    let ffmpeg_version_string = ffmpeg_version();
     let ffmpeg_major_version: u32 = ffmpeg_major_version();
 
     let include_paths: Vec<PathBuf> = if cargo_feature_enabled("build") {
-        let source_dir = output().join(format!("ffmpeg-{}", ffmpeg_version()));
-        let install_dir = output().join("dist");
-
-        println!(
-            "cargo:rustc-link-search=native={}",
-            install_dir.join("lib").to_string_lossy()
-        );
         link_to_libraries(statik);
-        if fs::metadata(install_dir.join("lib").join("libavutil.a")).is_err() {
-            fs::create_dir_all(output()).expect("failed to create build directory");
-            build(&source_dir, &install_dir, LIBRARIES).unwrap();
-        }
-
-        // Check additional required libraries.
-        {
-            let config_mak = source_dir.join("ffbuild/config.mak");
-            let file = File::open(config_mak).unwrap();
-            let reader = BufReader::new(file);
-            let extra_libs = reader
-                .lines()
-                .find(|line| line.as_ref().unwrap().starts_with("EXTRALIBS"))
-                .map(|line| line.unwrap())
-                .unwrap();
-
-            let linker_args = extra_libs.split('=').last().unwrap().split(' ');
-            let include_libs = linker_args
-                .filter(|v| v.starts_with("-l"))
-                .map(|flag| &flag[2..]);
-
-            for lib in include_libs {
-                println!("cargo:rustc-link-lib={}", lib);
-            }
-        }
-
-        vec![install_dir.join("include")]
+        build(&out_dir, &ffmpeg_version_string, LIBRARIES).unwrap()
     }
     // Use prebuilt library
     else if let Ok(ffmpeg_dir) = env::var("FFMPEG_DIR") {
