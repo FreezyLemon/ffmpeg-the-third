@@ -574,6 +574,8 @@ fn main() {
     let ffmpeg_major_version: u32 = ffmpeg_major_version();
 
     let include_paths: Vec<PathBuf> = if cargo_feature_enabled("build") {
+        let source_dir = output().join(format!("ffmpeg-{}", ffmpeg_version()));
+
         println!(
             "cargo:rustc-link-search=native={}",
             search().join("lib").to_string_lossy()
@@ -581,12 +583,12 @@ fn main() {
         link_to_libraries(statik);
         if fs::metadata(search().join("lib").join("libavutil.a")).is_err() {
             fs::create_dir_all(output()).expect("failed to create build directory");
-            build(LIBRARIES).unwrap();
+            build(&source_dir, LIBRARIES).unwrap();
         }
 
         // Check additional required libraries.
         {
-            let config_mak = source().join("ffbuild/config.mak");
+            let config_mak = source_dir.join("ffbuild/config.mak");
             let file = File::open(config_mak).unwrap();
             let reader = BufReader::new(file);
             let extra_libs = reader

@@ -21,10 +21,6 @@ pub fn output() -> PathBuf {
     PathBuf::from(env::var("OUT_DIR").unwrap())
 }
 
-pub fn source() -> PathBuf {
-    output().join(format!("ffmpeg-{}", ffmpeg_version()))
-}
-
 pub fn search() -> PathBuf {
     let mut absolute = env::current_dir().unwrap();
     absolute.push(&output());

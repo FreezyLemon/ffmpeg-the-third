@@ -1,7 +1,9 @@
 use std::env;
 use std::io;
+use std::path::Path;
 use std::process::Command;
 
+use crate::ffmpeg_version;
 use crate::util::*;
 use crate::Library;
 
@@ -83,18 +85,15 @@ impl FFmpegConfigure for Command {
     }
 }
 
-pub fn fetch() -> io::Result<()> {
-    let output_base_path = output();
-    let clone_dest_dir = format!("ffmpeg-{}", ffmpeg_version());
-    let _ = std::fs::remove_dir_all(output_base_path.join(&clone_dest_dir));
+pub fn fetch(source_dir: &Path, ffmpeg_version: &str) -> io::Result<()> {
+    let _ = std::fs::remove_dir_all(source_dir);
     let status = Command::new("git")
-        .current_dir(&output_base_path)
         .arg("clone")
         .arg("--depth=1")
         .arg("-b")
-        .arg(format!("n{}", ffmpeg_version()))
+        .arg(format!("n{ffmpeg_version}"))
         .arg("https://github.com/FFmpeg/FFmpeg")
-        .arg(&clone_dest_dir)
+        .arg(source_dir)
         .status()?;
 
     if status.success() {
@@ -104,15 +103,14 @@ pub fn fetch() -> io::Result<()> {
     }
 }
 
-pub fn build(libraries: &[Library]) -> io::Result<()> {
-    fetch()?;
-    let source_dir = source();
+pub fn build(source_dir: &Path, libraries: &[Library]) -> io::Result<()> {
+    fetch(source_dir, &ffmpeg_version())?;
 
     // Command's path is not relative to command's current_dir
     let configure_path = source_dir.join("configure");
     assert!(configure_path.exists());
     let mut configure = Command::new(&configure_path);
-    configure.current_dir(&source_dir);
+    configure.current_dir(source_dir);
 
     configure.arg(format!("--prefix={}", search().to_string_lossy()));
 
@@ -213,7 +211,7 @@ pub fn build(libraries: &[Library]) -> io::Result<()> {
     // run make
     if !Command::new("make")
         .arg(format!("-j{num_jobs}"))
-        .current_dir(&source())
+        .current_dir(source_dir)
         .status()?
         .success()
     {
@@ -222,7 +220,7 @@ pub fn build(libraries: &[Library]) -> io::Result<()> {
 
     // run make install
     if !Command::new("make")
-        .current_dir(&source())
+        .current_dir(source_dir)
         .arg("install")
         .status()?
         .success()
