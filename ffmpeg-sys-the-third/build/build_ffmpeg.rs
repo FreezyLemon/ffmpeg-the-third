@@ -1,6 +1,8 @@
 use std::env;
 use std::io;
+use std::path::Path;
 use std::process::Command;
+use std::process::Output;
 
 use crate::util::*;
 use crate::Library;
@@ -83,18 +85,15 @@ impl FFmpegConfigure for Command {
     }
 }
 
-pub fn fetch() -> io::Result<()> {
-    let output_base_path = output();
-    let clone_dest_dir = format!("ffmpeg-{}", ffmpeg_version());
-    let _ = std::fs::remove_dir_all(output_base_path.join(&clone_dest_dir));
+pub fn fetch(fetch_dir: &Path, ffmpeg_version: &str) -> io::Result<()> {
+    let _ = std::fs::remove_dir_all(&fetch_dir);
     let status = Command::new("git")
-        .current_dir(&output_base_path)
         .arg("clone")
         .arg("--depth=1")
         .arg("-b")
-        .arg(format!("n{}", ffmpeg_version()))
+        .arg(format!("n{ffmpeg_version}"))
         .arg("https://github.com/FFmpeg/FFmpeg")
-        .arg(&clone_dest_dir)
+        .arg(&fetch_dir)
         .status()?;
 
     if status.success() {
@@ -104,17 +103,13 @@ pub fn fetch() -> io::Result<()> {
     }
 }
 
-pub fn build(libraries: &[Library]) -> io::Result<()> {
-    fetch()?;
-    let source_dir = source();
-
+pub fn configure(source_dir: &Path, install_dir: &Path, libraries: &[Library]) -> io::Result<Output> {
     // Command's path is not relative to command's current_dir
     let configure_path = source_dir.join("configure");
-    assert!(configure_path.exists());
     let mut configure = Command::new(&configure_path);
     configure.current_dir(&source_dir);
 
-    configure.arg(format!("--prefix={}", search().to_string_lossy()));
+    configure.arg(format!("--prefix={}", install_dir.to_string_lossy()));
 
     if env::var("TARGET").unwrap() != env::var("HOST").unwrap() {
         // Rust targets are subtly different than naming scheme for compiler prefixes.
@@ -188,18 +183,24 @@ pub fn build(libraries: &[Library]) -> io::Result<()> {
     // configure misc build options
     configure.enable("BUILD_PIC", "pic");
 
-    // run ./configure
-    let output = configure
-        .output()
-        .unwrap_or_else(|_| panic!("{:?} failed", configure));
-    if !output.status.success() {
-        println!("configure: {}", String::from_utf8_lossy(&output.stdout));
+    configure.output()
+}
+
+pub fn build(source_dir: &Path, ffmpeg_version: &str, install_dir: &Path, libraries: &[Library]) -> io::Result<()> {
+    fetch(source_dir, ffmpeg_version)?;
+    let conf_output = configure(&source_dir, install_dir, libraries)?;
+
+    if !conf_output.status.success() {
+        println!(
+            "configure: {}",
+            String::from_utf8_lossy(&conf_output.stdout)
+        );
 
         return Err(io::Error::new(
             io::ErrorKind::Other,
             format!(
                 "configure failed {}",
-                String::from_utf8_lossy(&output.stderr)
+                String::from_utf8_lossy(&conf_output.stderr)
             ),
         ));
     }
@@ -213,7 +214,7 @@ pub fn build(libraries: &[Library]) -> io::Result<()> {
     // run make
     if !Command::new("make")
         .arg(format!("-j{num_jobs}"))
-        .current_dir(&source())
+        .current_dir(&source_dir)
         .status()?
         .success()
     {
@@ -222,7 +223,7 @@ pub fn build(libraries: &[Library]) -> io::Result<()> {
 
     // run make install
     if !Command::new("make")
-        .current_dir(&source())
+        .current_dir(&source_dir)
         .arg("install")
         .status()?
         .success()

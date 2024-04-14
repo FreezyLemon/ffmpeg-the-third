@@ -9,7 +9,7 @@ use std::env;
 use std::fmt::Write as FmtWrite;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str;
 
@@ -329,7 +329,7 @@ fn add_pkg_config_path() {
 #[cfg(not(target_os = "macos"))]
 fn add_pkg_config_path() {}
 
-fn check_features(include_paths: &[PathBuf]) {
+fn check_features(out_dir: &Path, include_paths: &[PathBuf]) {
     let mut includes_code = String::new();
     let mut main_code = String::new();
 
@@ -388,8 +388,6 @@ fn check_features(include_paths: &[PathBuf]) {
             }
         }
     }
-
-    let out_dir = output();
 
     write!(
         File::create(out_dir.join("check.c")).expect("Failed to create file"),
@@ -570,23 +568,29 @@ fn link_to_libraries(statik: bool) {
 }
 
 fn main() {
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+
     let statik = cargo_feature_enabled("static");
     let ffmpeg_major_version: u32 = ffmpeg_major_version();
 
     let include_paths: Vec<PathBuf> = if cargo_feature_enabled("build") {
+        let ffmpeg_version = ffmpeg_version();
+        let install_dir = out_dir.join("dist");
+        let source_dir = out_dir.join(format!("ffmpeg-{ffmpeg_version}"));
+
         println!(
             "cargo:rustc-link-search=native={}",
-            search().join("lib").to_string_lossy()
+            install_dir.join("lib").to_string_lossy()
         );
         link_to_libraries(statik);
-        if fs::metadata(search().join("lib").join("libavutil.a")).is_err() {
-            fs::create_dir_all(output()).expect("failed to create build directory");
-            build(LIBRARIES).unwrap();
+        if fs::metadata(install_dir.join("lib").join("libavutil.a")).is_err() {
+            fs::create_dir_all(&out_dir).expect("failed to create build directory");
+            build(&source_dir, &ffmpeg_version, &install_dir, LIBRARIES).unwrap();
         }
 
         // Check additional required libraries.
         {
-            let config_mak = source().join("ffbuild/config.mak");
+            let config_mak = source_dir.join("ffbuild/config.mak");
             let file = File::open(config_mak).unwrap();
             let reader = BufReader::new(file);
             let extra_libs = reader
@@ -605,7 +609,7 @@ fn main() {
             }
         }
 
-        vec![search().join("include")]
+        vec![install_dir.join("include")]
     }
     // Use prebuilt library
     else if let Ok(ffmpeg_dir) = env::var("FFMPEG_DIR") {
@@ -694,7 +698,7 @@ fn main() {
         }
     }
 
-    check_features(&include_paths);
+    check_features(&out_dir, &include_paths);
 
     let clang_includes = include_paths
         .iter()
@@ -920,6 +924,6 @@ fn main() {
 
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     bindings
-        .write_to_file(output().join("bindings.rs"))
+        .write_to_file(out_dir.join("bindings.rs"))
         .expect("Couldn't write bindings!");
 }
