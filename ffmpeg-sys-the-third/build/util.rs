@@ -20,11 +20,3 @@ pub fn ffmpeg_major_version() -> u32 {
 pub fn output() -> PathBuf {
     PathBuf::from(env::var("OUT_DIR").unwrap())
 }
-
-pub fn search() -> PathBuf {
-    let mut absolute = env::current_dir().unwrap();
-    absolute.push(&output());
-    absolute.push("dist");
-
-    absolute
-}

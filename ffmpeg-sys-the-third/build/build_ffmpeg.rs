@@ -103,7 +103,7 @@ pub fn fetch(source_dir: &Path, ffmpeg_version: &str) -> io::Result<()> {
     }
 }
 
-pub fn build(source_dir: &Path, libraries: &[Library]) -> io::Result<()> {
+pub fn build(source_dir: &Path, install_dir: &Path, libraries: &[Library]) -> io::Result<()> {
     fetch(source_dir, &ffmpeg_version())?;
 
     // Command's path is not relative to command's current_dir
@@ -112,7 +112,7 @@ pub fn build(source_dir: &Path, libraries: &[Library]) -> io::Result<()> {
     let mut configure = Command::new(&configure_path);
     configure.current_dir(source_dir);
 
-    configure.arg(format!("--prefix={}", search().to_string_lossy()));
+    configure.arg(format!("--prefix={}", install_dir.to_string_lossy()));
 
     if env::var("TARGET").unwrap() != env::var("HOST").unwrap() {
         // Rust targets are subtly different than naming scheme for compiler prefixes.

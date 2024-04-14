@@ -575,15 +575,16 @@ fn main() {
 
     let include_paths: Vec<PathBuf> = if cargo_feature_enabled("build") {
         let source_dir = output().join(format!("ffmpeg-{}", ffmpeg_version()));
+        let install_dir = output().join("dist");
 
         println!(
             "cargo:rustc-link-search=native={}",
-            search().join("lib").to_string_lossy()
+            install_dir.join("lib").to_string_lossy()
         );
         link_to_libraries(statik);
-        if fs::metadata(search().join("lib").join("libavutil.a")).is_err() {
+        if fs::metadata(install_dir.join("lib").join("libavutil.a")).is_err() {
             fs::create_dir_all(output()).expect("failed to create build directory");
-            build(&source_dir, LIBRARIES).unwrap();
+            build(&source_dir, &install_dir, LIBRARIES).unwrap();
         }
 
         // Check additional required libraries.
@@ -607,7 +608,7 @@ fn main() {
             }
         }
 
-        vec![search().join("include")]
+        vec![install_dir.join("include")]
     }
     // Use prebuilt library
     else if let Ok(ffmpeg_dir) = env::var("FFMPEG_DIR") {
