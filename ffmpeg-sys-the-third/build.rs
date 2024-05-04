@@ -13,12 +13,14 @@ use std::str;
 use bindgen::callbacks::{
     EnumVariantCustomBehavior, EnumVariantValue, IntKind, MacroParsingBehavior, ParseCallbacks,
 };
+use clang::{Clang, EntityKind, EntityVisitResult, EvaluationResult};
 
 #[derive(Debug)]
 struct Library {
     name: &'static str,
     optional: bool,
     features: &'static [AVFeature],
+    version_header: AVHeader,
     headers: &'static [AVHeader],
 }
 
@@ -26,12 +28,14 @@ impl Library {
     const fn required(
         name: &'static str,
         features: &'static [AVFeature],
+        version_header: AVHeader,
         headers: &'static [AVHeader],
     ) -> Self {
         Self {
             name,
             optional: false,
             features,
+            version_header,
             headers,
         }
     }
@@ -39,12 +43,14 @@ impl Library {
     const fn optional(
         name: &'static str,
         features: &'static [AVFeature],
+        version_header: AVHeader,
         headers: &'static [AVHeader],
     ) -> Self {
         Self {
             name,
             optional: true,
             features,
+            version_header,
             headers,
         }
     }
@@ -56,18 +62,28 @@ impl Library {
     fn enabled(&self) -> bool {
         !self.optional || cargo_feature_enabled(self.name)
     }
+
+    fn version_macros(&self) -> Vec<String> {
+        let name_upper = self.lib_name().to_uppercase();
+
+        vec![
+            format!("{name_upper}_VERSION_MAJOR"),
+            format!("{name_upper}_VERSION_MINOR"),
+            format!("{name_upper}_VERSION_MICRO"),
+        ]
+    }
 }
 
 static LIBRARIES: &[Library] = &[
-    Library::required("avutil", AVUTIL_FEATURES, AVUTIL_HEADERS),
-    Library::optional("avcodec", AVCODEC_FEATURES, AVCODEC_HEADERS),
-    Library::optional("avformat", AVFORMAT_FEATURES, AVFORMAT_HEADERS),
-    Library::optional("avdevice", AVDEVICE_FEATURES, AVDEVICE_HEADERS),
-    Library::optional("avfilter", AVFILTER_FEATURES, AVFILTER_HEADERS),
-    Library::optional("avresample", AVRESAMPLE_FEATURES, AVRESAMPLE_HEADERS),
-    Library::optional("swscale", SWSCALE_FEATURES, SWSCALE_HEADERS),
-    Library::optional("swresample", SWRESAMPLE_FEATURES, SWRESAMPLE_HEADERS),
-    Library::optional("postproc", POSTPROC_FEATURES, POSTPROC_HEADERS),
+    Library::required("avutil", AVUTIL_FEATURES, AVHeader::new("version.h"), AVUTIL_HEADERS),
+    Library::optional("avcodec", AVCODEC_FEATURES, AVHeader::new("version.h"), AVCODEC_HEADERS),
+    Library::optional("avformat", AVFORMAT_FEATURES, AVHeader::new("version.h"), AVFORMAT_HEADERS),
+    Library::optional("avdevice", AVDEVICE_FEATURES, AVHeader::new("version.h"), AVDEVICE_HEADERS),
+    Library::optional("avfilter", AVFILTER_FEATURES, AVHeader::new("version.h"), AVFILTER_HEADERS),
+    Library::optional("avresample", AVRESAMPLE_FEATURES, AVHeader::new("version.h"), AVRESAMPLE_HEADERS),
+    Library::optional("swscale", SWSCALE_FEATURES, AVHeader::new("version.h"), SWSCALE_HEADERS),
+    Library::optional("swresample", SWRESAMPLE_FEATURES, AVHeader::new("version.h"), SWRESAMPLE_HEADERS),
+    Library::optional("postproc", POSTPROC_FEATURES, AVHeader::new("version.h"), POSTPROC_HEADERS),
 ];
 
 #[derive(Debug)]
@@ -714,6 +730,52 @@ fn add_pkg_config_path() {
 #[cfg(not(target_os = "macos"))]
 fn add_pkg_config_path() {}
 
+fn detect_ffmpeg_version(lib: &Library, include_paths: &[PathBuf]) {
+    let header = &format!("{}/{}", lib.lib_name(), lib.version_header.name);
+
+    let mut versions: Vec<_> = lib.version_macros()
+        .into_iter()
+        .map(|m| (m, None))
+        .collect();
+
+    let clang = Clang::new().expect("clang is required");
+    let index = ::clang::Index::new(&clang, false, false);
+
+    let tu = index
+        .parser(search_include(include_paths, header))
+        .parse()
+        .expect("can parse version header");
+
+    let root_entity = tu.get_entity();
+    println!("root entity: {root_entity:?}");
+
+    tu.get_entity().visit_children(|entity, _parent| {
+        println!("visited {entity:?}");
+
+        if entity.get_kind() != EntityKind::MacroDefinition {
+            return EntityVisitResult::Continue;
+        };
+
+        let Some(entity_name) = entity.get_name() else {
+            return EntityVisitResult::Continue;
+        };
+
+        let Some((_, val)) = versions.iter_mut().find(|(m, _)| m == &entity_name) else {
+            return EntityVisitResult::Continue;
+        };
+
+        match entity.evaluate() {
+            Some(EvaluationResult::SignedInteger(ver)) => val.insert(ver),
+            Some(eval) => panic!("unexpected macro evaluation result {eval:?} for '{entity_name}' in {header}"),
+            None => panic!("failed to parse '{entity_name}' in {header}"),
+        };
+
+        EntityVisitResult::Continue
+    });
+
+    println!("detected versions: {versions:?}");
+}
+
 fn check_features(include_paths: &[PathBuf]) {
     let mut includes_code = String::new();
     let mut main_code = String::new();
@@ -1026,6 +1088,10 @@ fn main() {
         for f in frameworks {
             println!("cargo:rustc-link-lib=framework={}", f);
         }
+    }
+
+    for lib in LIBRARIES.iter().filter(|lib| lib.enabled()) {
+        detect_ffmpeg_version(lib, &include_paths);
     }
 
     check_features(&include_paths);
