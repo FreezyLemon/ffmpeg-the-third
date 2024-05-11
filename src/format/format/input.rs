@@ -27,7 +27,15 @@ impl Input {
     }
 
     pub fn description(&self) -> &str {
-        unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).long_name).to_bytes()) }
+        unsafe {
+            let long_name = (*self.as_ptr()).long_name;
+
+            if !long_name.is_null() {
+                from_utf8_unchecked(CStr::from_ptr(long_name).to_bytes())
+            } else {
+                ""
+            }
+        }
     }
 
     pub fn extensions(&self) -> Vec<&str> {
