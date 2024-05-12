@@ -3,43 +3,35 @@ pub mod input;
 pub mod output;
 
 use std::ffi::CStr;
-use std::marker::PhantomData;
 use std::str::from_utf8_unchecked;
 
 use crate::ffi::*;
 
 pub struct Info<'a> {
-    ptr: *mut AVDeviceInfo,
-
-    _marker: PhantomData<&'a ()>,
+    info: &'a AVDeviceInfo,
 }
 
 impl<'a> Info<'a> {
+    pub unsafe fn new(ptr: *const AVDeviceInfo) -> Option<Self> {
+        unsafe { ptr.as_ref().map(|info| Self { info }) }
+    }
+
     pub unsafe fn wrap(ptr: *mut AVDeviceInfo) -> Self {
-        Info {
-            ptr,
-            _marker: PhantomData,
-        }
+        unsafe { Self::new(ptr).expect("cannot wrap nullptr") }
     }
 
     pub unsafe fn as_ptr(&self) -> *const AVDeviceInfo {
-        self.ptr as *const _
-    }
-
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVDeviceInfo {
-        self.ptr
+        self.info as _
     }
 }
 
 impl<'a> Info<'a> {
     pub fn name(&self) -> &str {
-        unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).device_name).to_bytes()) }
+        unsafe { from_utf8_unchecked(CStr::from_ptr(self.info.device_name).to_bytes()) }
     }
 
     pub fn description(&self) -> &str {
-        unsafe {
-            from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).device_description).to_bytes())
-        }
+        unsafe { from_utf8_unchecked(CStr::from_ptr(self.info.device_description).to_bytes()) }
     }
 }
 
