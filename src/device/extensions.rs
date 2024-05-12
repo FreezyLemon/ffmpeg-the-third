@@ -15,7 +15,7 @@ impl Context {
 
 pub struct DeviceIter<'a> {
     ptr: *mut AVDeviceInfoList,
-    cur: c_int,
+    cur: usize,
 
     _marker: PhantomData<&'a ()>,
 }
@@ -55,13 +55,11 @@ impl<'a> Iterator for DeviceIter<'a> {
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
         unsafe {
-            if self.cur >= (*self.ptr).nb_devices {
+            if self.cur as c_int >= (*self.ptr).nb_devices {
                 None
             } else {
                 self.cur += 1;
-                Some(device::Info::wrap(
-                    *(*self.ptr).devices.offset((self.cur - 1) as isize),
-                ))
+                device::Info::new(*(*self.ptr).devices.add(self.cur - 1))
             }
         }
     }

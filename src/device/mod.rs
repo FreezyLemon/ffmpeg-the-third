@@ -16,12 +16,8 @@ impl<'a> Info<'a> {
         unsafe { ptr.as_ref().map(|info| Self { info }) }
     }
 
-    pub unsafe fn wrap(ptr: *mut AVDeviceInfo) -> Self {
-        unsafe { Self::new(ptr).expect("cannot wrap nullptr") }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVDeviceInfo {
-        self.info as _
+    pub const fn as_ref(&self) -> &AVDeviceInfo {
+        self.info
     }
 }
 
