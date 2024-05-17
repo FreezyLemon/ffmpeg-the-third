@@ -4,19 +4,43 @@ use std::ffi::CString;
 
 use crate::ffi::*;
 
-pub struct Dictionary<'a>(Cow<'a, AVDictionary>);
+pub struct Dictionary<'a>(Option<Cow<'a, AVDictionary>>);
 
 impl<'a> Dictionary<'a> {
     pub fn empty() -> Self {
-        todo!()
+        Self(None)
+    }
+
+    pub fn as_ptr(&self) -> *const AVDictionary {
+        match &self.0 {
+            Some(cow) => cow.as_ref(),
+            None => std::ptr::null(),
+        }
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut AVDictionary {
+        match &mut self.0 {
+            Some(cow) => cow.to_mut(),
+            None => std::ptr::null_mut(),
+        }
     }
 
     pub fn get(&self, key: &str) -> &str {
         unsafe {
-            av_dict_get(self.0.as_ref(), CString::new(key).unwrap().into_raw(), std::ptr::null(), 0);
+            av_dict_get(self.as_ptr(), CString::new(key).unwrap().into_raw(), std::ptr::null(), 0);
         }
 
         ""
+    }
+}
+
+impl<'a> Drop for Dictionary<'a> {
+    fn drop(&mut self) {
+        if let Some(Cow::Owned(ref mut dict)) = self.0 {
+            unsafe {
+                av_dict_free(&mut (dict as _))
+            }
+        }
     }
 }
 
