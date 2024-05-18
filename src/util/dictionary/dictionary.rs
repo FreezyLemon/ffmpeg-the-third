@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use libc::c_int;
 
-use crate::ffi::*;
+use crate::{ffi::*, Error};
 
 use super::DictionaryEntry;
 
@@ -69,6 +69,20 @@ impl<'dict> Dictionary<'dict> {
         })
     }
 
+    pub fn to_mut(&mut self) -> *mut AVDictionary {
+        if let Self::Owned(dict) = self {
+            return dict.ptr;
+        }
+
+        let clone = self.clone();
+        *self = clone;
+
+        match self {
+            Self::Owned(dict) => dict.ptr,
+            _ => unreachable!(),
+        }
+    }
+
     pub fn borrowed<'borrow>(&self) -> Dictionary<'borrow> 
     where 'dict: 'borrow
     {
@@ -121,30 +135,59 @@ impl<'dict> Dictionary<'dict> {
     // Note: Pass either a string type (String, &str), or a &[u8] without a NUL byte.
     pub fn get_single<K: Into<Vec<u8>>>(&self, key: K) -> Result<DictionaryEntry, DictGetError> 
     {
-        let key = match CString::new(key) {
-            Ok(c_string) => c_string,
-            Err(_) => return Err(DictGetError::InvalidKey),
-        };
+        let key = CString::new(key).map_err(|_| DictGetError::InvalidKey)?;
 
         self.get(&key, None, 0)
     }
 
     pub fn get_many<K: Into<Vec<u8>>>(&self, key: K) -> Result<DictionaryGetManyIter, DictGetError>
     {
-        let key = match CString::new(key) {
-            Ok(c_string) => c_string,
-            Err(_) => return Err(DictGetError::InvalidKey),
-        };
+        let key = CString::new(key).map_err(|_| DictGetError::InvalidKey)?;
 
         Ok(DictionaryGetManyIter::new(self.borrowed(), key, 0))
     }
 
-    // pub fn get<K: Into<Vec<u8>>>(&self, key: K, )
+    fn set(&mut self, key: &CStr, value: Option<&CStr>, flags: c_int) -> Result<(), Error> {
+        let value = match value {
+            Some(cstr) => cstr.as_ptr(),
+            None => std::ptr::null(),
+        };
+        
+        let ret = unsafe {
+            // TODO: SAFETY comment
+            av_dict_set(&mut self.to_mut(), key.as_ptr(), value, flags)
+        };
+
+        if ret >= 0 {
+            Ok(())
+        } else {
+            Err(Error::from(ret))
+        }
+    }
+
+    pub fn set_single<K: Into<Vec<u8>>, V: Into<Vec<u8>>>(&mut self, key: K, value: V) -> Result<(), DictSetError> {
+        let key = CString::new(key).map_err(|_| DictSetError::InvalidKey)?;
+        let value = CString::new(value).map_err(|_| DictSetError::InvalidValue)?;
+
+        self.set(&key, Some(&value), 0).map_err(|err| DictSetError::Other(err))
+    }
+
+    pub fn remove<K: Into<Vec<u8>>>(&mut self, key: K) -> Result<(), DictSetError> {
+        let key = CString::new(key).map_err(|_| DictSetError::InvalidKey)?;
+
+        self.set(&key, None, 0).map_err(|err| DictSetError::Other(err))
+    }
 }
 
 pub enum DictGetError {
     NotFound,
     InvalidKey,
+}
+
+pub enum DictSetError {
+    InvalidKey,
+    InvalidValue,
+    Other(Error),
 }
 
 impl<'d> Clone for Dictionary<'d> {

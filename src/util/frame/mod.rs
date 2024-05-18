@@ -11,7 +11,7 @@ pub mod flag;
 pub use self::flag::Flags;
 
 use crate::ffi::*;
-use crate::{Dictionary, DictionaryRef};
+use crate::Dictionary;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Packet {
