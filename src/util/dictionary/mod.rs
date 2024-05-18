@@ -1,3 +1,4 @@
+mod dictionary;
 mod get_many_iter;
 // pub use get_many_iter::DictionaryGetManyIter;
 
