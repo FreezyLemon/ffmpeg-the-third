@@ -4,8 +4,7 @@ use libc::c_int;
 
 use super::{Dictionary, DictionaryEntry};
 
-pub struct DictionaryGetManyIter<'d: 'e, 'e>
-{
+pub struct DictionaryGetManyIter<'d: 'e, 'e> {
     dict: Dictionary<'d>,
     key: CString,
     flags: c_int,
@@ -26,8 +25,7 @@ impl<'d: 'e, 'e> DictionaryGetManyIter<'d, 'e> {
 impl<'d: 'e, 'e> Iterator for DictionaryGetManyIter<'d, 'e> {
     type Item = DictionaryEntry<'e>;
 
-    fn next(&mut self) -> Option<Self::Item>
-    {
+    fn next(&mut self) -> Option<Self::Item> {
         match self.dict.get(&self.key, self.prev, self.flags) {
             Ok(entry) => {
                 self.prev = Some(entry);
