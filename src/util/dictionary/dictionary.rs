@@ -1,12 +1,11 @@
-mod get_many_iter;
-// pub use get_many_iter::DictionaryGetManyIter;
-
 use std::ffi::{CStr, CString};
 use std::marker::PhantomData;
 
 use libc::c_int;
 
 use crate::ffi::*;
+
+use super::DictionaryEntry;
 
 // Important note:
 // The header libavutil/dict.h defines `AVDictionary` to be a zero-sized struct, while
@@ -213,56 +212,4 @@ impl<'d: 'e, 'e> Iterator for DictionaryGetManyIter<'d, 'e> {
             Err(_) => None,
         }
     }
-}
-
-
-/// A read-only dictionary entry. This type is returned by <TODO>
-#[derive(Debug, Clone, Copy)]
-pub struct DictionaryEntry<'e> {
-    av_entry: &'e AVDictionaryEntry,
-}
-
-impl<'e> DictionaryEntry<'e> {
-    // TODO: Decide if we can assume UTF8-ness.
-
-    // We will assume that the key and value in the entry are valid and NUL-terminated because
-    // this should be enforced by FFmpeg.
-    // We will unconventionally *not* assume that they are valid UTF-8 because av_dict_set.
-
-    pub fn key_raw(&self) -> &CStr {
-        unsafe {
-            CStr::from_ptr(self.av_entry.key)
-        }
-    }
-    
-    pub fn value_raw(&self) -> &CStr {
-        unsafe {
-            CStr::from_ptr(self.av_entry.value)
-        }
-    }
-
-    pub fn key(&self) -> Option<&str> {
-        self.key_raw().to_str().ok()
-    }
-
-    pub fn value(&self) -> Option<&str> {
-        self.value_raw().to_str().ok()
-    }
-}
-
-mod iter;
-pub use self::iter::Iter;
-
-#[macro_export]
-macro_rules! dict {
-    ( $($key:expr => $value:expr),* $(,)*) => ({
-            let mut dict = ::ffmpeg::Dictionary::new();
-
-            $(
-                dict.set($key, $value);
-            )*
-
-            dict
-        }
-    );
 }
