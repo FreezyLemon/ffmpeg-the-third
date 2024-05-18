@@ -6,7 +6,7 @@ use std::str::from_utf8_unchecked;
 use super::Frame;
 use crate::ffi::AVFrameSideDataType::*;
 use crate::ffi::*;
-use crate::DictionaryRef;
+use crate::Dictionary;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
 
