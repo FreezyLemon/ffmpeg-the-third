@@ -988,15 +988,6 @@ fn main() {
             is_bitfield: false,
             is_global: false,
         })
-        .allowlist_file(r#".*[/\\]libavutil[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libavcodec[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libavformat[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libavdevice[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libavfilter[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libavresample[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libswscale[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libswresample[/\\].*"#)
-        .allowlist_file(r#".*[/\\]libpostproc[/\\].*"#)
         .opaque_type("__mingw_ldbl_type_t")
         .prepend_enum_name(false)
         .derive_eq(true)
@@ -1024,8 +1015,19 @@ fn main() {
         builder = builder.header(hwcontext_drm_header);
     }
 
+    create_enums(builder.clone(), &out_dir);
+
     // Finish the builder and generate the bindings.
     let bindings = builder
+        .allowlist_file(r#".*[/\\]libavutil[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libavcodec[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libavformat[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libavdevice[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libavfilter[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libavresample[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libswscale[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libswresample[/\\].*"#)
+        .allowlist_file(r#".*[/\\]libpostproc[/\\].*"#)
         .generate()
         // Unwrap the Result and panic on failure.
         .expect("Unable to generate bindings");
@@ -1034,4 +1036,35 @@ fn main() {
     bindings
         .write_to_file(out_dir.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+}
+
+fn create_enums(builder: bindgen::Builder, out_dir: &Path) {
+    let enum_builder = builder
+        .generate_comments(false)
+        .layout_tests(false)
+        .default_enum_style(EnumVariation::ModuleConsts)
+        .prepend_enum_name(false)
+        .c_naming(true)
+        .allowlist_type("enum_.*");
+
+    let mut text_buf = Vec::new();
+
+    let bindings = enum_builder
+        .generate()
+        .expect("Unable to generate enum bindings");
+
+    bindings
+        .write(Box::new(&mut text_buf))
+        // .write_to_file(out_dir.join("enum_bindings.rs"))
+        .expect("Couldn't write enum bindings!");
+
+    let mut bindings = 
+        String::from_utf8(text_buf).expect("non-utf8 in bindings");
+
+    bindings = bindings.replace("pub mod enum_", "impl_wrapper! {\npub mod enum_");
+    bindings = bindings.replace("pub mod", "pub mod");
+
+    println!("{bindings}");
+
+    std::fs::write(out_dir.join("enum_bindings.rs"), &bindings).unwrap();
 }
