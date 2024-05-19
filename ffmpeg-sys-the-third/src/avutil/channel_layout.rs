@@ -1,6 +1,5 @@
 use libc::c_int;
 
-use crate::AVChannel::*;
 use crate::*;
 use crate::{AVChannelLayout, AVChannelOrder};
 
@@ -78,9 +77,7 @@ impl fmt::Debug for AVChannelLayout {
                         &std::slice::from_raw_parts(self.u.map, self.nb_channels as usize),
                     );
                 }
-                // Not part of public API, but we have to exhaustively match
-                #[cfg(feature = "ffmpeg_7_0")]
-                AVChannelOrder::FF_CHANNEL_ORDER_NB => {}
+                _ => {} // unknown/unexpected enum value
             }
         }
 
@@ -106,36 +103,36 @@ impl fmt::Debug for AVChannelCustom {
 // The constants here should be kept up to date with libavutil/channel_layout.h.
 
 // Audio channel masks
-pub const AV_CH_FRONT_LEFT: u64 = 1 << (AV_CHAN_FRONT_LEFT as i32);
-pub const AV_CH_FRONT_RIGHT: u64 = 1 << (AV_CHAN_FRONT_RIGHT as i32);
-pub const AV_CH_FRONT_CENTER: u64 = 1 << (AV_CHAN_FRONT_CENTER as i32);
-pub const AV_CH_LOW_FREQUENCY: u64 = 1 << (AV_CHAN_LOW_FREQUENCY as i32);
-pub const AV_CH_BACK_LEFT: u64 = 1 << (AV_CHAN_BACK_LEFT as i32);
-pub const AV_CH_BACK_RIGHT: u64 = 1 << (AV_CHAN_BACK_RIGHT as i32);
-pub const AV_CH_FRONT_LEFT_OF_CENTER: u64 = 1 << (AV_CHAN_FRONT_LEFT_OF_CENTER as i32);
-pub const AV_CH_FRONT_RIGHT_OF_CENTER: u64 = 1 << (AV_CHAN_FRONT_RIGHT_OF_CENTER as i32);
-pub const AV_CH_BACK_CENTER: u64 = 1 << (AV_CHAN_BACK_CENTER as i32);
-pub const AV_CH_SIDE_LEFT: u64 = 1 << (AV_CHAN_SIDE_LEFT as i32);
-pub const AV_CH_SIDE_RIGHT: u64 = 1 << (AV_CHAN_SIDE_RIGHT as i32);
-pub const AV_CH_TOP_CENTER: u64 = 1 << (AV_CHAN_TOP_CENTER as i32);
-pub const AV_CH_TOP_FRONT_LEFT: u64 = 1 << (AV_CHAN_TOP_FRONT_LEFT as i32);
-pub const AV_CH_TOP_FRONT_CENTER: u64 = 1 << (AV_CHAN_TOP_FRONT_CENTER as i32);
-pub const AV_CH_TOP_FRONT_RIGHT: u64 = 1 << (AV_CHAN_TOP_FRONT_RIGHT as i32);
-pub const AV_CH_TOP_BACK_LEFT: u64 = 1 << (AV_CHAN_TOP_BACK_LEFT as i32);
-pub const AV_CH_TOP_BACK_CENTER: u64 = 1 << (AV_CHAN_TOP_BACK_CENTER as i32);
-pub const AV_CH_TOP_BACK_RIGHT: u64 = 1 << (AV_CHAN_TOP_BACK_RIGHT as i32);
-pub const AV_CH_STEREO_LEFT: u64 = 1 << (AV_CHAN_STEREO_LEFT as i32);
-pub const AV_CH_STEREO_RIGHT: u64 = 1 << (AV_CHAN_STEREO_RIGHT as i32);
-pub const AV_CH_WIDE_LEFT: u64 = 1 << (AV_CHAN_WIDE_LEFT as i32);
-pub const AV_CH_WIDE_RIGHT: u64 = 1 << (AV_CHAN_WIDE_RIGHT as i32);
-pub const AV_CH_SURROUND_DIRECT_LEFT: u64 = 1 << (AV_CHAN_SURROUND_DIRECT_LEFT as i32);
-pub const AV_CH_SURROUND_DIRECT_RIGHT: u64 = 1 << (AV_CHAN_SURROUND_DIRECT_RIGHT as i32);
-pub const AV_CH_LOW_FREQUENCY_2: u64 = 1 << (AV_CHAN_LOW_FREQUENCY_2 as i32);
-pub const AV_CH_TOP_SIDE_LEFT: u64 = 1 << (AV_CHAN_TOP_SIDE_LEFT as i32);
-pub const AV_CH_TOP_SIDE_RIGHT: u64 = 1 << (AV_CHAN_TOP_SIDE_RIGHT as i32);
-pub const AV_CH_BOTTOM_FRONT_CENTER: u64 = 1 << (AV_CHAN_BOTTOM_FRONT_CENTER as i32);
-pub const AV_CH_BOTTOM_FRONT_LEFT: u64 = 1 << (AV_CHAN_BOTTOM_FRONT_LEFT as i32);
-pub const AV_CH_BOTTOM_FRONT_RIGHT: u64 = 1 << (AV_CHAN_BOTTOM_FRONT_RIGHT as i32);
+pub const AV_CH_FRONT_LEFT: u64 = 1 << AVChannel::AV_CHAN_FRONT_LEFT.0;
+pub const AV_CH_FRONT_RIGHT: u64 = 1 << AVChannel::AV_CHAN_FRONT_RIGHT.0;
+pub const AV_CH_FRONT_CENTER: u64 = 1 << AVChannel::AV_CHAN_FRONT_CENTER.0;
+pub const AV_CH_LOW_FREQUENCY: u64 = 1 << AVChannel::AV_CHAN_LOW_FREQUENCY.0;
+pub const AV_CH_BACK_LEFT: u64 = 1 << AVChannel::AV_CHAN_BACK_LEFT.0;
+pub const AV_CH_BACK_RIGHT: u64 = 1 << AVChannel::AV_CHAN_BACK_RIGHT.0;
+pub const AV_CH_FRONT_LEFT_OF_CENTER: u64 = 1 << AVChannel::AV_CHAN_FRONT_LEFT_OF_CENTER.0;
+pub const AV_CH_FRONT_RIGHT_OF_CENTER: u64 = 1 << AVChannel::AV_CHAN_FRONT_RIGHT_OF_CENTER.0;
+pub const AV_CH_BACK_CENTER: u64 = 1 << AVChannel::AV_CHAN_BACK_CENTER.0;
+pub const AV_CH_SIDE_LEFT: u64 = 1 << AVChannel::AV_CHAN_SIDE_LEFT.0;
+pub const AV_CH_SIDE_RIGHT: u64 = 1 << AVChannel::AV_CHAN_SIDE_RIGHT.0;
+pub const AV_CH_TOP_CENTER: u64 = 1 << AVChannel::AV_CHAN_TOP_CENTER.0;
+pub const AV_CH_TOP_FRONT_LEFT: u64 = 1 << AVChannel::AV_CHAN_TOP_FRONT_LEFT.0;
+pub const AV_CH_TOP_FRONT_CENTER: u64 = 1 << AVChannel::AV_CHAN_TOP_FRONT_CENTER.0;
+pub const AV_CH_TOP_FRONT_RIGHT: u64 = 1 << AVChannel::AV_CHAN_TOP_FRONT_RIGHT.0;
+pub const AV_CH_TOP_BACK_LEFT: u64 = 1 << AVChannel::AV_CHAN_TOP_BACK_LEFT.0;
+pub const AV_CH_TOP_BACK_CENTER: u64 = 1 << AVChannel::AV_CHAN_TOP_BACK_CENTER.0;
+pub const AV_CH_TOP_BACK_RIGHT: u64 = 1 << AVChannel::AV_CHAN_TOP_BACK_RIGHT.0;
+pub const AV_CH_STEREO_LEFT: u64 = 1 << AVChannel::AV_CHAN_STEREO_LEFT.0;
+pub const AV_CH_STEREO_RIGHT: u64 = 1 << AVChannel::AV_CHAN_STEREO_RIGHT.0;
+pub const AV_CH_WIDE_LEFT: u64 = 1 << AVChannel::AV_CHAN_WIDE_LEFT.0;
+pub const AV_CH_WIDE_RIGHT: u64 = 1 << AVChannel::AV_CHAN_WIDE_RIGHT.0;
+pub const AV_CH_SURROUND_DIRECT_LEFT: u64 = 1 << AVChannel::AV_CHAN_SURROUND_DIRECT_LEFT.0;
+pub const AV_CH_SURROUND_DIRECT_RIGHT: u64 = 1 << AVChannel::AV_CHAN_SURROUND_DIRECT_RIGHT.0;
+pub const AV_CH_LOW_FREQUENCY_2: u64 = 1 << AVChannel::AV_CHAN_LOW_FREQUENCY_2.0;
+pub const AV_CH_TOP_SIDE_LEFT: u64 = 1 << AVChannel::AV_CHAN_TOP_SIDE_LEFT.0;
+pub const AV_CH_TOP_SIDE_RIGHT: u64 = 1 << AVChannel::AV_CHAN_TOP_SIDE_RIGHT.0;
+pub const AV_CH_BOTTOM_FRONT_CENTER: u64 = 1 << AVChannel::AV_CHAN_BOTTOM_FRONT_CENTER.0;
+pub const AV_CH_BOTTOM_FRONT_LEFT: u64 = 1 << AVChannel::AV_CHAN_BOTTOM_FRONT_LEFT.0;
+pub const AV_CH_BOTTOM_FRONT_RIGHT: u64 = 1 << AVChannel::AV_CHAN_BOTTOM_FRONT_RIGHT.0;
 
 // Audio channel layouts
 pub const AV_CH_LAYOUT_MONO: u64 = AV_CH_FRONT_CENTER;

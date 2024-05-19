@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str;
 
+use bindgen::EnumVariation;
+
 use bindgen::callbacks::{
     EnumVariantCustomBehavior, EnumVariantValue, IntKind, MacroParsingBehavior, ParseCallbacks,
 };
@@ -982,9 +984,10 @@ fn main() {
         // We need/want to implement Debug by hand for some types
         .no_debug("AVChannelLayout")
         .no_debug("AVChannelCustom")
-        // In FFmpeg 7.0+, this has bitfield-like behaviour,
-        // so cannot be a "rustified" enum
-        .newtype_enum("AVOptionType")
+        .default_enum_style(EnumVariation::NewType {
+            is_bitfield: false,
+            is_global: false,
+        })
         .allowlist_file(r#".*[/\\]libavutil[/\\].*"#)
         .allowlist_file(r#".*[/\\]libavcodec[/\\].*"#)
         .allowlist_file(r#".*[/\\]libavformat[/\\].*"#)
@@ -999,12 +1002,6 @@ fn main() {
         .derive_eq(true)
         .size_t_is_usize(true)
         .parse_callbacks(Box::new(Callbacks));
-
-    if cargo_feature_enabled("non_exhaustive_enums") {
-        builder = builder.rustified_non_exhaustive_enum(".*");
-    } else {
-        builder = builder.rustified_enum(".*");
-    }
 
     // The input headers we would like to generate
     // bindings for.
