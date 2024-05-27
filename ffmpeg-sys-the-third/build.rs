@@ -1047,24 +1047,57 @@ fn create_enums(builder: bindgen::Builder, out_dir: &Path) {
         .c_naming(true)
         .allowlist_type("enum_.*");
 
-    let mut text_buf = Vec::new();
+    let macro_text = String::from(r#"
+macro_rules! impl_wrapper {
+    // ignore non-pub modules
+    (mod $($t:tt)+) => {};
+    (
+        pub mod $enum:ident {
+            pub type Type = $type:ty;
+            $(pub const $variant_name:ident: Type = $variant_val:literal;)*
+        }
+    ) => {
+        pub enum $enum {
+            $($variant_name,)*
+        }
+
+        impl TryFrom<$type> for $enum {
+            type Error = ();
+
+            fn try_from(value: $type) -> Result<Self, Self::Error> {
+                match value {
+                    $($variant_val => Ok($enum::$variant_name),)*
+                    _ => Err(())
+                }
+            }
+        }
+    };
+}
+"#);
+
+    let mut bindings_text = Vec::new();
 
     let bindings = enum_builder
         .generate()
         .expect("Unable to generate enum bindings");
 
     bindings
-        .write(Box::new(&mut text_buf))
+        .write(Box::new(&mut bindings_text))
         // .write_to_file(out_dir.join("enum_bindings.rs"))
         .expect("Couldn't write enum bindings!");
 
     let mut bindings = 
-        String::from_utf8(text_buf).expect("non-utf8 in bindings");
+        String::from_utf8(bindings_text).expect("non-utf8 in bindings");
 
-    bindings = bindings.replace("pub mod enum_", "impl_wrapper! {\npub mod enum_");
-    bindings = bindings.replace("pub mod", "pub mod");
+    bindings = bindings.replace("pub mod enum__", "impl_wrapper! {\nmod __");
+    bindings = bindings.replace("pub mod enum_AV", "impl_wrapper! {\npub mod ");
+    bindings = bindings.replace("pub mod enum_", "impl_wrapper! {\npub mod ");
+    bindings = bindings.replace("}\n", "}\n}\n");
+    // bindings = bindings.replace("pub mod", "pub mod");
 
-    println!("{bindings}");
+    
+    let total_text = macro_text + &bindings;
+    println!("{total_text}");
 
-    std::fs::write(out_dir.join("enum_bindings.rs"), &bindings).unwrap();
+    std::fs::write(out_dir.join("enum_bindings.rs"), &total_text).unwrap();
 }

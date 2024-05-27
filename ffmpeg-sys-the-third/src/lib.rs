@@ -11,5 +11,10 @@ extern crate libc;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
+mod enums {
+    include!(concat!(env!("OUT_DIR"), "/enum_bindings.rs"));
+}
+
+
 mod avutil;
 pub use crate::avutil::*;
