@@ -25,6 +25,9 @@ rust-version = "1.61.0"
 # Disable doctests as a workaround for https://github.com/rust-lang/rust-bindgen/issues/1313
 doctest = false
 
+[dev-dependencies]
+libc = "0.2"
+
 [build-dependencies]
 cc = "1.0"
 pkg-config = "0.3"
