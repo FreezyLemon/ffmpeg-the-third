@@ -24,6 +24,7 @@ use crate::ffi::*;
 pub enum Dictionary<'dict> {
     Owned(DictionaryOwned),
     Borrowed(DictionaryBorrowed<'dict>),
+    BorrowedMut(DictionaryBorrowedMut<'dict>),
 }
 
 // Private structs
@@ -53,6 +54,12 @@ struct DictionaryBorrowed<'dict> {
     _marker: PhantomData<Option<&'dict AVDictionary>>,
 }
 
+#[derive(Debug, Clone)]
+struct DictionaryBorrowedMut<'dict> {
+    ptr: *mut AVDictionary,
+    _marker: PhantomData<Option<&'dict mut AVDictionary>>,
+}
+
 impl<'dict> Dictionary<'dict> {
     pub fn empty() -> Self {
         // SAFETY: Calling owned with a null pointer is valid
@@ -69,13 +76,30 @@ impl<'dict> Dictionary<'dict> {
         })
     }
 
-    pub fn borrowed<'borrow>(&self) -> Dictionary<'borrow>
+    /// TODO: Note lifetime considerations here
+    pub fn borrowed(ptr: *const AVDictionary) -> Self {
+        Self::Borrowed(DictionaryBorrowed {
+            ptr,
+            _marker: PhantomData,
+        })
+    }
+
+    /// TODO: Note lifetime considerations here
+    pub fn borrowed_mut(ptr: *mut AVDictionary) -> Self {
+        Self::BorrowedMut(DictionaryBorrowedMut {
+            ptr,
+            _marker: PhantomData,
+        })
+    }
+
+    pub fn to_borrowed<'borrow>(&self) -> Dictionary<'borrow>
     where
         'dict: 'borrow,
     {
         let ptr = match self {
-            Dictionary::Owned(dict) => dict.ptr as *const _,
-            Dictionary::Borrowed(dict) => dict.ptr,
+            Dictionary::Owned(d) => d.ptr as *const _,
+            Dictionary::Borrowed(d) => d.ptr,
+            Dictionary::BorrowedMut(d) => d.ptr as *const _,
         };
 
         Dictionary::Borrowed(DictionaryBorrowed {
@@ -88,6 +112,7 @@ impl<'dict> Dictionary<'dict> {
         match self {
             Self::Owned(d) => d.ptr,
             Self::Borrowed(d) => d.ptr,
+            Self::BorrowedMut(d) => d.ptr,
         }
     }
 
@@ -139,7 +164,7 @@ impl<'dict> Dictionary<'dict> {
             Err(_) => return Err(DictGetError::InvalidKey),
         };
 
-        Ok(DictionaryGetManyIter::new(self.borrowed(), key, 0))
+        Ok(DictionaryGetManyIter::new(self.to_borrowed(), key, 0))
     }
 
     // pub fn get<K: Into<Vec<u8>>>(&self, key: K, )

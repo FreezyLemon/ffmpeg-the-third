@@ -141,8 +141,17 @@ impl Frame {
     }
 
     #[inline]
-    pub fn metadata(&self) -> DictionaryRef {
-        unsafe { DictionaryRef::wrap((*self.as_ptr()).metadata) }
+    pub fn metadata<'md>(&'md self) -> Dictionary<'md> {
+        unsafe {
+            Dictionary::borrowed((*self.as_ptr()).metadata)
+        }
+    }
+
+    #[inline]
+    pub fn metadata_mut<'md>(&'md mut self) -> Dictionary<'md> {
+        unsafe {
+            Dictionary::borrowed_mut((*self.as_mut_ptr()).metadata)
+        }
     }
 
     #[inline]
