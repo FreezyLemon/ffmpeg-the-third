@@ -21,6 +21,9 @@ pub use self::capabilities::Capabilities;
 
 pub mod codec;
 
+#[cfg(feature = "ffmpeg_7_1")]
+pub mod config;
+
 pub mod parameters;
 pub use self::parameters::Parameters;
 
