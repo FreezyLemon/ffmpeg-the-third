@@ -27,7 +27,7 @@ version = "0.25"
 optional = true
 
 [dependencies.ffmpeg-sys-the-third]
-version = "2.0.0"
+version = "2.1.0"
 default-features = false
 path = "ffmpeg-sys-the-third"
 
