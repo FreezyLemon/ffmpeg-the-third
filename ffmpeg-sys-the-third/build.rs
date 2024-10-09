@@ -858,6 +858,7 @@ fn check_features(include_paths: &[PathBuf]) {
         ("ffmpeg_6_0", 60, 3),
         ("ffmpeg_6_1", 60, 31),
         ("ffmpeg_7_0", 61, 3),
+        ("ffmpeg_7_1", 61, 19),
     ];
 
     let lavc_version = *versions
