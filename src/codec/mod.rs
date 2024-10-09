@@ -21,6 +21,8 @@ pub use self::capabilities::Capabilities;
 
 pub mod codec;
 
+pub mod config;
+
 pub mod parameters;
 pub use self::parameters::Parameters;
 
