@@ -13,48 +13,38 @@ pub struct Audio {
 }
 
 impl Audio {
-    pub unsafe fn new(codec: Codec) -> Audio {
+    pub fn new(codec: Codec) -> Audio {
         Audio { codec }
     }
-}
 
-impl Audio {
     pub fn rates(&self) -> Option<RateIter> {
-        unsafe {
-            if (*self.as_ptr()).supported_samplerates.is_null() {
-                None
-            } else {
-                Some(RateIter::new((*self.codec.as_ptr()).supported_samplerates))
-            }
+        if self.av_codec.supported_samplerates.is_null() {
+            None
+        } else {
+            Some(RateIter::new(self.av_codec.supported_samplerates))
         }
     }
 
     pub fn formats(&self) -> Option<FormatIter> {
-        unsafe {
-            if (*self.codec.as_ptr()).sample_fmts.is_null() {
-                None
-            } else {
-                Some(FormatIter::new((*self.codec.as_ptr()).sample_fmts))
-            }
+        if self.av_codec.sample_fmts.is_null() {
+            None
+        } else {
+            Some(FormatIter::new(self.av_codec.sample_fmts))
         }
     }
 
     #[cfg(not(feature = "ffmpeg_7_0"))]
     pub fn channel_layouts(&self) -> Option<ChannelLayoutMaskIter> {
-        unsafe {
-            if (*self.codec.as_ptr()).channel_layouts.is_null() {
-                None
-            } else {
-                Some(ChannelLayoutMaskIter::new(
-                    (*self.codec.as_ptr()).channel_layouts,
-                ))
-            }
+        if self.av_codec.channel_layouts.is_null() {
+            None
+        } else {
+            Some(ChannelLayoutMaskIter::new(self.avcodec.channel_layouts))
         }
     }
 
     #[cfg(feature = "ffmpeg_5_1")]
     pub fn ch_layouts(&self) -> Option<ChannelLayoutIter> {
-        unsafe { ChannelLayoutIter::from_raw((*self.codec.as_ptr()).ch_layouts) }
+        unsafe { ChannelLayoutIter::from_raw(self.av_codec.ch_layouts) }
     }
 }
 

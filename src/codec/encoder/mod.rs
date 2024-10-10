@@ -37,25 +37,16 @@ pub fn new() -> Encoder {
 
 pub fn find(id: Id) -> Option<Codec> {
     unsafe {
-        let ptr = avcodec_find_encoder(id.into()) as *mut AVCodec;
-
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Codec::wrap(ptr))
-        }
+        let ptr = avcodec_find_encoder(id.into());
+        Codec::from_ptr(ptr)
     }
 }
 
 pub fn find_by_name(name: &str) -> Option<Codec> {
     unsafe {
         let name = CString::new(name).unwrap();
-        let ptr = avcodec_find_encoder_by_name(name.as_ptr()) as *mut AVCodec;
+        let ptr = avcodec_find_encoder_by_name(name.as_ptr());
 
-        if ptr.is_null() {
-            None
-        } else {
-            Some(Codec::wrap(ptr))
-        }
+        Codec::from_ptr(ptr)
     }
 }

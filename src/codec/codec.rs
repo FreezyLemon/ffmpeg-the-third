@@ -7,27 +7,39 @@ use crate::{media, Error};
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Codec {
-    ptr: *mut AVCodec,
+    // pub(super) so that other Codec wrappers can use the field
+    pub(super) av_codec: &'static AVCodec,
 }
 
+// SAFETY: We ensure that the data being pointed to by fields on
+//         `AVCodec` are never written to.
 unsafe impl Send for Codec {}
 unsafe impl Sync for Codec {}
 
 impl Codec {
-    pub unsafe fn wrap(ptr: *mut AVCodec) -> Self {
-        Codec { ptr }
+    /// Create a new [`Codec`] from a pointer to an [`AVCodec`]. Returns `None` if
+    /// the pointer is null.
+    /// 
+    /// # Safety
+    /// 
+    /// Callers must ensure that `ptr` is either null or:
+    /// - Properly aligned for `AVCodec`
+    /// - Valid for read accesses
+    /// - pointing to initialized memory and
+    /// - pointing to a static instance of `AVCodec`, i.e. the memory will live
+    ///   and remain unmutated for the entire lifetime of the program.
+    /// 
+    /// The easiest way to ensure this is using `const *AVCodec`
+    /// pointers returned by the FFmpeg API.
+    pub unsafe fn from_ptr(ptr: *const AVCodec) -> Option<Self> {
+        unsafe { ptr.as_ref().map(|av_codec| Self { av_codec }) }
     }
 
-    pub unsafe fn as_ptr(&self) -> *const AVCodec {
-        self.ptr as *const _
+    /// Returns a raw pointer to the underlying [`AVCodec`] instance.
+    pub fn as_ptr(&self) -> *const AVCodec {
+        self.av_codec as *const _
     }
 
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVCodec {
-        self.ptr
-    }
-}
-
-impl Codec {
     pub fn is_encoder(&self) -> bool {
         unsafe { av_codec_is_encoder(self.as_ptr()) != 0 }
     }
@@ -37,12 +49,12 @@ impl Codec {
     }
 
     pub fn name(&self) -> &str {
-        unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).name).to_bytes()) }
+        unsafe { from_utf8_unchecked(CStr::from_ptr(self.av_codec.name).to_bytes()) }
     }
 
     pub fn description(&self) -> &str {
+        let long_name = self.av_codec.long_name;
         unsafe {
-            let long_name = (*self.as_ptr()).long_name;
             if long_name.is_null() {
                 ""
             } else {
@@ -52,11 +64,11 @@ impl Codec {
     }
 
     pub fn medium(&self) -> media::Type {
-        unsafe { media::Type::from((*self.as_ptr()).type_) }
+        self.av_codec.type_.into()
     }
 
     pub fn id(&self) -> Id {
-        unsafe { Id::from((*self.as_ptr()).id) }
+        self.av_codec.id.into()
     }
 
     pub fn is_video(&self) -> bool {
@@ -64,12 +76,10 @@ impl Codec {
     }
 
     pub fn video(self) -> Result<Video, Error> {
-        unsafe {
-            if self.medium() == media::Type::Video {
-                Ok(Video::new(self))
-            } else {
-                Err(Error::InvalidData)
-            }
+        if self.medium() == media::Type::Video {
+            Ok(Video::new(self))
+        } else {
+            Err(Error::InvalidData)
         }
     }
 
@@ -78,30 +88,26 @@ impl Codec {
     }
 
     pub fn audio(self) -> Result<Audio, Error> {
-        unsafe {
-            if self.medium() == media::Type::Audio {
-                Ok(Audio::new(self))
-            } else {
-                Err(Error::InvalidData)
-            }
+        if self.medium() == media::Type::Audio {
+            Ok(Audio::new(self))
+        } else {
+            Err(Error::InvalidData)
         }
     }
 
     pub fn max_lowres(&self) -> i32 {
-        unsafe { (*self.as_ptr()).max_lowres.into() }
+        self.av_codec.max_lowres.into()
     }
 
     pub fn capabilities(&self) -> Capabilities {
-        unsafe { Capabilities::from_bits_truncate((*self.as_ptr()).capabilities as u32) }
+        Capabilities::from_bits_truncate(self.av_codec.capabilities as u32)
     }
 
     pub fn profiles(&self) -> Option<ProfileIter> {
-        unsafe {
-            if (*self.as_ptr()).profiles.is_null() {
-                None
-            } else {
-                Some(ProfileIter::new(self.id(), (*self.as_ptr()).profiles))
-            }
+        if self.av_codec.profiles.is_null() {
+            None
+        } else {
+            Some(ProfileIter::new(self.id(), self.av_codec.profiles))
         }
     }
 }

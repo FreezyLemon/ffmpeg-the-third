@@ -10,29 +10,23 @@ pub struct Video {
 }
 
 impl Video {
-    pub unsafe fn new(codec: Codec) -> Video {
+    pub fn new(codec: Codec) -> Video {
         Video { codec }
     }
-}
 
-impl Video {
     pub fn rates(&self) -> Option<RateIter> {
-        unsafe {
-            if (*self.codec.as_ptr()).supported_framerates.is_null() {
-                None
-            } else {
-                Some(RateIter::new((*self.codec.as_ptr()).supported_framerates))
-            }
+        if self.av_codec.supported_framerates.is_null() {
+            None
+        } else {
+            Some(RateIter::new(self.av_codec.supported_framerates))
         }
     }
 
     pub fn formats(&self) -> Option<FormatIter> {
-        unsafe {
-            if (*self.codec.as_ptr()).pix_fmts.is_null() {
-                None
-            } else {
-                Some(FormatIter::new((*self.codec.as_ptr()).pix_fmts))
-            }
+        if self.av_codec.pix_fmts.is_null() {
+            None
+        } else {
+            Some(FormatIter::new(self.av_codec.pix_fmts))
         }
     }
 }
