@@ -1,8 +1,14 @@
 use std::ops::Deref;
 
 use super::codec::Codec;
-use crate::ffi::*;
-use crate::{format, Rational};
+use crate::codec::config::{ColorSpaceIter, ColorRangeIter};
+use crate::codec::config::IterFromRef;
+
+pub use crate::codec::config::FrameRateIter as RateIter;
+pub use crate::codec::config::PixelFormatIter as FormatIter;
+
+#[cfg(feature = "ffmpeg_7_1")]
+use crate::codec::config::Supported;
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Video {
@@ -16,24 +22,78 @@ impl Video {
 }
 
 impl Video {
+    /// Checks if the given frame rate is supported by this video codec.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supports_rate(&self, rate: crate::Rational) -> bool {
+        self.supported_rates().supports(rate)
+    }
+
+    /// Returns a [`Supported`] representing the supported frame rates.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supported_rates(&self) -> Supported<RateIter> {
+        use crate::codec::config::supported_frame_rates;
+
+        supported_frame_rates(&self, None).expect("video codec returns supported frame rates")
+    }
+
     pub fn rates(&self) -> Option<RateIter> {
         unsafe {
-            if (*self.codec.as_ptr()).supported_framerates.is_null() {
-                None
-            } else {
-                Some(RateIter::new((*self.codec.as_ptr()).supported_framerates))
-            }
+            (*self.codec.as_ptr())
+                .supported_framerates
+                .as_ref()
+                .map(|fr| RateIter::from_ref(fr))
         }
+    }
+
+    /// Checks if the given pixel format is supported by this video codec.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supports_format(&self, format: crate::format::Pixel) -> bool {
+        self.supported_formats().supports(format)
+    }
+
+    /// Returns a [`Supported`] representing the supported pixel formats.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supported_formats(&self) -> Supported<FormatIter> {
+        use crate::codec::config::supported_pixel_formats;
+
+        supported_pixel_formats(self, None).expect("video codec returns supported pixel formats")
     }
 
     pub fn formats(&self) -> Option<FormatIter> {
         unsafe {
-            if (*self.codec.as_ptr()).pix_fmts.is_null() {
-                None
-            } else {
-                Some(FormatIter::new((*self.codec.as_ptr()).pix_fmts))
-            }
+            (*self.codec.as_ptr())
+                .pix_fmts
+                .as_ref()
+                .map(|pf| FormatIter::from_ref(pf))
         }
+    }
+
+    /// Checks if the given color space is supported by this video codec.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supports_color_space(&self, space: crate::color::Space) -> bool {
+        self.supported_color_spaces().supports(space)
+    }
+
+    /// Returns a [`Supported`] representing the supported color spaces.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supported_color_spaces(&self) -> Supported<ColorSpaceIter> {
+        use crate::codec::config::supported_color_spaces;
+
+        supported_color_spaces(self, None).expect("video codec returns supported color spaces")
+    }
+
+    /// Checks if the given color range is supported by this video codec.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supports_color_range(&self, range: crate::color::Range) -> bool {
+        self.supported_color_ranges().supports(range)
+    }
+
+    /// Returns a [`Supported`] representing the supported color ranges.
+    #[cfg(feature = "ffmpeg_7_1")]
+    pub fn supported_color_ranges(&self) -> Supported<ColorRangeIter> {
+        use crate::codec::config::supported_color_ranges;
+
+        supported_color_ranges(self, None).expect("video codec returns supported color ranges")
     }
 }
 
@@ -42,59 +102,5 @@ impl Deref for Video {
 
     fn deref(&self) -> &Self::Target {
         &self.codec
-    }
-}
-
-pub struct RateIter {
-    ptr: *const AVRational,
-}
-
-impl RateIter {
-    pub fn new(ptr: *const AVRational) -> Self {
-        RateIter { ptr }
-    }
-}
-
-impl Iterator for RateIter {
-    type Item = Rational;
-
-    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        unsafe {
-            if (*self.ptr).num == 0 && (*self.ptr).den == 0 {
-                return None;
-            }
-
-            let rate = (*self.ptr).into();
-            self.ptr = self.ptr.offset(1);
-
-            Some(rate)
-        }
-    }
-}
-
-pub struct FormatIter {
-    ptr: *const AVPixelFormat,
-}
-
-impl FormatIter {
-    pub fn new(ptr: *const AVPixelFormat) -> Self {
-        FormatIter { ptr }
-    }
-}
-
-impl Iterator for FormatIter {
-    type Item = format::Pixel;
-
-    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        unsafe {
-            if *self.ptr == AVPixelFormat::AV_PIX_FMT_NONE {
-                return None;
-            }
-
-            let format = (*self.ptr).into();
-            self.ptr = self.ptr.offset(1);
-
-            Some(format)
-        }
     }
 }

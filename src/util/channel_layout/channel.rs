@@ -151,7 +151,7 @@ impl From<AVChannel> for Channel {
             AV_CHAN_BOTTOM_FRONT_CENTER => BottomFrontCenter,
             AV_CHAN_BOTTOM_FRONT_LEFT => BottomFrontLeft,
             AV_CHAN_BOTTOM_FRONT_RIGHT => BottomFrontRight,
-            
+
             #[cfg(feature = "ffmpeg_7_1")]
             AV_CHAN_SIDE_SURROUND_LEFT => SideSurroundLeft,
             #[cfg(feature = "ffmpeg_7_1")]
