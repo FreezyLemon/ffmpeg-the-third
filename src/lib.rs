@@ -16,6 +16,8 @@ extern crate serde;
 
 pub use crate::sys as ffi;
 
+pub(crate) mod macros;
+
 #[macro_use]
 pub mod util;
 pub use crate::util::channel_layout::{self, ChannelLayoutMask};
