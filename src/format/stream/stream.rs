@@ -112,11 +112,14 @@ impl<'a> Iterator for SideDataIter<'a> {
 
             self.current += 1;
 
-            Some(packet::SideData::wrap(
-                (*self.stream.as_ptr())
-                    .side_data
-                    .offset((self.current - 1) as isize),
-            ))
+            Some(
+                packet::SideData::from_ptr(
+                    (*self.stream.as_ptr())
+                        .side_data
+                        .offset((self.current - 1) as isize),
+                )
+                .expect("side data ptr is non-null"),
+            )
         }
     }
 

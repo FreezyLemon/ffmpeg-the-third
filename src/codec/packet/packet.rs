@@ -310,9 +310,10 @@ impl<'a> Iterator for SideDataIter<'a> {
                 None
             } else {
                 self.cur += 1;
-                Some(SideData::wrap(
-                    (*self.ptr).side_data.offset((self.cur - 1) as isize),
-                ))
+                Some(
+                    SideData::from_ptr((*self.ptr).side_data.offset((self.cur - 1) as isize))
+                        .unwrap(),
+                )
             }
         }
     }
