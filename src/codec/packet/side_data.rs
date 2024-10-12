@@ -1,9 +1,8 @@
-use std::marker::PhantomData;
 use std::slice;
 
-use super::Packet;
 use crate::ffi::AVPacketSideDataType::*;
 use crate::ffi::*;
+use crate::macros::impl_ref_wrapper;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
 
@@ -203,26 +202,9 @@ impl From<Type> for AVPacketSideDataType {
     }
 }
 
-pub struct SideData<'a> {
-    ptr: *mut AVPacketSideData,
+impl_ref_wrapper!(SideData, AVPacketSideData);
 
-    _marker: PhantomData<&'a Packet>,
-}
-
-impl<'a> SideData<'a> {
-    pub unsafe fn wrap(ptr: *mut AVPacketSideData) -> Self {
-        SideData {
-            ptr,
-            _marker: PhantomData,
-        }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVPacketSideData {
-        self.ptr as *const _
-    }
-}
-
-impl<'a> SideData<'a> {
+impl<'sd> SideData<'sd> {
     pub fn kind(&self) -> Type {
         unsafe { Type::from((*self.as_ptr()).type_) }
     }
