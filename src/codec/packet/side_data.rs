@@ -1,7 +1,10 @@
+use std::iter::FusedIterator;
+use std::marker::PhantomData;
 use std::slice;
 
 use crate::ffi::AVPacketSideDataType::*;
 use crate::ffi::*;
+use crate::macros::impl_ffmpeg_list_iterator;
 use crate::macros::impl_ref_wrapper;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
@@ -207,3 +210,5 @@ impl<'sd> SideData<'sd> {
         unsafe { slice::from_raw_parts((*self.as_ptr()).data, (*self.as_ptr()).size as usize) }
     }
 }
+
+impl_ffmpeg_list_iterator!(SideDataIter, AVPacketSideData, SideData<'a>);

@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
 use std::mem;
 use std::slice;
 
-use super::{Borrow, Flags, Mut, Ref, SideData};
+use super::side_data::SideDataIter;
+use super::{Borrow, Flags, Mut, Ref};
 use crate::ffi::*;
 use crate::{format, Error, Rational};
 use libc::c_int;
@@ -174,9 +174,8 @@ impl Packet {
         self.0.convergence_duration as isize
     }
 
-    #[inline]
     pub fn side_data(&self) -> SideDataIter {
-        SideDataIter::new(&self.0)
+        unsafe { SideDataIter::new((*self.as_ptr()).side_data, (*self.as_ptr()).side_data_elems) }
     }
 
     #[inline]
@@ -283,48 +282,3 @@ impl Drop for Packet {
         }
     }
 }
-
-pub struct SideDataIter<'a> {
-    ptr: *const AVPacket,
-    cur: c_int,
-
-    _marker: PhantomData<&'a Packet>,
-}
-
-impl<'a> SideDataIter<'a> {
-    pub fn new(ptr: *const AVPacket) -> Self {
-        SideDataIter {
-            ptr,
-            cur: 0,
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<'a> Iterator for SideDataIter<'a> {
-    type Item = SideData<'a>;
-
-    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        unsafe {
-            if self.cur >= (*self.ptr).side_data_elems {
-                None
-            } else {
-                self.cur += 1;
-                Some(
-                    SideData::from_ptr((*self.ptr).side_data.offset((self.cur - 1) as isize))
-                        .unwrap(),
-                )
-            }
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        unsafe {
-            let length = (*self.ptr).side_data_elems as usize;
-
-            (length - self.cur as usize, Some(length - self.cur as usize))
-        }
-    }
-}
-
-impl<'a> ExactSizeIterator for SideDataIter<'a> {}

@@ -1,9 +1,9 @@
 use super::Disposition;
-use crate::codec::{self, packet};
+use crate::codec;
 use crate::ffi::*;
 use crate::format::context::common::Context;
+use crate::packet::side_data::SideDataIter;
 use crate::{DictionaryRef, Discard, Rational};
-use libc::c_int;
 
 #[derive(Debug)]
 pub struct Stream<'a> {
@@ -66,7 +66,7 @@ impl<'a> Stream<'a> {
     }
 
     pub fn side_data(&self) -> SideDataIter {
-        SideDataIter::new(self)
+        unsafe { SideDataIter::new((*self.as_ptr()).side_data, (*self.as_ptr()).nb_side_data) }
     }
 
     pub fn rate(&self) -> Rational {
@@ -89,50 +89,3 @@ impl<'a> PartialEq for Stream<'a> {
 }
 
 impl<'a> Eq for Stream<'a> {}
-
-pub struct SideDataIter<'a> {
-    stream: &'a Stream<'a>,
-    current: c_int,
-}
-
-impl<'a> SideDataIter<'a> {
-    pub fn new<'sd, 's: 'sd>(stream: &'s Stream) -> SideDataIter<'sd> {
-        SideDataIter { stream, current: 0 }
-    }
-}
-
-impl<'a> Iterator for SideDataIter<'a> {
-    type Item = packet::SideData<'a>;
-
-    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        unsafe {
-            if self.current >= (*self.stream.as_ptr()).nb_side_data {
-                return None;
-            }
-
-            self.current += 1;
-
-            Some(
-                packet::SideData::from_ptr(
-                    (*self.stream.as_ptr())
-                        .side_data
-                        .offset((self.current - 1) as isize),
-                )
-                .expect("side data ptr is non-null"),
-            )
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        unsafe {
-            let length = (*self.stream.as_ptr()).nb_side_data as usize;
-
-            (
-                length - self.current as usize,
-                Some(length - self.current as usize),
-            )
-        }
-    }
-}
-
-impl<'a> ExactSizeIterator for SideDataIter<'a> {}
