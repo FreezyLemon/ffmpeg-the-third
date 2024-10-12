@@ -42,29 +42,25 @@ impl Context {
         unsafe { (*self.as_ptr()).nb_streams }
     }
 
-    pub fn stream<'a, 'b>(&'a self, index: usize) -> Option<Stream<'b>>
-    where
-        'a: 'b,
-    {
+    pub fn stream<'c>(&'c self, index: u32) -> Option<Stream<'c>> {
+        if index >= self.nb_streams() {
+            return None;
+        }
+
         unsafe {
-            if index >= self.nb_streams() as usize {
-                None
-            } else {
-                Some(Stream::wrap(self, index))
-            }
+            let stream_ptr = (*(*self.as_ptr()).streams).add(index as usize);
+            Some(Stream::from_ptr(stream_ptr).expect("stream ptr is non-null"))
         }
     }
 
-    pub fn stream_mut<'a, 'b>(&'a mut self, index: usize) -> Option<StreamMut<'b>>
-    where
-        'a: 'b,
-    {
+    pub fn stream_mut<'c>(&'c mut self, index: u32) -> Option<StreamMut<'c>> {
+        if index >= self.nb_streams() {
+            return None;
+        }
+
         unsafe {
-            if index >= self.nb_streams() as usize {
-                None
-            } else {
-                Some(StreamMut::wrap(self, index))
-            }
+            let stream_ptr = (*(*self.as_ptr()).streams).add(index as usize);
+            Some(StreamMut::from_ptr(stream_ptr).expect("stream ptr is non-null"))
         }
     }
 
@@ -161,10 +157,7 @@ impl<'a> Best<'a> {
         self
     }
 
-    pub fn best<'b>(self, kind: media::Type) -> Option<Stream<'b>>
-    where
-        'a: 'b,
-    {
+    pub fn best(self, kind: media::Type) -> Option<Stream<'a>> {
         unsafe {
             let decoder = ptr::null_mut();
             let index = av_find_best_stream(
@@ -176,10 +169,9 @@ impl<'a> Best<'a> {
                 0,
             );
 
-            if index >= 0 {
-                Some(Stream::wrap(self.context, index as usize))
-            } else {
-                None
+            match u32::try_from(index) {
+                Ok(index) => self.context.stream(index),
+                Err(_) => None,
             }
         }
     }
@@ -187,7 +179,7 @@ impl<'a> Best<'a> {
 
 pub struct StreamIter<'a> {
     context: &'a Context,
-    current: c_uint,
+    current: u32,
 }
 
 impl<'a> StreamIter<'a> {
@@ -228,14 +220,12 @@ impl<'a> Iterator for StreamIter<'a> {
     type Item = Stream<'a>;
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        unsafe {
-            if self.current >= self.context.nb_streams() {
-                return None;
-            }
-
-            self.current += 1;
-
-            Some(Stream::wrap(self.context, (self.current - 1) as usize))
+        match self.context.stream(self.current) {
+            Some(s) => {
+                self.current += 1;
+                Some(s)
+            },
+            None => None,
         }
     }
 
@@ -253,7 +243,7 @@ impl<'a> ExactSizeIterator for StreamIter<'a> {}
 
 pub struct StreamIterMut<'a> {
     context: &'a mut Context,
-    current: c_uint,
+    current: u32,
 }
 
 impl<'a> StreamIterMut<'a> {
@@ -269,16 +259,12 @@ impl<'a> Iterator for StreamIterMut<'a> {
     type Item = StreamMut<'a>;
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        if self.current >= self.context.nb_streams() {
-            return None;
-        }
-        self.current += 1;
-
-        unsafe {
-            Some(StreamMut::wrap(
-                mem::transmute_copy(&self.context),
-                (self.current - 1) as usize,
-            ))
+        match self.context.stream_mut(self.current) {
+            Some(s) => {
+                self.current += 1;
+                Some(s)
+            },
+            None => None,
         }
     }
 

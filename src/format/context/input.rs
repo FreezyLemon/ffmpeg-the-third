@@ -165,9 +165,9 @@ impl<'a> Iterator for PacketIter<'a> {
         let mut packet = Packet::empty();
 
         match packet.read(self.context) {
-            Ok(..) => unsafe {
+            Ok(..) => {
                 Some(Ok((
-                    Stream::wrap(mem::transmute_copy(&self.context), packet.stream()),
+                    self.context.stream(packet.stream() as u32).unwrap(),
                     packet,
                 )))
             },
