@@ -1,40 +1,108 @@
 use std::ffi::CString;
-use std::mem;
-use std::ops::{Deref, DerefMut};
+use std::path::Path;
 
-use super::common::Context;
-use super::destructor;
-use crate::ffi::*;
+use crate::macros::{impl_getter_simple, impl_mut_wrapper, impl_owned_wrapper, impl_ref_wrapper};
 use crate::util::range::Range;
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::Codec;
+use crate::{ffi::*, Dictionary};
 use crate::{format, Error, Packet, Stream};
 
-pub struct Input {
-    ptr: *mut AVFormatContext,
-    ctx: Context,
+impl_owned_wrapper!(Input, AVFormatContext);
+
+impl Drop for Input {
+    fn drop(&mut self) {
+        unsafe {
+            avformat_close_input(&mut self.as_mut_ptr());
+        }
+    }
 }
+
+impl_ref_wrapper!(InputRef, AVFormatContext);
+impl_mut_wrapper!(InputMut, AVFormatContext);
 
 unsafe impl Send for Input {}
 
-impl Input {
-    pub unsafe fn wrap(ptr: *mut AVFormatContext) -> Self {
-        Input {
-            ptr,
-            ctx: Context::wrap(ptr, destructor::Mode::Input),
+pub struct InputBuilder<'d> {
+    path: CString,
+    context: Option<Input>,
+    force_format: Option<format::Input>,
+    options: Option<Dictionary<'d>>,
+}
+
+impl<'d> InputBuilder<'d> {
+    pub fn context(&mut self, context: Input) -> &mut Self {
+        self.context = Some(context);
+        self
+    }
+
+    pub fn force_format(&mut self, format: format::Input) -> &mut Self {
+        self.force_format = Some(format);
+        self
+    }
+
+    pub fn options(&mut self, options: Dictionary<'d>) -> &mut Self {
+        self.options = Some(options);
+        self
+    }
+
+    pub fn open(self) -> Result<Input, Error> {
+        use std::ptr::{null, null_mut};
+
+        let mut ctx = self.context.map_or(null_mut(), |mut ctx| ctx.as_mut_ptr());
+        let path = self.path.as_ptr();
+
+        unsafe {
+            let fmt = self.force_format.map_or(null(), |fmt| fmt.as_ptr());
+            let mut opts = self.options.map_or(null_mut(), |dict| dict.disown());
+
+            let res = avformat_open_input(&mut ctx, path, fmt, &mut opts);
+
+            // TODO: Return dictionary (or contained information) to user somehow
+            let _ = Dictionary::own(opts);
+
+            if res != 0 {
+                return Err(Error::from(res));
+            }
+
+            let res = avformat_find_stream_info(ctx, std::ptr::null_mut());
+            if res != 0 {
+                avformat_close_input(&mut ctx);
+                return Err(Error::from(res));
+            }
+
+            Ok(Input::from_ptr(ctx))
         }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVFormatContext {
-        self.ptr as *const _
-    }
-
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVFormatContext {
-        self.ptr
     }
 }
 
 impl Input {
+    pub fn new<'d, P: AsRef<Path>>(path: P) -> InputBuilder<'d> {
+        let path = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+
+        InputBuilder {
+            path,
+            context: None,
+            force_format: None,
+            options: None,
+        }
+    }
+
+    pub fn new_prepared<'d, P: AsRef<Path>>(self, path: P) -> InputBuilder<'d> {
+        let path = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+
+        InputBuilder {
+            path,
+            context: Some(self),
+            force_format: None,
+            options: None,
+        }
+    }
+
+    unsafe fn from_ptr(ptr: *mut AVFormatContext) -> Self {
+        Self(std::ptr::NonNull::new(ptr).unwrap())
+    }
+
     pub fn format(&self) -> format::Input {
         unsafe { format::Input::wrap((*self.as_ptr()).iformat as *mut AVInputFormat) }
     }
@@ -91,9 +159,7 @@ impl Input {
         }
     }
 
-    pub fn probe_score(&self) -> i32 {
-        unsafe { (*self.as_ptr()).probe_score }
-    }
+    impl_getter_simple!(probe_score() -> i32; probe_score);
 
     pub fn packets(&mut self) -> PacketIter {
         PacketIter::new(self)
@@ -134,20 +200,6 @@ impl Input {
     }
 }
 
-impl Deref for Input {
-    type Target = Context;
-
-    fn deref(&self) -> &Self::Target {
-        &self.ctx
-    }
-}
-
-impl DerefMut for Input {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.ctx
-    }
-}
-
 pub struct PacketIter<'a> {
     context: &'a mut Input,
 }
@@ -165,12 +217,10 @@ impl<'a> Iterator for PacketIter<'a> {
         let mut packet = Packet::empty();
 
         match packet.read(self.context) {
-            Ok(..) => {
-                Some(Ok((
-                    self.context.stream(packet.stream() as u32).unwrap(),
-                    packet,
-                )))
-            },
+            Ok(..) => Some(Ok((
+                self.context.stream(packet.stream() as u32).unwrap(),
+                packet,
+            ))),
 
             Err(Error::Eof) => None,
 

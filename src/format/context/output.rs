@@ -1,39 +1,89 @@
 use std::ffi::CString;
 use std::mem::size_of;
-use std::ops::{Deref, DerefMut};
+use std::path::Path;
 use std::ptr;
 
-use super::common::Context;
-use super::destructor;
 use crate::codec::traits;
 use crate::ffi::*;
+use crate::macros::impl_owned_wrapper;
 use crate::{format, ChapterMut, Dictionary, Error, Rational, StreamMut};
 
-pub struct Output {
-    ptr: *mut AVFormatContext,
-    ctx: Context,
-}
+impl_owned_wrapper!(Output, AVFormatContext);
 
 unsafe impl Send for Output {}
 
-impl Output {
-    pub unsafe fn wrap(ptr: *mut AVFormatContext) -> Self {
-        Output {
-            ptr,
-            ctx: Context::wrap(ptr, destructor::Mode::Output),
+pub struct OutputBuilder<'d> {
+    path: CString,
+    context: Option<Output>,
+    force_format: Option<format::Output>,
+    options: Option<Dictionary<'d>>,
+}
+
+impl<'d> OutputBuilder<'d> {
+    pub fn context(&mut self, context: Output) -> &mut Self {
+        self.context = Some(context);
+        self
+    }
+
+    pub fn force_format(&mut self, format: format::Output) -> &mut Self {
+        self.force_format = Some(format);
+        self
+    }
+
+    pub fn options(&mut self, options: Dictionary<'d>) -> &mut Self {
+        self.options = Some(options);
+        self
+    }
+
+    pub fn open(self) -> Result<Output, Error> {
+        use std::ptr::{null, null_mut};
+
+        let mut ctx = self.context.map_or(null_mut(), |mut ctx| ctx.as_mut_ptr());
+        let path = self.path.as_ptr();
+
+        unsafe {
+            let fmt = self.force_format.map_or(null(), |fmt| fmt.as_ptr());
+
+            // FIXME: Check how avformat_alloc_output_context2 and avio_open2 use these params
+            //        and check if the API can be improved
+
+            let res = avformat_alloc_output_context2(&mut ctx, fmt, ptr::null_mut(), path);
+
+            if res != 0 {
+                return Err(Error::from(res));
+            }
+
+            let mut opts = self.options.map_or(null_mut(), |dict| dict.disown());
+            let res = avio_open2(&mut (*ctx).pb, path, AVIO_FLAG_WRITE, null(), &mut opts);
+
+            // TODO: Return dictionary (or contained information) to user somehow
+            let _ = Dictionary::own(opts);
+
+            if res >= 0 {
+                Ok(Output::from_ptr(ctx))
+            } else {
+                Err(Error::from(res))
+            }
         }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVFormatContext {
-        self.ptr as *const _
-    }
-
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVFormatContext {
-        self.ptr
     }
 }
 
 impl Output {
+    pub fn new<'d, P: AsRef<Path>>(path: P) -> OutputBuilder<'d> {
+        let path = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+
+        OutputBuilder {
+            path,
+            context: None,
+            force_format: None,
+            options: None,
+        }
+    }
+
+    unsafe fn from_ptr(ptr: *mut AVFormatContext) -> Self {
+        Self(std::ptr::NonNull::new(ptr).unwrap())
+    }
+
     pub fn format(&self) -> format::Output {
         unsafe { format::Output::wrap((*self.as_ptr()).oformat as *mut AVOutputFormat) }
     }
@@ -148,20 +198,6 @@ impl Output {
         unsafe {
             (*self.as_mut_ptr()).metadata = dictionary.disown();
         }
-    }
-}
-
-impl Deref for Output {
-    type Target = Context;
-
-    fn deref(&self) -> &Self::Target {
-        &self.ctx
-    }
-}
-
-impl DerefMut for Output {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.ctx
     }
 }
 
