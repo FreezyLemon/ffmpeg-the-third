@@ -224,7 +224,7 @@ impl<'a> Iterator for StreamIter<'a> {
             Some(s) => {
                 self.current += 1;
                 Some(s)
-            },
+            }
             None => None,
         }
     }
@@ -263,7 +263,7 @@ impl<'a> Iterator for StreamIterMut<'a> {
             Some(s) => {
                 self.current += 1;
                 Some(s)
-            },
+            }
             None => None,
         }
     }

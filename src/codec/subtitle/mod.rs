@@ -2,10 +2,7 @@ pub mod flag;
 pub use self::flag::Flags;
 
 mod rect;
-pub use self::rect::{Ass, Bitmap, Rect, Text};
-
-mod rect_mut;
-pub use self::rect_mut::{AssMut, BitmapMut, RectMut, TextMut};
+pub use self::rect::{Ass, AssMut, Bitmap, BitmapMut, Rect, RectMut, Text, TextMut};
 
 use std::marker::PhantomData;
 use std::mem;
@@ -116,7 +113,7 @@ impl Subtitle {
 
             *self.0.rects.offset((self.0.num_rects - 1) as isize) = rect;
 
-            RectMut::wrap(rect)
+            RectMut::from_ptr(rect).unwrap()
         }
     }
 }
@@ -153,9 +150,7 @@ impl<'a> Iterator for RectIter<'a> {
                 None
             } else {
                 self.cur += 1;
-                Some(Rect::wrap(
-                    *(*self.ptr).rects.offset((self.cur - 1) as isize),
-                ))
+                Some(Rect::from_ptr(*(*self.ptr).rects.offset((self.cur - 1) as isize)).unwrap())
             }
         }
     }
@@ -197,9 +192,7 @@ impl<'a> Iterator for RectMutIter<'a> {
                 None
             } else {
                 self.cur += 1;
-                Some(RectMut::wrap(
-                    *(*self.ptr).rects.offset((self.cur - 1) as isize),
-                ))
+                Some(RectMut::from_ptr(*(*self.ptr).rects.offset((self.cur - 1) as isize)).unwrap())
             }
         }
     }

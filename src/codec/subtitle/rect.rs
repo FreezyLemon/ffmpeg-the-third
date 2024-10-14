@@ -1,91 +1,110 @@
-use std::ffi::CStr;
-use std::marker::PhantomData;
+use std::ffi::{CStr, CString};
+// use std::ops::Deref;
 use std::str::from_utf8_unchecked;
+
+use libc::c_int;
 
 use super::{Flags, Type};
 use crate::ffi::*;
+use crate::macros::{
+    impl_for_many, impl_getter_into, impl_getter_simple, impl_mut_wrapper, impl_ref_wrapper,
+    impl_setter_simple,
+};
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::{format, Picture};
 
-pub enum Rect<'a> {
-    None(*const AVSubtitleRect),
-    Bitmap(Bitmap<'a>),
-    Text(Text<'a>),
-    Ass(Ass<'a>),
+impl_ref_wrapper!(Rect, AVSubtitleRect);
+impl_mut_wrapper!(RectMut, AVSubtitleRect);
+
+impl_for_many! {
+    impl for Rect<'a>, RectMut<'a> {
+        impl_getter_into!(kind() -> Type; type_);
+
+        pub fn flags(&self) -> Flags {
+            unsafe {
+                Flags::from_bits_truncate((*self.as_ptr()).flags)
+            }
+        }
+
+        /// Tries to return the contained subtitle as a UTF-8 string slice.
+        ///
+        /// Returns `None` if the subtitle is a bitmap or has no defined type.
+        pub fn as_string(&self) -> Option<&str> {
+            unsafe {
+                let text_ptr = match self.kind() {
+                    Type::None => return None,
+                    Type::Bitmap => return None,
+                    Type::Text => (*self.as_ptr()).text,
+                    Type::Ass => (*self.as_ptr()).ass,
+                };
+
+                Some(from_utf8_unchecked(CStr::from_ptr(text_ptr).to_bytes()))
+            }
+        }
+    }
 }
 
 impl<'a> Rect<'a> {
-    pub unsafe fn wrap(ptr: *const AVSubtitleRect) -> Self {
-        match Type::from((*ptr).type_) {
-            Type::None => Rect::None(ptr),
-            Type::Bitmap => Rect::Bitmap(Bitmap::wrap(ptr)),
-            Type::Text => Rect::Text(Text::wrap(ptr)),
-            Type::Ass => Rect::Ass(Ass::wrap(ptr)),
+    pub fn as_bitmap(&self) -> Option<Bitmap<'a>> {
+        if self.kind() != Type::Bitmap {
+            return None;
         }
+
+        unsafe { Some(Bitmap::from_ptr(self.as_ptr()).unwrap()) }
     }
 
-    pub unsafe fn as_ptr(&self) -> *const AVSubtitleRect {
-        match *self {
-            Rect::None(ptr) => ptr,
-            Rect::Bitmap(ref b) => b.as_ptr(),
-            Rect::Text(ref t) => t.as_ptr(),
-            Rect::Ass(ref a) => a.as_ptr(),
+    pub fn as_text(&self) -> Option<Text<'a>> {
+        if self.kind() != Type::Text {
+            return None;
         }
-    }
-}
 
-impl<'a> Rect<'a> {
-    pub fn flags(&self) -> Flags {
-        unsafe {
-            Flags::from_bits_truncate(match *self {
-                Rect::None(ptr) => (*ptr).flags,
-                Rect::Bitmap(ref b) => (*b.as_ptr()).flags,
-                Rect::Text(ref t) => (*t.as_ptr()).flags,
-                Rect::Ass(ref a) => (*a.as_ptr()).flags,
-            })
+        unsafe { Some(Text::from_ptr(self.as_ptr()).unwrap()) }
+    }
+
+    pub fn as_ass(&self) -> Option<Ass<'a>> {
+        if self.kind() != Type::Ass {
+            return None;
         }
+
+        unsafe { Some(Ass::from_ptr(self.as_ptr()).unwrap()) }
     }
 }
 
-pub struct Bitmap<'a> {
-    ptr: *const AVSubtitleRect,
+impl<'a> RectMut<'a> {
+    pub fn as_bitmap(&mut self) -> Option<BitmapMut<'a>> {
+        if self.kind() != Type::Bitmap {
+            return None;
+        }
 
-    _marker: PhantomData<&'a ()>,
+        unsafe { Some(BitmapMut::from_ptr(self.as_mut_ptr()).unwrap()) }
+    }
+
+    pub fn as_text(&mut self) -> Option<TextMut<'a>> {
+        if self.kind() != Type::Text {
+            return None;
+        }
+
+        unsafe { Some(TextMut::from_ptr(self.as_mut_ptr()).unwrap()) }
+    }
+
+    pub fn as_ass(&mut self) -> Option<AssMut<'a>> {
+        if self.kind() != Type::Ass {
+            return None;
+        }
+
+        unsafe { Some(AssMut::from_ptr(self.as_mut_ptr()).unwrap()) }
+    }
 }
+
+impl_ref_wrapper!(Bitmap, AVSubtitleRect);
+impl_mut_wrapper!(BitmapMut, AVSubtitleRect);
 
 impl<'a> Bitmap<'a> {
-    pub unsafe fn wrap(ptr: *const AVSubtitleRect) -> Self {
-        Bitmap {
-            ptr,
-            _marker: PhantomData,
-        }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVSubtitleRect {
-        self.ptr
-    }
-}
-
-impl<'a> Bitmap<'a> {
-    pub fn x(&self) -> usize {
-        unsafe { (*self.as_ptr()).x as usize }
-    }
-
-    pub fn y(&self) -> usize {
-        unsafe { (*self.as_ptr()).y as usize }
-    }
-
-    pub fn width(&self) -> u32 {
-        unsafe { (*self.as_ptr()).w as u32 }
-    }
-
-    pub fn height(&self) -> u32 {
-        unsafe { (*self.as_ptr()).h as u32 }
-    }
-
-    pub fn colors(&self) -> usize {
-        unsafe { (*self.as_ptr()).nb_colors as usize }
-    }
+    impl_getter_simple!(x() -> u32; x);
+    impl_getter_simple!(y() -> u32; y);
+    impl_getter_simple!(width() -> u32; w);
+    impl_getter_simple!(height() -> u32; h);
+    impl_getter_simple!(colors() -> u32; nb_colors);
 
     // XXX: must split Picture and PictureMut
     #[cfg(not(feature = "ffmpeg_5_0"))]
@@ -101,52 +120,56 @@ impl<'a> Bitmap<'a> {
     }
 }
 
-pub struct Text<'a> {
-    ptr: *const AVSubtitleRect,
-
-    _marker: PhantomData<&'a ()>,
+impl<'a> BitmapMut<'a> {
+    impl_setter_simple!(set_x(u32); x: c_int);
+    impl_setter_simple!(set_y(u32); y: c_int);
+    impl_setter_simple!(set_width(u32); w: c_int);
+    impl_setter_simple!(set_height(u32); h: c_int);
+    impl_setter_simple!(set_colors(u32); nb_colors: c_int);
 }
 
-impl<'a> Text<'a> {
-    pub unsafe fn wrap(ptr: *const AVSubtitleRect) -> Self {
-        Text {
-            ptr,
-            _marker: PhantomData,
+impl_ref_wrapper!(Text, AVSubtitleRect);
+impl_mut_wrapper!(TextMut, AVSubtitleRect);
+
+impl_for_many! {
+    impl for Text<'a>, TextMut<'a> {
+        pub fn get(&self) -> &str {
+            unsafe {
+                from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).text).to_bytes())
+            }
         }
     }
-
-    pub unsafe fn as_ptr(&self) -> *const AVSubtitleRect {
-        self.ptr
-    }
 }
 
-impl<'a> Text<'a> {
-    pub fn get(&self) -> &str {
-        unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).text).to_bytes()) }
-    }
-}
+impl<'a> TextMut<'a> {
+    pub fn set(&mut self, value: &str) {
+        let value = CString::new(value).unwrap();
 
-pub struct Ass<'a> {
-    ptr: *const AVSubtitleRect,
-
-    _marker: PhantomData<&'a ()>,
-}
-
-impl<'a> Ass<'a> {
-    pub unsafe fn wrap(ptr: *const AVSubtitleRect) -> Self {
-        Ass {
-            ptr,
-            _marker: PhantomData,
+        unsafe {
+            (*self.as_mut_ptr()).text = av_strdup(value.as_ptr());
         }
     }
+}
 
-    pub unsafe fn as_ptr(&self) -> *const AVSubtitleRect {
-        self.ptr
+impl_ref_wrapper!(Ass, AVSubtitleRect);
+impl_mut_wrapper!(AssMut, AVSubtitleRect);
+
+impl_for_many! {
+    impl for Ass<'a>, AssMut<'a> {
+        pub fn get(&self) -> &str {
+            unsafe {
+                from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).ass).to_bytes())
+            }
+        }
     }
 }
 
-impl<'a> Ass<'a> {
-    pub fn get(&self) -> &str {
-        unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).ass).to_bytes()) }
+impl<'a> AssMut<'a> {
+    pub fn set(&mut self, value: &str) {
+        let value = CString::new(value).unwrap();
+
+        unsafe {
+            (*self.as_mut_ptr()).ass = av_strdup(value.as_ptr());
+        }
     }
 }
