@@ -1,33 +1,16 @@
 use std::ffi::CStr;
-use std::str::from_utf8_unchecked;
 
 use super::{Audio, Capabilities, Id, Profile, Video};
 use crate::ffi::*;
+use crate::macros::{impl_field_string, impl_getter_into, impl_ref_wrapper};
 use crate::{media, Error};
 
-#[derive(PartialEq, Eq, Copy, Clone)]
-pub struct Codec {
-    ptr: *mut AVCodec,
-}
+impl_ref_wrapper!(Codec, AVCodec);
 
-unsafe impl Send for Codec {}
-unsafe impl Sync for Codec {}
+unsafe impl<'c> Send for Codec<'c> {}
+unsafe impl<'c> Sync for Codec<'c> {}
 
-impl Codec {
-    pub unsafe fn wrap(ptr: *mut AVCodec) -> Self {
-        Codec { ptr }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVCodec {
-        self.ptr as *const _
-    }
-
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVCodec {
-        self.ptr
-    }
-}
-
-impl Codec {
+impl<'c> Codec<'c> {
     pub fn is_encoder(&self) -> bool {
         unsafe { av_codec_is_encoder(self.as_ptr()) != 0 }
     }
@@ -36,34 +19,16 @@ impl Codec {
         unsafe { av_codec_is_decoder(self.as_ptr()) != 0 }
     }
 
-    pub fn name(&self) -> &str {
-        unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).name).to_bytes()) }
-    }
-
-    pub fn description(&self) -> &str {
-        unsafe {
-            let long_name = (*self.as_ptr()).long_name;
-            if long_name.is_null() {
-                ""
-            } else {
-                from_utf8_unchecked(CStr::from_ptr(long_name).to_bytes())
-            }
-        }
-    }
-
-    pub fn medium(&self) -> media::Type {
-        unsafe { media::Type::from((*self.as_ptr()).type_) }
-    }
-
-    pub fn id(&self) -> Id {
-        unsafe { Id::from((*self.as_ptr()).id) }
-    }
+    impl_field_string!(name, name);
+    impl_field_string!(optional description, long_name);
+    impl_getter_into!(medium() -> media::Type; type_);
+    impl_getter_into!(id() -> Id; id);
 
     pub fn is_video(&self) -> bool {
         self.medium() == media::Type::Video
     }
 
-    pub fn video(self) -> Result<Video, Error> {
+    pub fn video(self) -> Result<Video<'c>, Error> {
         unsafe {
             if self.medium() == media::Type::Video {
                 Ok(Video::new(self))
@@ -77,7 +42,7 @@ impl Codec {
         self.medium() == media::Type::Audio
     }
 
-    pub fn audio(self) -> Result<Audio, Error> {
+    pub fn audio(self) -> Result<Audio<'c>, Error> {
         unsafe {
             if self.medium() == media::Type::Audio {
                 Ok(Audio::new(self))
@@ -87,9 +52,7 @@ impl Codec {
         }
     }
 
-    pub fn max_lowres(&self) -> i32 {
-        unsafe { (*self.as_ptr()).max_lowres.into() }
-    }
+    impl_getter_into!(max_lowres() -> i32; max_lowres);
 
     pub fn capabilities(&self) -> Capabilities {
         unsafe { Capabilities::from_bits_truncate((*self.as_ptr()).capabilities as u32) }

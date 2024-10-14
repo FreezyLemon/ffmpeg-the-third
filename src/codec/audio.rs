@@ -8,17 +8,15 @@ use crate::format;
 use crate::ChannelLayoutMask;
 
 #[derive(PartialEq, Eq, Copy, Clone)]
-pub struct Audio {
-    codec: Codec,
+pub struct Audio<'c> {
+    codec: Codec<'c>,
 }
 
-impl Audio {
-    pub unsafe fn new(codec: Codec) -> Audio {
+impl<'c> Audio<'c> {
+    pub unsafe fn new(codec: Codec<'c>) -> Audio {
         Audio { codec }
     }
-}
 
-impl Audio {
     pub fn rates(&self) -> Option<RateIter> {
         unsafe {
             if (*self.as_ptr()).supported_samplerates.is_null() {
@@ -58,8 +56,8 @@ impl Audio {
     }
 }
 
-impl Deref for Audio {
-    type Target = Codec;
+impl<'c> Deref for Audio<'c> {
+    type Target = Codec<'c>;
 
     fn deref(&self) -> &Self::Target {
         &self.codec

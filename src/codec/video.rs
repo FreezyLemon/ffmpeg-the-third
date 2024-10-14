@@ -5,17 +5,15 @@ use crate::ffi::*;
 use crate::{format, Rational};
 
 #[derive(PartialEq, Eq, Copy, Clone)]
-pub struct Video {
-    codec: Codec,
+pub struct Video<'c> {
+    codec: Codec<'c>,
 }
 
-impl Video {
+impl<'c> Video<'c> {
     pub unsafe fn new(codec: Codec) -> Video {
         Video { codec }
     }
-}
 
-impl Video {
     pub fn rates(&self) -> Option<RateIter> {
         unsafe {
             if (*self.codec.as_ptr()).supported_framerates.is_null() {
@@ -37,8 +35,8 @@ impl Video {
     }
 }
 
-impl Deref for Video {
-    type Target = Codec;
+impl<'c> Deref for Video<'c> {
+    type Target = Codec<'c>;
 
     fn deref(&self) -> &Self::Target {
         &self.codec
