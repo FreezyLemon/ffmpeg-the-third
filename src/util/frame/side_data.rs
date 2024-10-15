@@ -1,11 +1,10 @@
 use std::ffi::CStr;
-use std::marker::PhantomData;
 use std::slice;
 use std::str::from_utf8_unchecked;
 
-use super::Frame;
 use crate::ffi::AVFrameSideDataType::*;
 use crate::ffi::*;
+use crate::macros::impl_ref_wrapper;
 use crate::DictionaryRef;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
@@ -209,31 +208,7 @@ impl From<Type> for AVFrameSideDataType {
     }
 }
 
-pub struct SideData<'a> {
-    ptr: *mut AVFrameSideData,
-
-    _marker: PhantomData<&'a Frame>,
-}
-
-impl<'a> SideData<'a> {
-    #[inline(always)]
-    pub unsafe fn wrap(ptr: *mut AVFrameSideData) -> Self {
-        SideData {
-            ptr,
-            _marker: PhantomData,
-        }
-    }
-
-    #[inline(always)]
-    pub unsafe fn as_ptr(&self) -> *const AVFrameSideData {
-        self.ptr as *const _
-    }
-
-    #[inline(always)]
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVFrameSideData {
-        self.ptr
-    }
-}
+impl_ref_wrapper!(SideData, AVFrameSideData);
 
 impl<'a> SideData<'a> {
     #[inline]
