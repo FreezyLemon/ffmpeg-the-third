@@ -2,26 +2,11 @@ use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
 use crate::ffi::*;
+use crate::macros::impl_ref_wrapper;
 
-pub struct Input {
-    ptr: *mut AVInputFormat,
-}
+impl_ref_wrapper!(Input, AVInputFormat);
 
-impl Input {
-    pub unsafe fn wrap(ptr: *mut AVInputFormat) -> Self {
-        Input { ptr }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVInputFormat {
-        self.ptr as *const _
-    }
-
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVInputFormat {
-        self.ptr
-    }
-}
-
-impl Input {
+impl<'i> Input<'i> {
     pub fn name(&self) -> &str {
         unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).name).to_bytes()) }
     }

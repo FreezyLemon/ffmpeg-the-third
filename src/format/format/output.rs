@@ -6,27 +6,12 @@ use std::str::from_utf8_unchecked;
 
 use super::Flags;
 use crate::ffi::*;
+use crate::macros::impl_ref_wrapper;
 use crate::{codec, media};
 
-pub struct Output {
-    ptr: *mut AVOutputFormat,
-}
+impl_ref_wrapper!(Output, AVOutputFormat);
 
-impl Output {
-    pub unsafe fn wrap(ptr: *mut AVOutputFormat) -> Self {
-        Output { ptr }
-    }
-
-    pub unsafe fn as_ptr(&self) -> *const AVOutputFormat {
-        self.ptr as *const _
-    }
-
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVOutputFormat {
-        self.ptr
-    }
-}
-
-impl Output {
+impl<'o> Output<'o> {
     pub fn name(&self) -> &str {
         unsafe { from_utf8_unchecked(CStr::from_ptr((*self.as_ptr()).name).to_bytes()) }
     }
