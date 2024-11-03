@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use std::ptr::NonNull;
 use std::slice;
 
 use super::Frame;
@@ -207,32 +208,57 @@ impl From<Type> for AVFrameSideDataType {
 }
 
 pub struct SideData<'a> {
-    ptr: *mut AVFrameSideData,
+    ptr: NonNull<AVFrameSideData>,
+    _marker: PhantomData<&'a AVFrameSideData>,
+}
 
-    _marker: PhantomData<&'a Frame>,
+pub struct SideDataMut<'a> {
+    ptr: NonNull<AVFrameSideData>,
+    _marker: PhantomData<&'a mut AVFrameSideData>,
 }
 
 impl<'a> SideData<'a> {
-    #[inline(always)]
-    pub unsafe fn wrap(ptr: *mut AVFrameSideData) -> Self {
-        SideData {
-            ptr,
-            _marker: PhantomData,
-        }
+    pub unsafe fn from_raw(ptr: *const AVFrameSideData) -> Option<Self> {
+        NonNull::new(ptr as *mut _).map(|ptr| Self { ptr, _marker: PhantomData })
     }
 
-    #[inline(always)]
     pub unsafe fn as_ptr(&self) -> *const AVFrameSideData {
-        self.ptr as *const _
+        self.ptr.as_ptr()
+    }
+}
+
+impl<'a> SideDataMut<'a> {
+    pub unsafe fn from_raw(ptr: *const AVFrameSideData) -> Option<Self> {
+        NonNull::new(ptr as *mut _).map(|ptr| Self { ptr, _marker: PhantomData })
     }
 
-    #[inline(always)]
+    pub unsafe fn as_ptr(&self) -> *const AVFrameSideData {
+        self.ptr.as_ptr()
+    }
+
     pub unsafe fn as_mut_ptr(&mut self) -> *mut AVFrameSideData {
-        self.ptr
+        self.ptr.as_ptr()
     }
 }
 
 impl<'a> SideData<'a> {
+    #[inline]
+    pub fn kind(&self) -> Type {
+        unsafe { Type::from((*self.as_ptr()).type_) }
+    }
+
+    #[inline]
+    pub fn data(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts((*self.as_ptr()).data, (*self.as_ptr()).size as usize) }
+    }
+
+    #[inline]
+    pub fn metadata(&self) -> DictionaryRef {
+        unsafe { DictionaryRef::wrap((*self.as_ptr()).metadata) }
+    }
+}
+
+impl<'a> SideDataMut<'a> {
     #[inline]
     pub fn kind(&self) -> Type {
         unsafe { Type::from((*self.as_ptr()).type_) }
