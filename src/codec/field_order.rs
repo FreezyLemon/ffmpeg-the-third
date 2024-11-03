@@ -1,4 +1,3 @@
-use crate::ffi::AVFieldOrder::*;
 use crate::ffi::*;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
@@ -16,13 +15,15 @@ pub enum FieldOrder {
 
 impl From<AVFieldOrder> for FieldOrder {
     fn from(value: AVFieldOrder) -> Self {
+        use AVFieldOrder as AV;
+
         match value {
-            AV_FIELD_UNKNOWN => FieldOrder::Unknown,
-            AV_FIELD_PROGRESSIVE => FieldOrder::Progressive,
-            AV_FIELD_TT => FieldOrder::TT,
-            AV_FIELD_BB => FieldOrder::BB,
-            AV_FIELD_TB => FieldOrder::TB,
-            AV_FIELD_BT => FieldOrder::BT,
+            AV::AV_FIELD_UNKNOWN => FieldOrder::Unknown,
+            AV::AV_FIELD_PROGRESSIVE => FieldOrder::Progressive,
+            AV::AV_FIELD_TT => FieldOrder::TT,
+            AV::AV_FIELD_BB => FieldOrder::BB,
+            AV::AV_FIELD_TB => FieldOrder::TB,
+            AV::AV_FIELD_BT => FieldOrder::BT,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -33,12 +34,12 @@ impl From<AVFieldOrder> for FieldOrder {
 impl From<FieldOrder> for AVFieldOrder {
     fn from(value: FieldOrder) -> AVFieldOrder {
         match value {
-            FieldOrder::Unknown => AV_FIELD_UNKNOWN,
-            FieldOrder::Progressive => AV_FIELD_PROGRESSIVE,
-            FieldOrder::TT => AV_FIELD_TT,
-            FieldOrder::BB => AV_FIELD_BB,
-            FieldOrder::TB => AV_FIELD_TB,
-            FieldOrder::BT => AV_FIELD_BT,
+            FieldOrder::Unknown => Self::AV_FIELD_UNKNOWN,
+            FieldOrder::Progressive => Self::AV_FIELD_PROGRESSIVE,
+            FieldOrder::TT => Self::AV_FIELD_TT,
+            FieldOrder::BB => Self::AV_FIELD_BB,
+            FieldOrder::TB => Self::AV_FIELD_TB,
+            FieldOrder::BT => Self::AV_FIELD_BT,
         }
     }
 }

@@ -1,4 +1,3 @@
-use crate::ffi::AVDiscard::*;
 use crate::ffi::*;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
@@ -17,14 +16,16 @@ pub enum Discard {
 
 impl From<AVDiscard> for Discard {
     fn from(value: AVDiscard) -> Self {
+        use AVDiscard as AV;
+
         match value {
-            AVDISCARD_NONE => Discard::None,
-            AVDISCARD_DEFAULT => Discard::Default,
-            AVDISCARD_NONREF => Discard::NonReference,
-            AVDISCARD_BIDIR => Discard::Bidirectional,
-            AVDISCARD_NONINTRA => Discard::NonIntra,
-            AVDISCARD_NONKEY => Discard::NonKey,
-            AVDISCARD_ALL => Discard::All,
+            AV::AVDISCARD_NONE => Discard::None,
+            AV::AVDISCARD_DEFAULT => Discard::Default,
+            AV::AVDISCARD_NONREF => Discard::NonReference,
+            AV::AVDISCARD_BIDIR => Discard::Bidirectional,
+            AV::AVDISCARD_NONINTRA => Discard::NonIntra,
+            AV::AVDISCARD_NONKEY => Discard::NonKey,
+            AV::AVDISCARD_ALL => Discard::All,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -35,13 +36,13 @@ impl From<AVDiscard> for Discard {
 impl From<Discard> for AVDiscard {
     fn from(value: Discard) -> AVDiscard {
         match value {
-            Discard::None => AVDISCARD_NONE,
-            Discard::Default => AVDISCARD_DEFAULT,
-            Discard::NonReference => AVDISCARD_NONREF,
-            Discard::Bidirectional => AVDISCARD_BIDIR,
-            Discard::NonIntra => AVDISCARD_NONINTRA,
-            Discard::NonKey => AVDISCARD_NONKEY,
-            Discard::All => AVDISCARD_ALL,
+            Discard::None => Self::AVDISCARD_NONE,
+            Discard::Default => Self::AVDISCARD_DEFAULT,
+            Discard::NonReference => Self::AVDISCARD_NONREF,
+            Discard::Bidirectional => Self::AVDISCARD_BIDIR,
+            Discard::NonIntra => Self::AVDISCARD_NONINTRA,
+            Discard::NonKey => Self::AVDISCARD_NONKEY,
+            Discard::All => Self::AVDISCARD_ALL,
         }
     }
 }

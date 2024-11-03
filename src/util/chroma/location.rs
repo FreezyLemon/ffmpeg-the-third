@@ -1,6 +1,5 @@
 use std::ffi::CString;
 
-use crate::ffi::AVChromaLocation::*;
 use crate::ffi::*;
 use crate::utils;
 use crate::Error;
@@ -70,15 +69,17 @@ impl Location {
 
 impl From<AVChromaLocation> for Location {
     fn from(value: AVChromaLocation) -> Self {
+        use AVChromaLocation as AV;
+
         match value {
-            AVCHROMA_LOC_UNSPECIFIED => Location::Unspecified,
-            AVCHROMA_LOC_LEFT => Location::Left,
-            AVCHROMA_LOC_CENTER => Location::Center,
-            AVCHROMA_LOC_TOPLEFT => Location::TopLeft,
-            AVCHROMA_LOC_TOP => Location::Top,
-            AVCHROMA_LOC_BOTTOMLEFT => Location::BottomLeft,
-            AVCHROMA_LOC_BOTTOM => Location::Bottom,
-            AVCHROMA_LOC_NB => Location::Unspecified,
+            AV::AVCHROMA_LOC_UNSPECIFIED => Self::Unspecified,
+            AV::AVCHROMA_LOC_LEFT => Self::Left,
+            AV::AVCHROMA_LOC_CENTER => Self::Center,
+            AV::AVCHROMA_LOC_TOPLEFT => Self::TopLeft,
+            AV::AVCHROMA_LOC_TOP => Self::Top,
+            AV::AVCHROMA_LOC_BOTTOMLEFT => Self::BottomLeft,
+            AV::AVCHROMA_LOC_BOTTOM => Self::Bottom,
+            AV::AVCHROMA_LOC_NB => Self::Unspecified,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -88,14 +89,16 @@ impl From<AVChromaLocation> for Location {
 
 impl From<Location> for AVChromaLocation {
     fn from(value: Location) -> AVChromaLocation {
+        use Location as L;
+
         match value {
-            Location::Unspecified => AVCHROMA_LOC_UNSPECIFIED,
-            Location::Left => AVCHROMA_LOC_LEFT,
-            Location::Center => AVCHROMA_LOC_CENTER,
-            Location::TopLeft => AVCHROMA_LOC_TOPLEFT,
-            Location::Top => AVCHROMA_LOC_TOP,
-            Location::BottomLeft => AVCHROMA_LOC_BOTTOMLEFT,
-            Location::Bottom => AVCHROMA_LOC_BOTTOM,
+            L::Unspecified => Self::AVCHROMA_LOC_UNSPECIFIED,
+            L::Left => Self::AVCHROMA_LOC_LEFT,
+            L::Center => Self::AVCHROMA_LOC_CENTER,
+            L::TopLeft => Self::AVCHROMA_LOC_TOPLEFT,
+            L::Top => Self::AVCHROMA_LOC_TOP,
+            L::BottomLeft => Self::AVCHROMA_LOC_BOTTOMLEFT,
+            L::Bottom => Self::AVCHROMA_LOC_BOTTOM,
         }
     }
 }

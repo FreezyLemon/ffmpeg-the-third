@@ -1,4 +1,3 @@
-use crate::ffi::AVColorSpace::*;
 use crate::ffi::*;
 use crate::utils;
 #[cfg(feature = "serialize")]
@@ -48,31 +47,33 @@ impl Space {
 
 impl From<AVColorSpace> for Space {
     fn from(value: AVColorSpace) -> Self {
+        use AVColorSpace as AV;
+
         match value {
-            AVCOL_SPC_RGB => Space::RGB,
-            AVCOL_SPC_BT709 => Space::BT709,
-            AVCOL_SPC_UNSPECIFIED => Space::Unspecified,
-            AVCOL_SPC_RESERVED => Space::Reserved,
-            AVCOL_SPC_FCC => Space::FCC,
-            AVCOL_SPC_BT470BG => Space::BT470BG,
-            AVCOL_SPC_SMPTE170M => Space::SMPTE170M,
-            AVCOL_SPC_SMPTE240M => Space::SMPTE240M,
-            AVCOL_SPC_YCGCO => Space::YCGCO,
-            AVCOL_SPC_BT2020_NCL => Space::BT2020NCL,
-            AVCOL_SPC_BT2020_CL => Space::BT2020CL,
-            AVCOL_SPC_SMPTE2085 => Space::SMPTE2085,
-            AVCOL_SPC_NB => Space::Unspecified,
+            AV::AVCOL_SPC_RGB => Self::RGB,
+            AV::AVCOL_SPC_BT709 => Self::BT709,
+            AV::AVCOL_SPC_UNSPECIFIED => Self::Unspecified,
+            AV::AVCOL_SPC_RESERVED => Self::Reserved,
+            AV::AVCOL_SPC_FCC => Self::FCC,
+            AV::AVCOL_SPC_BT470BG => Self::BT470BG,
+            AV::AVCOL_SPC_SMPTE170M => Self::SMPTE170M,
+            AV::AVCOL_SPC_SMPTE240M => Self::SMPTE240M,
+            AV::AVCOL_SPC_YCGCO => Self::YCGCO,
+            AV::AVCOL_SPC_BT2020_NCL => Self::BT2020NCL,
+            AV::AVCOL_SPC_BT2020_CL => Self::BT2020CL,
+            AV::AVCOL_SPC_SMPTE2085 => Self::SMPTE2085,
+            AV::AVCOL_SPC_NB => Self::Unspecified,
 
-            AVCOL_SPC_CHROMA_DERIVED_NCL => Space::ChromaDerivedNCL,
-            AVCOL_SPC_CHROMA_DERIVED_CL => Space::ChromaDerivedCL,
-            AVCOL_SPC_ICTCP => Space::ICTCP,
+            AV::AVCOL_SPC_CHROMA_DERIVED_NCL => Self::ChromaDerivedNCL,
+            AV::AVCOL_SPC_CHROMA_DERIVED_CL => Self::ChromaDerivedCL,
+            AV::AVCOL_SPC_ICTCP => Self::ICTCP,
 
             #[cfg(feature = "ffmpeg_7_1")]
-            AVCOL_SPC_IPT_C2 => Space::IPTC2,
+            AV::AVCOL_SPC_IPT_C2 => Self::IPTC2,
             #[cfg(feature = "ffmpeg_7_1")]
-            AVCOL_SPC_YCGCO_RE => Space::YCGCORE,
+            AV::AVCOL_SPC_YCGCO_RE => Self::YCGCORE,
             #[cfg(feature = "ffmpeg_7_1")]
-            AVCOL_SPC_YCGCO_RO => Space::YCGCORO,
+            AV::AVCOL_SPC_YCGCO_RO => Self::YCGCORO,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -82,30 +83,32 @@ impl From<AVColorSpace> for Space {
 
 impl From<Space> for AVColorSpace {
     fn from(value: Space) -> AVColorSpace {
+        use Space as S;
+
         match value {
-            Space::RGB => AVCOL_SPC_RGB,
-            Space::BT709 => AVCOL_SPC_BT709,
-            Space::Unspecified => AVCOL_SPC_UNSPECIFIED,
-            Space::Reserved => AVCOL_SPC_RESERVED,
-            Space::FCC => AVCOL_SPC_FCC,
-            Space::BT470BG => AVCOL_SPC_BT470BG,
-            Space::SMPTE170M => AVCOL_SPC_SMPTE170M,
-            Space::SMPTE240M => AVCOL_SPC_SMPTE240M,
-            Space::YCGCO => AVCOL_SPC_YCGCO,
-            Space::BT2020NCL => AVCOL_SPC_BT2020_NCL,
-            Space::BT2020CL => AVCOL_SPC_BT2020_CL,
-            Space::SMPTE2085 => AVCOL_SPC_SMPTE2085,
+            S::RGB => Self::AVCOL_SPC_RGB,
+            S::BT709 => Self::AVCOL_SPC_BT709,
+            S::Unspecified => Self::AVCOL_SPC_UNSPECIFIED,
+            S::Reserved => Self::AVCOL_SPC_RESERVED,
+            S::FCC => Self::AVCOL_SPC_FCC,
+            S::BT470BG => Self::AVCOL_SPC_BT470BG,
+            S::SMPTE170M => Self::AVCOL_SPC_SMPTE170M,
+            S::SMPTE240M => Self::AVCOL_SPC_SMPTE240M,
+            S::YCGCO => Self::AVCOL_SPC_YCGCO,
+            S::BT2020NCL => Self::AVCOL_SPC_BT2020_NCL,
+            S::BT2020CL => Self::AVCOL_SPC_BT2020_CL,
+            S::SMPTE2085 => Self::AVCOL_SPC_SMPTE2085,
 
-            Space::ChromaDerivedNCL => AVCOL_SPC_CHROMA_DERIVED_NCL,
-            Space::ChromaDerivedCL => AVCOL_SPC_CHROMA_DERIVED_CL,
-            Space::ICTCP => AVCOL_SPC_ICTCP,
+            S::ChromaDerivedNCL => Self::AVCOL_SPC_CHROMA_DERIVED_NCL,
+            S::ChromaDerivedCL => Self::AVCOL_SPC_CHROMA_DERIVED_CL,
+            S::ICTCP => Self::AVCOL_SPC_ICTCP,
 
             #[cfg(feature = "ffmpeg_7_1")]
-            Space::IPTC2 => AVCOL_SPC_IPT_C2,
+            S::IPTC2 => Self::AVCOL_SPC_IPT_C2,
             #[cfg(feature = "ffmpeg_7_1")]
-            Space::YCGCORE => AVCOL_SPC_YCGCO_RE,
+            S::YCGCORE => Self::AVCOL_SPC_YCGCO_RE,
             #[cfg(feature = "ffmpeg_7_1")]
-            Space::YCGCORO => AVCOL_SPC_YCGCO_RO,
+            S::YCGCORO => Self::AVCOL_SPC_YCGCO_RO,
         }
     }
 }

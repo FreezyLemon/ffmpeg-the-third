@@ -1,8 +1,5 @@
 use crate::ffi::AVChannelOrder;
 
-use AVChannelOrder::*;
-use ChannelOrder::*;
-
 /// Specifies an order for audio channels.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChannelOrder {
@@ -24,14 +21,16 @@ pub enum ChannelOrder {
 
 impl From<AVChannelOrder> for ChannelOrder {
     fn from(value: AVChannelOrder) -> Self {
+        use AVChannelOrder as AV;
+
         match value {
-            AV_CHANNEL_ORDER_UNSPEC => Unspecified,
-            AV_CHANNEL_ORDER_NATIVE => Native,
-            AV_CHANNEL_ORDER_CUSTOM => Custom,
-            AV_CHANNEL_ORDER_AMBISONIC => Ambisonic,
+            AV::AV_CHANNEL_ORDER_UNSPEC => Self::Unspecified,
+            AV::AV_CHANNEL_ORDER_NATIVE => Self::Native,
+            AV::AV_CHANNEL_ORDER_CUSTOM => Self::Custom,
+            AV::AV_CHANNEL_ORDER_AMBISONIC => Self::Ambisonic,
             #[cfg(feature = "ffmpeg_7_0")]
             // Not part of the API, should never be used
-            FF_CHANNEL_ORDER_NB => unreachable!(),
+            AV::FF_CHANNEL_ORDER_NB => unreachable!(),
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
         }
@@ -40,11 +39,13 @@ impl From<AVChannelOrder> for ChannelOrder {
 
 impl From<ChannelOrder> for AVChannelOrder {
     fn from(value: ChannelOrder) -> Self {
+        use ChannelOrder as O;
+
         match value {
-            Unspecified => AV_CHANNEL_ORDER_UNSPEC,
-            Native => AV_CHANNEL_ORDER_NATIVE,
-            Custom => AV_CHANNEL_ORDER_CUSTOM,
-            Ambisonic => AV_CHANNEL_ORDER_AMBISONIC,
+            O::Unspecified => Self::AV_CHANNEL_ORDER_UNSPEC,
+            O::Native => Self::AV_CHANNEL_ORDER_NATIVE,
+            O::Custom => Self::AV_CHANNEL_ORDER_CUSTOM,
+            O::Ambisonic => Self::AV_CHANNEL_ORDER_AMBISONIC,
         }
     }
 }

@@ -1,4 +1,3 @@
-use crate::ffi::AVColorPrimaries::*;
 use crate::ffi::*;
 use crate::utils;
 #[cfg(feature = "serialize")]
@@ -45,27 +44,29 @@ impl Primaries {
 
 impl From<AVColorPrimaries> for Primaries {
     fn from(value: AVColorPrimaries) -> Primaries {
+        use AVColorPrimaries as AV;
+
         match value {
-            AVCOL_PRI_RESERVED0 => Primaries::Reserved0,
-            AVCOL_PRI_BT709 => Primaries::BT709,
-            AVCOL_PRI_UNSPECIFIED => Primaries::Unspecified,
-            AVCOL_PRI_RESERVED => Primaries::Reserved,
-            AVCOL_PRI_BT470M => Primaries::BT470M,
+            AV::AVCOL_PRI_RESERVED0 => Self::Reserved0,
+            AV::AVCOL_PRI_BT709 => Self::BT709,
+            AV::AVCOL_PRI_UNSPECIFIED => Self::Unspecified,
+            AV::AVCOL_PRI_RESERVED => Self::Reserved,
+            AV::AVCOL_PRI_BT470M => Self::BT470M,
 
-            AVCOL_PRI_BT470BG => Primaries::BT470BG,
-            AVCOL_PRI_SMPTE170M => Primaries::SMPTE170M,
-            AVCOL_PRI_SMPTE240M => Primaries::SMPTE240M,
-            AVCOL_PRI_FILM => Primaries::Film,
-            AVCOL_PRI_BT2020 => Primaries::BT2020,
-            AVCOL_PRI_NB => Primaries::Reserved0,
+            AV::AVCOL_PRI_BT470BG => Self::BT470BG,
+            AV::AVCOL_PRI_SMPTE170M => Self::SMPTE170M,
+            AV::AVCOL_PRI_SMPTE240M => Self::SMPTE240M,
+            AV::AVCOL_PRI_FILM => Self::Film,
+            AV::AVCOL_PRI_BT2020 => Self::BT2020,
+            AV::AVCOL_PRI_NB => Self::Reserved0,
 
-            AVCOL_PRI_SMPTE428 => Primaries::SMPTE428,
-            AVCOL_PRI_SMPTE431 => Primaries::SMPTE431,
-            AVCOL_PRI_SMPTE432 => Primaries::SMPTE432,
+            AV::AVCOL_PRI_SMPTE428 => Self::SMPTE428,
+            AV::AVCOL_PRI_SMPTE431 => Self::SMPTE431,
+            AV::AVCOL_PRI_SMPTE432 => Self::SMPTE432,
             #[cfg(not(feature = "ffmpeg_4_3"))]
-            AVCOL_PRI_JEDEC_P22 => Primaries::JEDEC_P22,
+            AV::AVCOL_PRI_JEDEC_P22 => Self::JEDEC_P22,
             #[cfg(feature = "ffmpeg_4_3")]
-            AVCOL_PRI_EBU3213 => Primaries::EBU3213,
+            AV::AVCOL_PRI_EBU3213 => Self::EBU3213,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -75,26 +76,28 @@ impl From<AVColorPrimaries> for Primaries {
 
 impl From<Primaries> for AVColorPrimaries {
     fn from(value: Primaries) -> AVColorPrimaries {
+        use Primaries as P;
+
         match value {
-            Primaries::Reserved0 => AVCOL_PRI_RESERVED0,
-            Primaries::BT709 => AVCOL_PRI_BT709,
-            Primaries::Unspecified => AVCOL_PRI_UNSPECIFIED,
-            Primaries::Reserved => AVCOL_PRI_RESERVED,
-            Primaries::BT470M => AVCOL_PRI_BT470M,
+            P::Reserved0 => Self::AVCOL_PRI_RESERVED0,
+            P::BT709 => Self::AVCOL_PRI_BT709,
+            P::Unspecified => Self::AVCOL_PRI_UNSPECIFIED,
+            P::Reserved => Self::AVCOL_PRI_RESERVED,
+            P::BT470M => Self::AVCOL_PRI_BT470M,
 
-            Primaries::BT470BG => AVCOL_PRI_BT470BG,
-            Primaries::SMPTE170M => AVCOL_PRI_SMPTE170M,
-            Primaries::SMPTE240M => AVCOL_PRI_SMPTE240M,
-            Primaries::Film => AVCOL_PRI_FILM,
-            Primaries::BT2020 => AVCOL_PRI_BT2020,
+            P::BT470BG => Self::AVCOL_PRI_BT470BG,
+            P::SMPTE170M => Self::AVCOL_PRI_SMPTE170M,
+            P::SMPTE240M => Self::AVCOL_PRI_SMPTE240M,
+            P::Film => Self::AVCOL_PRI_FILM,
+            P::BT2020 => Self::AVCOL_PRI_BT2020,
 
-            Primaries::SMPTE428 => AVCOL_PRI_SMPTE428,
-            Primaries::SMPTE431 => AVCOL_PRI_SMPTE431,
-            Primaries::SMPTE432 => AVCOL_PRI_SMPTE432,
+            P::SMPTE428 => Self::AVCOL_PRI_SMPTE428,
+            P::SMPTE431 => Self::AVCOL_PRI_SMPTE431,
+            P::SMPTE432 => Self::AVCOL_PRI_SMPTE432,
             #[cfg(not(feature = "ffmpeg_4_3"))]
-            Primaries::JEDEC_P22 => AVCOL_PRI_JEDEC_P22,
+            P::JEDEC_P22 => Self::AVCOL_PRI_JEDEC_P22,
             #[cfg(feature = "ffmpeg_4_3")]
-            Primaries::EBU3213 => AVCOL_PRI_EBU3213,
+            P::EBU3213 => Self::AVCOL_PRI_EBU3213,
         }
     }
 }

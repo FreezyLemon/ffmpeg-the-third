@@ -10,7 +10,6 @@ pub use self::rect_mut::{AssMut, BitmapMut, RectMut, TextMut};
 use std::marker::PhantomData;
 use std::mem;
 
-use crate::ffi::AVSubtitleType::*;
 use crate::ffi::*;
 use libc::{c_uint, size_t};
 #[cfg(feature = "serialize")]
@@ -27,11 +26,13 @@ pub enum Type {
 
 impl From<AVSubtitleType> for Type {
     fn from(value: AVSubtitleType) -> Type {
+        use AVSubtitleType as AV;
+
         match value {
-            SUBTITLE_NONE => Type::None,
-            SUBTITLE_BITMAP => Type::Bitmap,
-            SUBTITLE_TEXT => Type::Text,
-            SUBTITLE_ASS => Type::Ass,
+            AV::SUBTITLE_NONE => Type::None,
+            AV::SUBTITLE_BITMAP => Type::Bitmap,
+            AV::SUBTITLE_TEXT => Type::Text,
+            AV::SUBTITLE_ASS => Type::Ass,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -42,10 +43,10 @@ impl From<AVSubtitleType> for Type {
 impl From<Type> for AVSubtitleType {
     fn from(value: Type) -> AVSubtitleType {
         match value {
-            Type::None => SUBTITLE_NONE,
-            Type::Bitmap => SUBTITLE_BITMAP,
-            Type::Text => SUBTITLE_TEXT,
-            Type::Ass => SUBTITLE_ASS,
+            Type::None => Self::SUBTITLE_NONE,
+            Type::Bitmap => Self::SUBTITLE_BITMAP,
+            Type::Text => Self::SUBTITLE_TEXT,
+            Type::Ass => Self::SUBTITLE_ASS,
         }
     }
 }

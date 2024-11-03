@@ -1,4 +1,3 @@
-use crate::ffi::AVMediaType::*;
 use crate::ffi::*;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
@@ -17,14 +16,16 @@ pub enum Type {
 impl From<AVMediaType> for Type {
     #[inline(always)]
     fn from(value: AVMediaType) -> Self {
+        use AVMediaType as AV;
+
         match value {
-            AVMEDIA_TYPE_UNKNOWN => Type::Unknown,
-            AVMEDIA_TYPE_VIDEO => Type::Video,
-            AVMEDIA_TYPE_AUDIO => Type::Audio,
-            AVMEDIA_TYPE_DATA => Type::Data,
-            AVMEDIA_TYPE_SUBTITLE => Type::Subtitle,
-            AVMEDIA_TYPE_ATTACHMENT => Type::Attachment,
-            AVMEDIA_TYPE_NB => Type::Unknown,
+            AV::AVMEDIA_TYPE_UNKNOWN => Type::Unknown,
+            AV::AVMEDIA_TYPE_VIDEO => Type::Video,
+            AV::AVMEDIA_TYPE_AUDIO => Type::Audio,
+            AV::AVMEDIA_TYPE_DATA => Type::Data,
+            AV::AVMEDIA_TYPE_SUBTITLE => Type::Subtitle,
+            AV::AVMEDIA_TYPE_ATTACHMENT => Type::Attachment,
+            AV::AVMEDIA_TYPE_NB => Type::Unknown,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -36,12 +37,12 @@ impl From<Type> for AVMediaType {
     #[inline(always)]
     fn from(value: Type) -> AVMediaType {
         match value {
-            Type::Unknown => AVMEDIA_TYPE_UNKNOWN,
-            Type::Video => AVMEDIA_TYPE_VIDEO,
-            Type::Audio => AVMEDIA_TYPE_AUDIO,
-            Type::Data => AVMEDIA_TYPE_DATA,
-            Type::Subtitle => AVMEDIA_TYPE_SUBTITLE,
-            Type::Attachment => AVMEDIA_TYPE_ATTACHMENT,
+            Type::Unknown => Self::AVMEDIA_TYPE_UNKNOWN,
+            Type::Video => Self::AVMEDIA_TYPE_VIDEO,
+            Type::Audio => Self::AVMEDIA_TYPE_AUDIO,
+            Type::Data => Self::AVMEDIA_TYPE_DATA,
+            Type::Subtitle => Self::AVMEDIA_TYPE_SUBTITLE,
+            Type::Attachment => Self::AVMEDIA_TYPE_ATTACHMENT,
         }
     }
 }

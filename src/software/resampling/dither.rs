@@ -1,4 +1,3 @@
-use crate::ffi::SwrDitherType::*;
 use crate::ffi::*;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
@@ -22,21 +21,23 @@ pub enum Dither {
 
 impl From<SwrDitherType> for Dither {
     fn from(value: SwrDitherType) -> Dither {
-        match value {
-            SWR_DITHER_NONE => Dither::None,
-            SWR_DITHER_RECTANGULAR => Dither::Rectangular,
-            SWR_DITHER_TRIANGULAR => Dither::Triangular,
-            SWR_DITHER_TRIANGULAR_HIGHPASS => Dither::TriangularHighPass,
+        use SwrDitherType as AV;
 
-            SWR_DITHER_NS => Dither::None,
-            SWR_DITHER_NS_LIPSHITZ => Dither::NoiseShapingLipshitz,
-            SWR_DITHER_NS_F_WEIGHTED => Dither::NoiseShapingFWeighted,
-            SWR_DITHER_NS_MODIFIED_E_WEIGHTED => Dither::NoiseShapingModifiedEWeighted,
-            SWR_DITHER_NS_IMPROVED_E_WEIGHTED => Dither::NoiseShapingImprovedEWeighted,
-            SWR_DITHER_NS_SHIBATA => Dither::NoiseShapingShibata,
-            SWR_DITHER_NS_LOW_SHIBATA => Dither::NoiseShapingLowShibata,
-            SWR_DITHER_NS_HIGH_SHIBATA => Dither::NoiseShapingHighShibata,
-            SWR_DITHER_NB => Dither::None,
+        match value {
+            AV::SWR_DITHER_NONE => Dither::None,
+            AV::SWR_DITHER_RECTANGULAR => Dither::Rectangular,
+            AV::SWR_DITHER_TRIANGULAR => Dither::Triangular,
+            AV::SWR_DITHER_TRIANGULAR_HIGHPASS => Dither::TriangularHighPass,
+
+            AV::SWR_DITHER_NS => Dither::None,
+            AV::SWR_DITHER_NS_LIPSHITZ => Dither::NoiseShapingLipshitz,
+            AV::SWR_DITHER_NS_F_WEIGHTED => Dither::NoiseShapingFWeighted,
+            AV::SWR_DITHER_NS_MODIFIED_E_WEIGHTED => Dither::NoiseShapingModifiedEWeighted,
+            AV::SWR_DITHER_NS_IMPROVED_E_WEIGHTED => Dither::NoiseShapingImprovedEWeighted,
+            AV::SWR_DITHER_NS_SHIBATA => Dither::NoiseShapingShibata,
+            AV::SWR_DITHER_NS_LOW_SHIBATA => Dither::NoiseShapingLowShibata,
+            AV::SWR_DITHER_NS_HIGH_SHIBATA => Dither::NoiseShapingHighShibata,
+            AV::SWR_DITHER_NB => Dither::None,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -47,18 +48,18 @@ impl From<SwrDitherType> for Dither {
 impl From<Dither> for SwrDitherType {
     fn from(value: Dither) -> SwrDitherType {
         match value {
-            Dither::None => SWR_DITHER_NONE,
-            Dither::Rectangular => SWR_DITHER_RECTANGULAR,
-            Dither::Triangular => SWR_DITHER_TRIANGULAR,
-            Dither::TriangularHighPass => SWR_DITHER_TRIANGULAR_HIGHPASS,
+            Dither::None => Self::SWR_DITHER_NONE,
+            Dither::Rectangular => Self::SWR_DITHER_RECTANGULAR,
+            Dither::Triangular => Self::SWR_DITHER_TRIANGULAR,
+            Dither::TriangularHighPass => Self::SWR_DITHER_TRIANGULAR_HIGHPASS,
 
-            Dither::NoiseShapingLipshitz => SWR_DITHER_NS_LIPSHITZ,
-            Dither::NoiseShapingFWeighted => SWR_DITHER_NS_F_WEIGHTED,
-            Dither::NoiseShapingModifiedEWeighted => SWR_DITHER_NS_MODIFIED_E_WEIGHTED,
-            Dither::NoiseShapingImprovedEWeighted => SWR_DITHER_NS_IMPROVED_E_WEIGHTED,
-            Dither::NoiseShapingShibata => SWR_DITHER_NS_SHIBATA,
-            Dither::NoiseShapingLowShibata => SWR_DITHER_NS_LOW_SHIBATA,
-            Dither::NoiseShapingHighShibata => SWR_DITHER_NS_HIGH_SHIBATA,
+            Dither::NoiseShapingLipshitz => Self::SWR_DITHER_NS_LIPSHITZ,
+            Dither::NoiseShapingFWeighted => Self::SWR_DITHER_NS_F_WEIGHTED,
+            Dither::NoiseShapingModifiedEWeighted => Self::SWR_DITHER_NS_MODIFIED_E_WEIGHTED,
+            Dither::NoiseShapingImprovedEWeighted => Self::SWR_DITHER_NS_IMPROVED_E_WEIGHTED,
+            Dither::NoiseShapingShibata => Self::SWR_DITHER_NS_SHIBATA,
+            Dither::NoiseShapingLowShibata => Self::SWR_DITHER_NS_LOW_SHIBATA,
+            Dither::NoiseShapingHighShibata => Self::SWR_DITHER_NS_HIGH_SHIBATA,
         }
     }
 }

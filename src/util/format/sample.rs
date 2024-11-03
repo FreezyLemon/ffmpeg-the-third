@@ -3,7 +3,6 @@ use std::ops::Index;
 use std::ptr;
 use std::slice;
 
-use crate::ffi::AVSampleFormat::*;
 use crate::ffi::*;
 use crate::utils;
 use libc::{c_int, c_void};
@@ -70,24 +69,26 @@ impl Sample {
 impl From<AVSampleFormat> for Sample {
     #[inline]
     fn from(value: AVSampleFormat) -> Self {
+        use AVSampleFormat as AV;
+
         match value {
-            AV_SAMPLE_FMT_NONE => Sample::None,
+            AV::AV_SAMPLE_FMT_NONE => Self::None,
 
-            AV_SAMPLE_FMT_U8 => Sample::U8(Type::Packed),
-            AV_SAMPLE_FMT_S16 => Sample::I16(Type::Packed),
-            AV_SAMPLE_FMT_S32 => Sample::I32(Type::Packed),
-            AV_SAMPLE_FMT_S64 => Sample::I64(Type::Packed),
-            AV_SAMPLE_FMT_FLT => Sample::F32(Type::Packed),
-            AV_SAMPLE_FMT_DBL => Sample::F64(Type::Packed),
+            AV::AV_SAMPLE_FMT_U8 => Self::U8(Type::Packed),
+            AV::AV_SAMPLE_FMT_S16 => Self::I16(Type::Packed),
+            AV::AV_SAMPLE_FMT_S32 => Self::I32(Type::Packed),
+            AV::AV_SAMPLE_FMT_S64 => Self::I64(Type::Packed),
+            AV::AV_SAMPLE_FMT_FLT => Self::F32(Type::Packed),
+            AV::AV_SAMPLE_FMT_DBL => Self::F64(Type::Packed),
 
-            AV_SAMPLE_FMT_U8P => Sample::U8(Type::Planar),
-            AV_SAMPLE_FMT_S16P => Sample::I16(Type::Planar),
-            AV_SAMPLE_FMT_S32P => Sample::I32(Type::Planar),
-            AV_SAMPLE_FMT_S64P => Sample::I64(Type::Planar),
-            AV_SAMPLE_FMT_FLTP => Sample::F32(Type::Planar),
-            AV_SAMPLE_FMT_DBLP => Sample::F64(Type::Planar),
+            AV::AV_SAMPLE_FMT_U8P => Self::U8(Type::Planar),
+            AV::AV_SAMPLE_FMT_S16P => Self::I16(Type::Planar),
+            AV::AV_SAMPLE_FMT_S32P => Self::I32(Type::Planar),
+            AV::AV_SAMPLE_FMT_S64P => Self::I64(Type::Planar),
+            AV::AV_SAMPLE_FMT_FLTP => Self::F32(Type::Planar),
+            AV::AV_SAMPLE_FMT_DBLP => Self::F64(Type::Planar),
 
-            AV_SAMPLE_FMT_NB => Sample::None,
+            AV::AV_SAMPLE_FMT_NB => Self::None,
 
             #[cfg(feature = "non-exhaustive-enums")]
             _ => unimplemented!(),
@@ -109,22 +110,24 @@ impl From<&'static str> for Sample {
 impl From<Sample> for AVSampleFormat {
     #[inline]
     fn from(value: Sample) -> AVSampleFormat {
+        use Sample as SF;
+
         match value {
-            Sample::None => AV_SAMPLE_FMT_NONE,
+            SF::None => Self::AV_SAMPLE_FMT_NONE,
 
-            Sample::U8(Type::Packed) => AV_SAMPLE_FMT_U8,
-            Sample::I16(Type::Packed) => AV_SAMPLE_FMT_S16,
-            Sample::I32(Type::Packed) => AV_SAMPLE_FMT_S32,
-            Sample::I64(Type::Packed) => AV_SAMPLE_FMT_S64,
-            Sample::F32(Type::Packed) => AV_SAMPLE_FMT_FLT,
-            Sample::F64(Type::Packed) => AV_SAMPLE_FMT_DBL,
+            SF::U8(Type::Packed) => Self::AV_SAMPLE_FMT_U8,
+            SF::I16(Type::Packed) => Self::AV_SAMPLE_FMT_S16,
+            SF::I32(Type::Packed) => Self::AV_SAMPLE_FMT_S32,
+            SF::I64(Type::Packed) => Self::AV_SAMPLE_FMT_S64,
+            SF::F32(Type::Packed) => Self::AV_SAMPLE_FMT_FLT,
+            SF::F64(Type::Packed) => Self::AV_SAMPLE_FMT_DBL,
 
-            Sample::U8(Type::Planar) => AV_SAMPLE_FMT_U8P,
-            Sample::I16(Type::Planar) => AV_SAMPLE_FMT_S16P,
-            Sample::I32(Type::Planar) => AV_SAMPLE_FMT_S32P,
-            Sample::I64(Type::Planar) => AV_SAMPLE_FMT_S64P,
-            Sample::F32(Type::Planar) => AV_SAMPLE_FMT_FLTP,
-            Sample::F64(Type::Planar) => AV_SAMPLE_FMT_DBLP,
+            SF::U8(Type::Planar) => Self::AV_SAMPLE_FMT_U8P,
+            SF::I16(Type::Planar) => Self::AV_SAMPLE_FMT_S16P,
+            SF::I32(Type::Planar) => Self::AV_SAMPLE_FMT_S32P,
+            SF::I64(Type::Planar) => Self::AV_SAMPLE_FMT_S64P,
+            SF::F32(Type::Planar) => Self::AV_SAMPLE_FMT_FLTP,
+            SF::F64(Type::Planar) => Self::AV_SAMPLE_FMT_DBLP,
         }
     }
 }
