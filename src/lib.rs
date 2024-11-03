@@ -4,6 +4,7 @@
 #![allow(clippy::too_many_arguments)]
 // FFI Types may differ across platforms, making casts necessary
 #![allow(clippy::unnecessary_cast)]
+#![deny(clippy::enum_glob_use)]
 
 #[macro_use]
 extern crate bitflags;
