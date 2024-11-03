@@ -2,10 +2,10 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use std::slice;
 
-use super::Frame;
 use crate::ffi::AVFrameSideDataType::*;
 use crate::ffi::*;
 use crate::utils;
+use crate::DictionaryMut;
 use crate::DictionaryRef;
 #[cfg(feature = "serialize")]
 use serde::{Deserialize, Serialize};
@@ -222,20 +222,23 @@ impl<'a> SideData<'a> {
         NonNull::new(ptr as *mut _).map(|ptr| Self { ptr, _marker: PhantomData })
     }
 
+    #[inline]
     pub unsafe fn as_ptr(&self) -> *const AVFrameSideData {
         self.ptr.as_ptr()
     }
 }
 
 impl<'a> SideDataMut<'a> {
-    pub unsafe fn from_raw(ptr: *const AVFrameSideData) -> Option<Self> {
-        NonNull::new(ptr as *mut _).map(|ptr| Self { ptr, _marker: PhantomData })
+    pub unsafe fn from_raw(ptr: *mut AVFrameSideData) -> Option<Self> {
+        NonNull::new(ptr).map(|ptr| Self { ptr, _marker: PhantomData })
     }
 
+    #[inline]
     pub unsafe fn as_ptr(&self) -> *const AVFrameSideData {
         self.ptr.as_ptr()
     }
 
+    #[inline]
     pub unsafe fn as_mut_ptr(&mut self) -> *mut AVFrameSideData {
         self.ptr.as_ptr()
     }
@@ -270,7 +273,17 @@ impl<'a> SideDataMut<'a> {
     }
 
     #[inline]
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        unsafe { slice::from_raw_parts_mut((*self.as_mut_ptr()).data, (*self.as_mut_ptr()).size as usize)}
+    }
+
+    #[inline]
     pub fn metadata(&self) -> DictionaryRef {
         unsafe { DictionaryRef::wrap((*self.as_ptr()).metadata) }
+    }
+
+    #[inline]
+    pub fn metadata_mut(&mut self) -> DictionaryMut {
+        unsafe { DictionaryMut::wrap((*self.as_mut_ptr()).metadata) }
     }
 }
