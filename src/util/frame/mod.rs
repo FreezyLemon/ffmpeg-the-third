@@ -126,12 +126,7 @@ impl Frame {
     pub fn side_data(&self, kind: side_data::Type) -> Option<SideData<'_>> {
         unsafe {
             let ptr = av_frame_get_side_data(self.as_ptr(), kind.into());
-
-            if ptr.is_null() {
-                None
-            } else {
-                Some(SideData::wrap(ptr))
-            }
+            SideData::from_raw(ptr)
         }
     }
 
@@ -139,12 +134,7 @@ impl Frame {
     pub fn new_side_data(&mut self, kind: side_data::Type, size: usize) -> Option<SideData<'_>> {
         unsafe {
             let ptr = av_frame_new_side_data(self.as_mut_ptr(), kind.into(), size as _);
-
-            if ptr.is_null() {
-                None
-            } else {
-                Some(SideData::wrap(ptr))
-            }
+            SideData::from_raw(ptr)
         }
     }
 
