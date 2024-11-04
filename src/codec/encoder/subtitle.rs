@@ -1,12 +1,10 @@
 use std::ops::{Deref, DerefMut};
-use std::ptr;
 
 use crate::ffi::*;
 use libc::c_int;
 
 use super::Encoder as Super;
-use crate::codec::traits;
-use crate::{Dictionary, Error};
+use crate::Error;
 
 pub struct Subtitle(pub Super);
 

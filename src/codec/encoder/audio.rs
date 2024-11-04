@@ -1,16 +1,12 @@
 use std::ops::{Deref, DerefMut};
-use std::ptr;
 
-use crate::ffi::*;
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use libc::c_int;
 
 use super::Encoder as Super;
-use crate::codec::{traits, Context};
 use crate::util::format;
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::{frame, packet};
-use crate::{Dictionary, Error};
 
 #[cfg(feature = "ffmpeg_5_1")]
 use crate::ChannelLayout;
