@@ -374,18 +374,6 @@ impl DerefMut for Video {
     }
 }
 
-impl AsRef<Context> for Video {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Video {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
-    }
-}
-
 pub struct Encoder(pub Video);
 
 impl Encoder {
@@ -464,18 +452,6 @@ impl Deref for Encoder {
 impl DerefMut for Encoder {
     #[inline]
     fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
-    }
-}
-
-impl AsRef<Context> for Encoder {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Encoder {
-    fn as_mut(&mut self) -> &mut Context {
         &mut self.0
     }
 }

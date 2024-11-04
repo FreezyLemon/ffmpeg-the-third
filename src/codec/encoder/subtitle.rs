@@ -70,18 +70,6 @@ impl DerefMut for Subtitle {
     }
 }
 
-impl AsRef<Context> for Subtitle {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Subtitle {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
-    }
-}
-
 pub struct Encoder(pub Subtitle);
 
 impl Encoder {
@@ -110,18 +98,6 @@ impl Deref for Encoder {
 
 impl DerefMut for Encoder {
     fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
-    }
-}
-
-impl AsRef<Context> for Encoder {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Encoder {
-    fn as_mut(&mut self) -> &mut Context {
         &mut self.0
     }
 }

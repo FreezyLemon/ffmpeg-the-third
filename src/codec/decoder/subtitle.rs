@@ -44,15 +44,3 @@ impl DerefMut for Subtitle {
         &mut self.0
     }
 }
-
-impl AsRef<Context> for Subtitle {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Subtitle {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
-    }
-}

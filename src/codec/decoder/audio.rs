@@ -146,15 +146,3 @@ impl DerefMut for Audio {
         &mut self.0
     }
 }
-
-impl AsRef<Context> for Audio {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Audio {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
-    }
-}

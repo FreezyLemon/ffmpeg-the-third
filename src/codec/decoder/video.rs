@@ -144,15 +144,3 @@ impl DerefMut for Video {
         &mut self.0
     }
 }
-
-impl AsRef<Context> for Video {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Video {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
-    }
-}
