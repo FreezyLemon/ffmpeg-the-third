@@ -154,7 +154,7 @@ impl<A, S> Context<A, S> {
     }
 }
 
-impl Context<Closed> {
+impl<A> Context<A, Closed> {
     // previous impl:
     // pub fn open(mut self) -> Result<Opened, Error> {
     //     unsafe {
