@@ -17,68 +17,6 @@ pub struct Video(pub Super);
 
 impl Video {
     #[inline]
-    pub fn open(mut self) -> Result<Encoder, Error> {
-        unsafe {
-            match avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut()) {
-                0 => Ok(Encoder(self)),
-                e => Err(Error::from(e)),
-            }
-        }
-    }
-
-    #[inline]
-    pub fn open_as<T, E: traits::Encoder<T>>(mut self, codec: E) -> Result<Encoder, Error> {
-        unsafe {
-            if let Some(codec) = codec.encoder() {
-                match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
-                    0 => Ok(Encoder(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::EncoderNotFound)
-            }
-        }
-    }
-
-    #[inline]
-    pub fn open_with(mut self, options: Dictionary) -> Result<Encoder, Error> {
-        unsafe {
-            let mut opts = options.disown();
-            let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut opts);
-
-            Dictionary::own(opts);
-
-            match res {
-                0 => Ok(Encoder(self)),
-                e => Err(Error::from(e)),
-            }
-        }
-    }
-
-    #[inline]
-    pub fn open_as_with<T, E: traits::Encoder<T>>(
-        mut self,
-        codec: E,
-        options: Dictionary,
-    ) -> Result<Encoder, Error> {
-        unsafe {
-            if let Some(codec) = codec.encoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
-
-                match res {
-                    0 => Ok(Encoder(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::EncoderNotFound)
-            }
-        }
-    }
-
-    #[inline]
     pub fn set_width(&mut self, value: u32) {
         unsafe {
             (*self.as_mut_ptr()).width = value as c_int;

@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::rc::Rc;
 
-use super::{Context, Id};
+use super::Id;
 use crate::ffi::*;
 use crate::media;
 

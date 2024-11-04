@@ -330,6 +330,30 @@ impl<S> Context<Encoding, S> {
 }
 
 impl Context<Closed> {
+    // previous impl:
+    // pub fn open(mut self) -> Result<Opened, Error> {
+    //     unsafe {
+    //         match avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut()) {
+    //             0 => Ok(Opened(self)),
+    //             e => Err(Error::from(e)),
+    //         }
+    //     }
+    // }
+
+    // pub fn open_with(mut self, options: Dictionary) -> Result<Encoder, Error> {
+    //     unsafe {
+    //         let mut opts = options.disown();
+    //         let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut opts);
+
+    //         Dictionary::own(opts);
+
+    //         match res {
+    //             0 => Ok(Encoder(self)),
+    //             e => Err(Error::from(e)),
+    //         }
+    //     }
+    // }
+
     pub fn open(mut self) -> Result<Context<Opened>, Error> {
         let ret = unsafe {
             // TODO: support third param (options)

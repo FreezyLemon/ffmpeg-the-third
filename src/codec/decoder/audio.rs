@@ -6,7 +6,6 @@ use crate::ffi::*;
 use libc::c_int;
 
 use super::Opened;
-use crate::codec::Context;
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::frame;
 use crate::util::format;

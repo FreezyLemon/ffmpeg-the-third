@@ -23,14 +23,9 @@ pub use self::opened::Opened;
 
 use std::ffi::CString;
 
-use crate::codec::Context;
 use crate::codec::Id;
 use crate::ffi::*;
 use crate::Codec;
-
-pub fn new() -> Decoder {
-    Context::new().decoder()
-}
 
 pub fn find(id: Id) -> Option<Codec> {
     unsafe {

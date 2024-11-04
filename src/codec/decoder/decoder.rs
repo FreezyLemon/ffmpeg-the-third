@@ -9,50 +9,6 @@ use crate::{Dictionary, Discard, Error, Rational};
 pub struct Decoder(pub Context);
 
 impl Decoder {
-    pub fn open(mut self) -> Result<Opened, Error> {
-        unsafe {
-            match avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut()) {
-                0 => Ok(Opened(self)),
-                e => Err(Error::from(e)),
-            }
-        }
-    }
-
-    pub fn open_as<T, D: traits::Decoder<T>>(mut self, codec: D) -> Result<Opened, Error> {
-        unsafe {
-            if let Some(codec) = codec.decoder() {
-                match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
-                    0 => Ok(Opened(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::DecoderNotFound)
-            }
-        }
-    }
-
-    pub fn open_as_with<T, D: traits::Decoder<T>>(
-        mut self,
-        codec: D,
-        options: Dictionary,
-    ) -> Result<Opened, Error> {
-        unsafe {
-            if let Some(codec) = codec.decoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
-
-                match res {
-                    0 => Ok(Opened(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::DecoderNotFound)
-            }
-        }
-    }
-
     pub fn video(self) -> Result<Video, Error> {
         if let Some(codec) = super::find(self.id()) {
             self.open_as(codec).and_then(|o| o.video())
