@@ -5,8 +5,8 @@ use std::marker::PhantomData;
 use std::ptr::{self, NonNull};
 
 use super::{threading, Compliance, Debug, Flags, Id, Parameters};
-use crate::media;
 use crate::ffi::*;
+use crate::media;
 use crate::{Codec, Error};
 use libc::{c_int, c_uint};
 
@@ -14,28 +14,75 @@ use libc::{c_int, c_uint};
 // (Type = Video/Audio)?
 // State = Closed/Opened
 
-pub type Decoder = Context<Decoding>;
-pub type Encoder = Context<Encoding>;
+pub type Decoder<CodecType> = Context<Decoding, CodecType>;
+pub type Encoder<CodecType> = Context<Encoding, CodecType>;
 
 #[derive(Debug)]
-pub struct Context<Action, State = Closed> {
+pub struct Context<Action, CodecType, State = Closed>
+where
+    Action: self::Action,
+    CodecType: self::CodecType,
+    State: self::State,
+{
     ptr: NonNull<AVCodecContext>,
-    _marker: PhantomData<(Action, State)>,
+    _marker: PhantomData<(Action, CodecType, State)>,
 }
 
-unsafe impl<A, S> Send for Context<A, S> {}
+unsafe impl<A: Action, T: CodecType, S: State> Send for Context<A, T, S> {}
+
+// TODO: Seal with traits?
+mod private {
+    pub trait Sealed {}
+
+    impl Sealed for super::Decoding {}
+    impl Sealed for super::Encoding {}
+    impl Sealed for super::Video {}
+    impl Sealed for super::Audio {}
+    impl Sealed for super::Data {}
+    impl Sealed for super::Subtitle {}
+    impl Sealed for super::Attachment {}
+    impl Sealed for super::Closed {}
+    impl Sealed for super::Opened {}
+}
+
+pub trait Action: private::Sealed {}
+pub trait CodecType: private::Sealed {}
+pub trait State: private::Sealed {}
 
 #[derive(Debug)]
 pub struct Decoding;
 #[derive(Debug)]
 pub struct Encoding;
 
+impl Action for Decoding {}
+impl Action for Encoding {}
+
+#[derive(Debug)]
+pub struct Video;
+#[derive(Debug)]
+pub struct Audio;
+#[derive(Debug)]
+pub struct Data;
+#[derive(Debug)]
+pub struct Subtitle;
+#[derive(Debug)]
+pub struct Attachment;
+
+impl CodecType for Video {}
+impl CodecType for Audio {}
+impl CodecType for Data {}
+impl CodecType for Subtitle {}
+impl CodecType for Attachment {}
+
 #[derive(Debug)]
 pub struct Closed;
 #[derive(Debug)]
 pub struct Opened;
 
-fn new_context<A, S>(codec: Codec) -> Context<A, S> {
+impl State for Closed {}
+impl State for Opened {}
+
+fn new_context<A: Action, T: CodecType, S: State>(codec: Codec) -> Context<A, T, S> {
     let ptr = unsafe { avcodec_alloc_context3(codec.as_ptr()) };
 
     Context {
@@ -43,6 +90,8 @@ fn new_context<A, S>(codec: Codec) -> Context<A, S> {
         _marker: PhantomData,
     }
 }
+
+// TODO: How to make `fn new` more ergonomic?
 
 impl Decoder {
     pub fn new(codec: Codec) -> Self {
@@ -58,7 +107,7 @@ impl Encoder {
     }
 }
 
-impl<A, S> Context<A, S> {
+impl<A, T, S> Context<A, T, S> {
     // pub fn from_parameters<P: Into<Parameters>>(codec: Codec, parameters: P) -> Result<ContextNew, Error> {
     //     let parameters = parameters.into();
     //     let mut context = Self::new(codec);
@@ -154,7 +203,7 @@ impl<A, S> Context<A, S> {
     }
 }
 
-impl<A> Context<A, Closed> {
+impl<A, T> Context<A, T, Closed> {
     // previous impl:
     // pub fn open(mut self) -> Result<Opened, Error> {
     //     unsafe {
@@ -165,7 +214,7 @@ impl<A> Context<A, Closed> {
     //     }
     // }
 
-    pub fn open(mut self) -> Result<Context<Opened>, Error> {
+    pub fn open(mut self) -> Result<Context<A, T, Opened>, Error> {
         let ret = unsafe {
             // TODO: support third param (options)
             avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut())
@@ -202,7 +251,7 @@ impl<A> Context<A, Closed> {
     // }
 }
 
-impl<A, S> Drop for Context<A, S> {
+impl<A, T, S> Drop for Context<A, T, S> {
     fn drop(&mut self) {
         unsafe {
             avcodec_free_context(&mut self.as_mut_ptr());
