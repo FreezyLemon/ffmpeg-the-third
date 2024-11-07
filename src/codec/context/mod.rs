@@ -6,6 +6,7 @@ use std::ptr::{self, NonNull};
 
 use super::{threading, Compliance, Debug, Flags, Id, Parameters};
 use crate::ffi::*;
+use crate::codec::codec::*;
 use crate::media;
 use crate::{Codec, Error};
 use libc::{c_int, c_uint};
@@ -21,11 +22,11 @@ pub type Encoder<CodecType> = Context<Encoding, CodecType>;
 pub struct Context<Action, CodecType, State = Closed>
 where
     Action: self::Action,
-    CodecType: self::CodecType,
+    CodecType: crate::codec::CodecType,
     State: self::State,
 {
     ptr: NonNull<AVCodecContext>,
-    _marker: PhantomData<(Action, CodecType, State)>,
+    _marker: PhantomData<(Action, Codec<CodecType>, State)>,
 }
 
 unsafe impl<A: Action, T: CodecType, S: State> Send for Context<A, T, S> {}
@@ -36,17 +37,11 @@ mod private {
 
     impl Sealed for super::Decoding {}
     impl Sealed for super::Encoding {}
-    impl Sealed for super::Video {}
-    impl Sealed for super::Audio {}
-    impl Sealed for super::Data {}
-    impl Sealed for super::Subtitle {}
-    impl Sealed for super::Attachment {}
     impl Sealed for super::Closed {}
     impl Sealed for super::Opened {}
 }
 
 pub trait Action: private::Sealed {}
-pub trait CodecType: private::Sealed {}
 pub trait State: private::Sealed {}
 
 #[derive(Debug)]
@@ -58,23 +53,6 @@ impl Action for Decoding {}
 impl Action for Encoding {}
 
 #[derive(Debug)]
-pub struct Video;
-#[derive(Debug)]
-pub struct Audio;
-#[derive(Debug)]
-pub struct Data;
-#[derive(Debug)]
-pub struct Subtitle;
-#[derive(Debug)]
-pub struct Attachment;
-
-impl CodecType for Video {}
-impl CodecType for Audio {}
-impl CodecType for Data {}
-impl CodecType for Subtitle {}
-impl CodecType for Attachment {}
-
-#[derive(Debug)]
 pub struct Closed;
 #[derive(Debug)]
 pub struct Opened;
@@ -82,7 +60,7 @@ pub struct Opened;
 impl State for Closed {}
 impl State for Opened {}
 
-fn new_context<A: Action, T: CodecType, S: State>(codec: Codec) -> Context<A, T, S> {
+fn new_context<A: Action, T: CodecType, S: State>(codec: Codec<T>) -> Context<A, T, S> {
     let ptr = unsafe { avcodec_alloc_context3(codec.as_ptr()) };
 
     Context {
@@ -93,21 +71,59 @@ fn new_context<A: Action, T: CodecType, S: State>(codec: Codec) -> Context<A, T,
 
 // TODO: How to make `fn new` more ergonomic?
 
-impl Decoder {
-    pub fn new(codec: Codec) -> Self {
-        assert!(codec.is_decoder(), "Codec does not support decoding");
-        new_context(codec)
-    }
-}
+// impl Decoder {
+//     pub fn new(codec: Codec) -> Self {
+//         assert!(codec.is_decoder(), "Codec does not support decoding");
+//         new_context(codec)
+//     }
+// }
 
-impl Encoder {
-    pub fn new(codec: Codec) -> Self {
-        assert!(codec.is_encoder(), "Codec does not support encoding");
-        new_context(codec)
-    }
-}
+// impl Encoder {
+//     pub fn new(codec: Codec) -> Self {
+//         assert!(codec.is_encoder(), "Codec does not support encoding");
+//         new_context(codec)
+//     }
+// }
 
-impl<A, T, S> Context<A, T, S> {
+impl<A: Action, C: CodecType, S: State> Context<A, C, S> {
+// impl CodecType for Video {}
+// impl CodecType for Audio {}
+// impl CodecType for Data {}
+// impl CodecType for Subtitle {}
+// impl CodecType for Attachment {}
+
+    pub fn new_video_encoder(codec: Codec) -> Option<Context<Encoding, VideoType>> {
+        if codec.is_encoder() {
+            codec.video().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_video_decoder(codec: Codec) -> Option<Context<Decoding, VideoType>> {
+        if codec.is_decoder() {
+            codec.video().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_audio_encoder(codec: Codec) -> Option<Context<Encoding, AudioType>> {
+        if codec.is_encoder() {
+            codec.audio().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_audio_decoder(codec: Codec) -> Option<Context<Decoding, AudioType>> {
+        if codec.is_decoder() {
+            codec.audio().map(new_context)
+        } else {
+            None
+        }
+    }
+
     // pub fn from_parameters<P: Into<Parameters>>(codec: Codec, parameters: P) -> Result<ContextNew, Error> {
     //     let parameters = parameters.into();
     //     let mut context = Self::new(codec);
@@ -203,7 +219,7 @@ impl<A, T, S> Context<A, T, S> {
     }
 }
 
-impl<A, T> Context<A, T, Closed> {
+impl<A: Action, C: CodecType> Context<A, C, Closed> {
     // previous impl:
     // pub fn open(mut self) -> Result<Opened, Error> {
     //     unsafe {
@@ -214,7 +230,7 @@ impl<A, T> Context<A, T, Closed> {
     //     }
     // }
 
-    pub fn open(mut self) -> Result<Context<A, T, Opened>, Error> {
+    pub fn open(mut self) -> Result<Context<A, C, Opened>, Error> {
         let ret = unsafe {
             // TODO: support third param (options)
             avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut())
@@ -251,7 +267,7 @@ impl<A, T> Context<A, T, Closed> {
     // }
 }
 
-impl<A, T, S> Drop for Context<A, T, S> {
+impl<A: Action, C: CodecType, S: State> Drop for Context<A, C, S> {
     fn drop(&mut self) {
         unsafe {
             avcodec_free_context(&mut self.as_mut_ptr());

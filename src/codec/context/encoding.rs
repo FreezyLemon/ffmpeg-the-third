@@ -1,8 +1,8 @@
-use super::{Context, Encoding};
+use super::{CodecType, Context, Encoding, State};
 use crate::{chroma, color, format, FieldOrder, Rational};
 use libc::c_int;
 
-impl<S> Context<Encoding, S> {
+impl<C: CodecType, S: State> Context<Encoding, C, S> {
     // Optional for CFR content
     pub fn set_framerate(&mut self, framerate: Rational) {
         unsafe {

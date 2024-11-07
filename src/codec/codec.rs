@@ -26,12 +26,39 @@ pub struct Codec<Type = UnknownType> {
     _marker: PhantomData<Type>,
 }
 
+mod private {
+    use super::*;
+
+    pub trait Sealed {}
+
+    impl Sealed for UnknownType {}
+    impl Sealed for VideoType {}
+    impl Sealed for AudioType {}
+    impl Sealed for DataType {}
+    impl Sealed for SubtitleType {}
+    impl Sealed for AttachmentType {}
+}
+
+pub trait CodecType : private::Sealed {}
+impl CodecType for UnknownType {}
+impl CodecType for VideoType {}
+impl CodecType for AudioType {}
+impl CodecType for DataType {}
+impl CodecType for SubtitleType {}
+impl CodecType for AttachmentType {}
+
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct UnknownType;
 #[derive(PartialEq, Eq, Copy, Clone)]
+pub struct VideoType;
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub struct AudioType;
 #[derive(PartialEq, Eq, Copy, Clone)]
-pub struct VideoType;
+pub struct DataType;
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub struct SubtitleType;
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub struct AttachmentType;
 
 unsafe impl<T> Send for Codec<T> {}
 unsafe impl<T> Sync for Codec<T> {}

@@ -1,8 +1,8 @@
-use super::{Context, Decoding};
+use super::{CodecType, Context, Decoding, State};
 use crate::{chroma, color, format, FieldOrder, Rational};
 use libc::c_int;
 
-impl<S> Context<Decoding, S> {
+impl<C: CodecType, S: State> Context<Decoding, C, S> {
     // MUST be set
     pub fn set_time_base(&mut self, time_base: Rational) {
         unsafe {
