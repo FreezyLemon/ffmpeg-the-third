@@ -1,4 +1,5 @@
-use super::{CodecType, Context, Encoding, State};
+use crate::codec::codec::CodecType;
+use crate::codec::context::{Context, Encoding, State};
 use crate::{chroma, color, format, FieldOrder, Rational};
 use libc::c_int;
 

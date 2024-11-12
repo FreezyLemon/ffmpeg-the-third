@@ -19,6 +19,9 @@ pub fn list_descriptors() -> CodecDescriptorIter {
 
 pub type Audio = Codec<AudioType>;
 pub type Video = Codec<VideoType>;
+pub type Data = Codec<DataType>;
+pub type Subtitle = Codec<SubtitleType>;
+pub type Attachment = Codec<AttachmentType>;
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct Codec<Type = UnknownType> {
@@ -39,7 +42,7 @@ mod private {
     impl Sealed for AttachmentType {}
 }
 
-pub trait CodecType : private::Sealed {}
+pub trait CodecType: private::Sealed {}
 impl CodecType for UnknownType {}
 impl CodecType for VideoType {}
 impl CodecType for AudioType {}
@@ -73,6 +76,76 @@ impl Codec<UnknownType> {
             _marker: PhantomData,
         })
     }
+
+    // Helper function to easily convert to another codec type.
+    // TODO: Does this need to be unsafe?
+    /// Ensure that `self.medium()` is correct for `Codec<U>`.
+    fn as_other_codec<U>(self) -> Codec<U> {
+        Codec {
+            ptr: self.ptr,
+            _marker: PhantomData,
+        }
+    }
+
+    pub fn is_video(&self) -> bool {
+        self.medium() == media::Type::Video
+    }
+
+    pub fn video(self) -> Option<Video> {
+        if self.is_video() {
+            Some(self.as_other_codec())
+        } else {
+            None
+        }
+    }
+
+    pub fn is_audio(&self) -> bool {
+        self.medium() == media::Type::Audio
+    }
+
+    pub fn audio(self) -> Option<Audio> {
+        if self.is_audio() {
+            Some(self.as_other_codec())
+        } else {
+            None
+        }
+    }
+
+    pub fn is_data(&self) -> bool {
+        self.medium() == media::Type::Data
+    }
+
+    pub fn data(self) -> Option<Data> {
+        if self.is_data() {
+            Some(self.as_other_codec())
+        } else {
+            None
+        }
+    }
+
+    pub fn is_subtitle(&self) -> bool {
+        self.medium() == media::Type::Subtitle
+    }
+
+    pub fn subtitle(self) -> Option<Subtitle> {
+        if self.is_subtitle() {
+            Some(self.as_other_codec())
+        } else {
+            None
+        }
+    }
+
+    pub fn is_attachment(&self) -> bool {
+        self.medium() == media::Type::Attachment
+    }
+
+    pub fn attachment(self) -> Option<Attachment> {
+        if self.is_attachment() {
+            Some(self.as_other_codec())
+        } else {
+            None
+        }
+    }
 }
 
 impl<T> Codec<T> {
@@ -102,36 +175,6 @@ impl<T> Codec<T> {
 
     pub fn id(&self) -> Id {
         unsafe { Id::from((*self.as_ptr()).id) }
-    }
-
-    pub fn is_video(&self) -> bool {
-        self.medium() == media::Type::Video
-    }
-
-    pub fn video(self) -> Option<Video> {
-        if self.medium() == media::Type::Video {
-            Some(Codec {
-                ptr: self.ptr,
-                _marker: PhantomData,
-            })
-        } else {
-            None
-        }
-    }
-
-    pub fn is_audio(&self) -> bool {
-        self.medium() == media::Type::Audio
-    }
-
-    pub fn audio(self) -> Option<Audio> {
-        if self.medium() == media::Type::Audio {
-            Some(Codec {
-                ptr: self.ptr,
-                _marker: PhantomData,
-            })
-        } else {
-            None
-        }
     }
 
     pub fn max_lowres(&self) -> i32 {

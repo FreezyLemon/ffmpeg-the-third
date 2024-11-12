@@ -5,18 +5,11 @@ use std::marker::PhantomData;
 use std::ptr::{self, NonNull};
 
 use super::{threading, Compliance, Debug, Flags, Id, Parameters};
-use crate::ffi::*;
 use crate::codec::codec::*;
+use crate::{ffi::*, Dictionary};
 use crate::media;
 use crate::{Codec, Error};
 use libc::{c_int, c_uint};
-
-// Action = Decode/Encode
-// (Type = Video/Audio)?
-// State = Closed/Opened
-
-pub type Decoder<CodecType> = Context<Decoding, CodecType>;
-pub type Encoder<CodecType> = Context<Encoding, CodecType>;
 
 #[derive(Debug)]
 pub struct Context<Action, CodecType, State = Closed>
@@ -69,29 +62,7 @@ fn new_context<A: Action, T: CodecType, S: State>(codec: Codec<T>) -> Context<A,
     }
 }
 
-// TODO: How to make `fn new` more ergonomic?
-
-// impl Decoder {
-//     pub fn new(codec: Codec) -> Self {
-//         assert!(codec.is_decoder(), "Codec does not support decoding");
-//         new_context(codec)
-//     }
-// }
-
-// impl Encoder {
-//     pub fn new(codec: Codec) -> Self {
-//         assert!(codec.is_encoder(), "Codec does not support encoding");
-//         new_context(codec)
-//     }
-// }
-
 impl<A: Action, C: CodecType, S: State> Context<A, C, S> {
-// impl CodecType for Video {}
-// impl CodecType for Audio {}
-// impl CodecType for Data {}
-// impl CodecType for Subtitle {}
-// impl CodecType for Attachment {}
-
     pub fn new_video_encoder(codec: Codec) -> Option<Context<Encoding, VideoType>> {
         if codec.is_encoder() {
             codec.video().map(new_context)
@@ -119,6 +90,54 @@ impl<A: Action, C: CodecType, S: State> Context<A, C, S> {
     pub fn new_audio_decoder(codec: Codec) -> Option<Context<Decoding, AudioType>> {
         if codec.is_decoder() {
             codec.audio().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_data_encoder(codec: Codec) -> Option<Context<Encoding, DataType>> {
+        if codec.is_encoder() {
+            codec.data().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_data_decoder(codec: Codec) -> Option<Context<Decoding, DataType>> {
+        if codec.is_decoder() {
+            codec.data().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_subtitle_encoder(codec: Codec) -> Option<Context<Encoding, SubtitleType>> {
+        if codec.is_encoder() {
+            codec.subtitle().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_subtitle_decoder(codec: Codec) -> Option<Context<Decoding, SubtitleType>> {
+        if codec.is_decoder() {
+            codec.subtitle().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_attachment_encoder(codec: Codec) -> Option<Context<Encoding, AttachmentType>> {
+        if codec.is_encoder() {
+            codec.attachment().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_attachment_decoder(codec: Codec) -> Option<Context<Decoding, AttachmentType>> {
+        if codec.is_decoder() {
+            codec.attachment().map(new_context)
         } else {
             None
         }
@@ -220,16 +239,6 @@ impl<A: Action, C: CodecType, S: State> Context<A, C, S> {
 }
 
 impl<A: Action, C: CodecType> Context<A, C, Closed> {
-    // previous impl:
-    // pub fn open(mut self) -> Result<Opened, Error> {
-    //     unsafe {
-    //         match avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut()) {
-    //             0 => Ok(Opened(self)),
-    //             e => Err(Error::from(e)),
-    //         }
-    //     }
-    // }
-
     pub fn open(mut self) -> Result<Context<A, C, Opened>, Error> {
         let ret = unsafe {
             // TODO: support third param (options)
@@ -246,25 +255,23 @@ impl<A: Action, C: CodecType> Context<A, C, Closed> {
         }
     }
 
-    // pub fn open_with(mut self, options: Dictionary) -> Result<Encoder, Error> {
-    //     unsafe {
-    //         let mut opts = options.disown();
-    //         let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut opts);
+    pub fn open_with(mut self, options: Dictionary) -> Result<Context<A, C, Opened>, Error> {
+        let ret = unsafe {
+            let mut opts = options.disown();
+            let ret = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut opts);
+            Dictionary::own(opts);
+            ret
+        };
 
-    //         Dictionary::own(opts);
-
-    //         match res {
-    //             0 => Ok(Encoder(self)),
-    //             e => Err(Error::from(e)),
-    //         }
-    //     }
-    // }
-
-    // pub fn asdf(&mut self) {
-    //     unsafe {
-
-    //     }
-    // }
+        if ret < 0 {
+            Err(Error::from(ret))
+        } else {
+            Ok(Context {
+                ptr: self.ptr,
+                _marker: PhantomData,
+            })
+        }
+    }
 }
 
 impl<A: Action, C: CodecType, S: State> Drop for Context<A, C, S> {
