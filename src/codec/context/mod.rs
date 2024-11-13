@@ -1,3 +1,6 @@
+mod audio;
+mod video;
+
 mod decoding;
 mod encoding;
 
@@ -173,6 +176,10 @@ impl<A: Action, C: CodecType, S: State> Context<A, C, S> {
 
     pub fn id(&self) -> Id {
         unsafe { Id::from((*self.as_ptr()).codec_id) }
+    }
+
+    pub fn max_bit_rate(&self) -> usize {
+        unsafe { (*self.as_ptr()).rc_max_rate as usize }
     }
 
     // TODO: Improve API

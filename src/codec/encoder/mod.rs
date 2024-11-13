@@ -1,9 +1,6 @@
 pub mod encoder;
 pub use self::encoder::Encoder;
 
-pub mod video;
-pub use self::video::Encoder as Video;
-
 pub mod audio;
 pub use self::audio::Encoder as Audio;
 

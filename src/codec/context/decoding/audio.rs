@@ -73,10 +73,6 @@ impl<S: State> AudioDecoder<S> {
         unsafe { AudioService::from((*self.as_mut_ptr()).audio_service_type) }
     }
 
-    pub fn max_bit_rate(&self) -> usize {
-        unsafe { (*self.as_ptr()).rc_max_rate as usize }
-    }
-
     pub fn frame_size(&self) -> u32 {
         unsafe { (*self.as_ptr()).frame_size as u32 }
     }

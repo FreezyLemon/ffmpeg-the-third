@@ -1,9 +1,6 @@
 pub mod decoder;
 pub use self::decoder::Decoder;
 
-pub mod video;
-pub use self::video::Video;
-
 pub mod subtitle;
 pub use self::subtitle::Subtitle;
 
