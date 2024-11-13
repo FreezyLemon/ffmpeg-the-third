@@ -3,13 +3,6 @@ use crate::{chroma, color, format, FieldOrder, Rational};
 use libc::c_int;
 
 impl<C: CodecType, S: State> Context<Decoding, C, S> {
-    // MUST be set
-    pub fn set_time_base(&mut self, time_base: Rational) {
-        unsafe {
-            (*self.as_mut_ptr()).time_base = time_base.into();
-        }
-    }
-
     pub fn set_pkt_timebase(&mut self, pkt_timebase: Rational) {
         unsafe {
             (*self.as_mut_ptr()).pkt_timebase = pkt_timebase.into();

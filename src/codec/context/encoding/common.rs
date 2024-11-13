@@ -4,6 +4,13 @@ use crate::{chroma, color, format, FieldOrder, Rational};
 use libc::c_int;
 
 impl<C: CodecType, S: State> Context<Encoding, C, S> {
+    // MUST be set
+    pub fn set_time_base(&mut self, time_base: Rational) {
+        unsafe {
+            (*self.as_mut_ptr()).time_base = time_base.into();
+        }
+    }
+
     // Optional for CFR content
     pub fn set_framerate(&mut self, framerate: Rational) {
         unsafe {

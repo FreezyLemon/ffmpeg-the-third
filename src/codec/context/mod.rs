@@ -6,8 +6,8 @@ use std::ptr::{self, NonNull};
 
 use super::{threading, Compliance, Debug, Flags, Id, Parameters};
 use crate::codec::codec::*;
-use crate::{ffi::*, Dictionary};
 use crate::media;
+use crate::{ffi::*, Dictionary};
 use crate::{Codec, Error};
 use libc::{c_int, c_uint};
 
