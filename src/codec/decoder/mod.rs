@@ -4,9 +4,6 @@ pub use self::decoder::Decoder;
 pub mod video;
 pub use self::video::Video;
 
-pub mod audio;
-pub use self::audio::Audio;
-
 pub mod subtitle;
 pub use self::subtitle::Subtitle;
 
