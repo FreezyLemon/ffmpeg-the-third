@@ -1,7 +1,6 @@
 use std::ops::{Deref, DerefMut};
 use std::ptr;
 
-use super::Video;
 use crate::codec::Profile;
 use crate::ffi::*;
 use crate::{media, packet, Error, Frame, Rational};
