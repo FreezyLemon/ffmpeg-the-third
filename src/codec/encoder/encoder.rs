@@ -4,7 +4,6 @@ use std::ptr;
 use crate::ffi::*;
 use libc::c_int;
 
-use super::subtitle;
 use crate::codec::Context;
 use crate::{media, packet, Error, Frame, Rational};
 

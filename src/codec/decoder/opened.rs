@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 use std::ptr;
 
-use super::{Subtitle, Video};
+use super::Video;
 use crate::codec::Profile;
 use crate::ffi::*;
 use crate::{media, packet, Error, Frame, Rational};
@@ -9,14 +9,6 @@ use crate::{media, packet, Error, Frame, Rational};
 pub struct Opened(pub Decoder);
 
 impl Opened {
-    pub fn subtitle(self) -> Result<Subtitle, Error> {
-        if self.medium() == media::Type::Subtitle {
-            Ok(Subtitle(self))
-        } else {
-            Err(Error::InvalidData)
-        }
-    }
-
     pub fn send_packet<P: packet::Ref>(&mut self, packet: &P) -> Result<(), Error> {
         unsafe {
             match avcodec_send_packet(self.as_mut_ptr(), packet.as_ptr()) {
