@@ -11,4 +11,5 @@ pub type AttachmentEncoder<State = Closed> = Encoder<AttachmentType, State>;
 
 mod audio;
 mod common;
+mod subtitle;
 mod video;

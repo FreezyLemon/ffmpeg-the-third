@@ -1,14 +1,11 @@
-use std::ops::{Deref, DerefMut};
-
 use crate::ffi::*;
+use crate::packet;
+use crate::Error;
 use libc::c_int;
 
-use super::Opened;
-use crate::{packet, Error};
+use super::{State, SubtitleDecoder};
 
-pub struct Subtitle(pub Opened);
-
-impl Subtitle {
+impl<S: State> SubtitleDecoder<S> {
     pub fn decode<P: packet::Ref>(
         &mut self,
         packet: &P,
@@ -27,19 +24,5 @@ impl Subtitle {
                 _ => Ok(got != 0),
             }
         }
-    }
-}
-
-impl Deref for Subtitle {
-    type Target = Opened;
-
-    fn deref(&self) -> &<Self as Deref>::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Subtitle {
-    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
     }
 }

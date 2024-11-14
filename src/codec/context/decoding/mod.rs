@@ -11,4 +11,5 @@ pub type AttachmentDecoder<State = Closed> = Decoder<AttachmentType, State>;
 
 mod audio;
 mod common;
+mod subtitle;
 mod video;

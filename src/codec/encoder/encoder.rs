@@ -43,22 +43,6 @@ impl Encoder {
         }
     }
 
-    pub fn subtitle(mut self) -> Result<subtitle::Subtitle, Error> {
-        match self.medium() {
-            media::Type::Unknown => {
-                unsafe {
-                    (*self.as_mut_ptr()).codec_type = media::Type::Subtitle.into();
-                }
-
-                Ok(subtitle::Subtitle(self))
-            }
-
-            media::Type::Subtitle => Ok(subtitle::Subtitle(self)),
-
-            _ => Err(Error::InvalidData),
-        }
-    }
-
     pub fn send_frame(&mut self, frame: &Frame) -> Result<(), Error> {
         unsafe {
             match avcodec_send_frame(self.as_mut_ptr(), frame.as_ptr()) {

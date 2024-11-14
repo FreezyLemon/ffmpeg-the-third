@@ -1,9 +1,6 @@
 pub mod decoder;
 pub use self::decoder::Decoder;
 
-pub mod subtitle;
-pub use self::subtitle::Subtitle;
-
 pub mod slice;
 
 pub mod conceal;
