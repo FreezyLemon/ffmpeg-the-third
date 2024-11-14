@@ -4,29 +4,13 @@ use std::ptr;
 use crate::ffi::*;
 use libc::c_int;
 
-use super::{subtitle, video};
+use super::subtitle;
 use crate::codec::Context;
 use crate::{media, packet, Error, Frame, Rational};
 
 pub struct Encoder(pub Context);
 
 impl Encoder {
-    pub fn video(mut self) -> Result<video::Video, Error> {
-        match self.medium() {
-            media::Type::Unknown => {
-                unsafe {
-                    (*self.as_mut_ptr()).codec_type = media::Type::Video.into();
-                }
-
-                Ok(video::Video(self))
-            }
-
-            media::Type::Video => Ok(video::Video(self)),
-
-            _ => Err(Error::InvalidData),
-        }
-    }
-
     pub fn send_frame(&mut self, frame: &Frame) -> Result<(), Error> {
         unsafe {
             match avcodec_send_frame(self.as_mut_ptr(), frame.as_ptr()) {

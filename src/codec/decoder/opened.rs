@@ -9,14 +9,6 @@ use crate::{media, packet, Error, Frame, Rational};
 pub struct Opened(pub Decoder);
 
 impl Opened {
-    pub fn video(self) -> Result<Video, Error> {
-        if self.medium() == media::Type::Video {
-            Ok(Video(self))
-        } else {
-            Err(Error::InvalidData)
-        }
-    }
-
     pub fn subtitle(self) -> Result<Subtitle, Error> {
         if self.medium() == media::Type::Subtitle {
             Ok(Subtitle(self))
