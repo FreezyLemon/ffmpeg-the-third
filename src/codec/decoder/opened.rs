@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 use std::ptr;
 
-use super::{Audio, Decoder, Subtitle, Video};
+use super::{Decoder, Subtitle, Video};
 use crate::codec::Profile;
 use crate::ffi::*;
 use crate::{media, packet, Error, Frame, Rational};
@@ -12,14 +12,6 @@ impl Opened {
     pub fn video(self) -> Result<Video, Error> {
         if self.medium() == media::Type::Video {
             Ok(Video(self))
-        } else {
-            Err(Error::InvalidData)
-        }
-    }
-
-    pub fn audio(self) -> Result<Audio, Error> {
-        if self.medium() == media::Type::Audio {
-            Ok(Audio(self))
         } else {
             Err(Error::InvalidData)
         }

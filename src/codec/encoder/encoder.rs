@@ -4,7 +4,7 @@ use std::ptr;
 use crate::ffi::*;
 use libc::c_int;
 
-use super::{audio, subtitle, video};
+use super::{subtitle, video};
 use crate::codec::Context;
 use crate::{media, packet, Error, Frame, Rational};
 
@@ -22,22 +22,6 @@ impl Encoder {
             }
 
             media::Type::Video => Ok(video::Video(self)),
-
-            _ => Err(Error::InvalidData),
-        }
-    }
-
-    pub fn audio(mut self) -> Result<audio::Audio, Error> {
-        match self.medium() {
-            media::Type::Unknown => {
-                unsafe {
-                    (*self.as_mut_ptr()).codec_type = media::Type::Audio.into();
-                }
-
-                Ok(audio::Audio(self))
-            }
-
-            media::Type::Audio => Ok(audio::Audio(self)),
 
             _ => Err(Error::InvalidData),
         }

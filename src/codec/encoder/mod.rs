@@ -1,9 +1,6 @@
 pub mod encoder;
 pub use self::encoder::Encoder;
 
-pub mod audio;
-pub use self::audio::Encoder as Audio;
-
 pub mod motion_estimation;
 pub use self::motion_estimation::MotionEstimation;
 
