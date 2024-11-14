@@ -1,6 +1,3 @@
-pub mod decoder;
-pub use self::decoder::Decoder;
-
 pub mod slice;
 
 pub mod conceal;
