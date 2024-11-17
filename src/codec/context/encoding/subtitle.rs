@@ -1,8 +1,8 @@
 use crate::ffi::*;
 use libc::c_int;
 
-use crate::Error;
 use super::{State, SubtitleEncoder};
+use crate::Error;
 
 impl<S: State> SubtitleEncoder<S> {
     pub fn encode(&mut self, subtitle: &crate::Subtitle, out: &mut [u8]) -> Result<bool, Error> {
