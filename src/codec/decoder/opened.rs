@@ -37,10 +37,6 @@ impl Opened {
         }
     }
 
-    pub fn bit_rate(&self) -> usize {
-        unsafe { (*self.as_ptr()).bit_rate as usize }
-    }
-
     pub fn delay(&self) -> usize {
         unsafe { (*self.as_ptr()).delay as usize }
     }

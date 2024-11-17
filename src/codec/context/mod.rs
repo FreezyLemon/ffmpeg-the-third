@@ -1,4 +1,5 @@
 mod audio;
+mod common;
 mod video;
 
 mod decoding;
