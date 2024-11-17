@@ -1,5 +1,6 @@
 use libc::c_int;
 
+use crate::ffi::AVRational;
 use crate::{chroma, color, format, FieldOrder, Rational};
 
 use super::{Action, Context, State, VideoType};
@@ -35,9 +36,16 @@ impl<A: Action, S: State> Context<A, VideoType, S> {
         unsafe { (*self.as_ptr()).delay }
     }
 
-    // {0, 1} if unknown, otherwise signals framerate
-    pub fn framerate(&self) -> Rational {
-        unsafe { (*self.as_ptr()).framerate.into() }
+    // Some(framerate) or None if unknown
+    pub fn framerate(&self) -> Option<Rational> {
+        let value = unsafe { (*self.as_ptr()).framerate };
+
+        // {0, 1} if unknown
+        if value == (AVRational { num: 0, den: 1 }) {
+            None
+        } else {
+            Some(value.into())
+        }
     }
 
     pub fn sample_aspect_ratio(&self) -> Rational {

@@ -12,9 +12,17 @@ impl<C: CodecType, S: State> Context<Encoding, C, S> {
     }
 
     // Optional for CFR content
-    pub fn set_framerate(&mut self, framerate: Rational) {
+    pub fn set_framerate<R: Into<Rational>>(&mut self, framerate: R) {
         unsafe {
-            (*self.as_mut_ptr()).framerate = framerate.into();
+            (*self.as_mut_ptr()).framerate = framerate.into().into();
+        }
+    }
+
+    // Set framerate to { 0, 1 } (meaning "unknown")
+    pub fn unset_framerate(&mut self) {
+        unsafe {
+            (*self.as_mut_ptr()).framerate.num = 0;
+            (*self.as_mut_ptr()).framerate.den = 1;
         }
     }
 

@@ -73,17 +73,6 @@ impl Encoder {
             (*self.as_mut_ptr()).time_base = value.into().into();
         }
     }
-
-    pub fn set_frame_rate<R: Into<Rational>>(&mut self, value: Option<R>) {
-        unsafe {
-            if let Some(value) = value {
-                (*self.as_mut_ptr()).framerate = value.into().into();
-            } else {
-                (*self.as_mut_ptr()).framerate.num = 0;
-                (*self.as_mut_ptr()).framerate.den = 1;
-            }
-        }
-    }
 }
 
 impl Deref for Encoder {
