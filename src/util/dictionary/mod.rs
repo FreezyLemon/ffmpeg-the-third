@@ -1,3 +1,6 @@
+mod flag;
+pub use flag::Flags;
+
 mod immutable;
 pub use self::immutable::Ref;
 
