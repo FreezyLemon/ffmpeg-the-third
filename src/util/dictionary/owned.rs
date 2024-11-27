@@ -5,6 +5,7 @@ use libc::c_int;
 
 use crate::ffi::*;
 
+use super::{DictionaryRef, DictionaryMut};
 use super::flag::Flags;
 use super::impls;
 
@@ -38,12 +39,12 @@ impl Dictionary {
         self.ptr
     }
 
-    pub fn as_ref(&self) -> super::DictionaryRef {
-        unsafe { super::DictionaryRef::wrap(self.as_ptr()) }
+    pub fn as_ref(&self) -> DictionaryRef {
+        unsafe { DictionaryRef::from_raw(self.as_ptr()) }
     }
 
-    pub fn as_mut(&mut self) -> super::Mut {
-        unsafe { super::Mut::from_raw(self.as_mut_ptr()) }
+    pub fn as_mut(&mut self) -> DictionaryMut {
+        unsafe { DictionaryMut::from_raw(self.as_mut_ptr()) }
     }
 }
 

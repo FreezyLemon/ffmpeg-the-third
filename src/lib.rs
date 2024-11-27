@@ -28,9 +28,7 @@ pub use crate::util::channel_layout::{
 pub use crate::util::chroma;
 pub use crate::util::color;
 pub use crate::util::dictionary;
-pub use crate::util::dictionary::Dictionary;
-pub use crate::util::dictionary::Mut as DictionaryMut;
-pub use crate::util::dictionary::DictionaryRef as DictionaryRef;
+pub use crate::util::dictionary::{Dictionary, DictionaryMut, DictionaryRef};
 pub use crate::util::error::{self, Error};
 pub use crate::util::frame::{self, Frame};
 pub use crate::util::log;
