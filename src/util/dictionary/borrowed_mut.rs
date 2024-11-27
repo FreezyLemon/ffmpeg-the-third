@@ -1,59 +1,36 @@
-use std::ffi::CString;
-use std::fmt;
+use core::fmt;
 use std::marker::PhantomData;
-use std::ops::Deref;
 
-use super::borrowed;
 use crate::ffi::*;
 
-pub struct Ref<'a> {
+pub struct DictionaryMut<'d> {
     ptr: *mut AVDictionary,
-    imm: borrowed::Ref<'a>,
-
-    _marker: PhantomData<&'a ()>,
+    _marker: PhantomData<&'d mut AVDictionary>,
 }
 
-impl<'a> Ref<'a> {
-    pub unsafe fn wrap(ptr: *mut AVDictionary) -> Self {
-        Ref {
+impl<'d> DictionaryMut<'d> {
+    pub unsafe fn from_raw(ptr: *mut AVDictionary) -> Self {
+        DictionaryMut {
             ptr,
-            imm: borrowed::Ref::wrap(ptr),
             _marker: PhantomData,
         }
     }
 
-    pub unsafe fn as_mut_ptr(&self) -> *mut AVDictionary {
+    pub fn as_ptr(&self) -> *const AVDictionary {
         self.ptr
     }
-}
 
-impl<'a> Ref<'a> {
-    pub fn set(&mut self, key: &str, value: &str) {
-        unsafe {
-            let key = CString::new(key).unwrap();
-            let value = CString::new(value).unwrap();
-            let mut ptr = self.as_mut_ptr();
+    pub fn as_mut_ptr(&mut self) -> *mut AVDictionary {
+        self.ptr
+    }
 
-            if av_dict_set(&mut ptr, key.as_ptr(), value.as_ptr(), 0) < 0 {
-                panic!("out of memory");
-            }
-
-            self.ptr = ptr;
-            self.imm = borrowed::Ref::wrap(ptr);
-        }
+    pub fn as_ref(&self) -> super::DictionaryRef<'d> {
+        unsafe { super::DictionaryRef::from_raw(self.as_ptr()) }
     }
 }
 
-impl<'a> Deref for Ref<'a> {
-    type Target = borrowed::Ref<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.imm
-    }
-}
-
-impl<'a> fmt::Debug for Ref<'a> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        self.imm.fmt(fmt)
+impl<'d> fmt::Debug for DictionaryMut<'d> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.as_ref().fmt(f)
     }
 }

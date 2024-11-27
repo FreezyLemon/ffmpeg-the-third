@@ -154,7 +154,7 @@ impl Transcoder {
     }
 }
 
-fn parse_opts<'a>(s: String) -> Option<Dictionary<'a>> {
+fn parse_opts(s: String) -> Option<Dictionary> {
     let mut dict = Dictionary::new();
     for keyval in s.split_terminator(',') {
         let tokens: Vec<&str> = keyval.split('=').collect();

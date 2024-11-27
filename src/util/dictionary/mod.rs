@@ -1,14 +1,16 @@
 mod flag;
 pub use flag::Flags;
 
-mod immutable;
-pub use self::immutable::Ref;
+mod impls;
 
-mod mutable;
-pub use self::mutable::Ref as Mut;
+mod borrowed;
+pub use self::borrowed::DictionaryRef;
+
+mod borrowed_mut;
+pub use self::borrowed_mut::DictionaryMut;
 
 mod owned;
-pub use self::owned::Owned;
+pub use self::owned::Dictionary;
 
 mod iter;
 pub use self::iter::Iter;

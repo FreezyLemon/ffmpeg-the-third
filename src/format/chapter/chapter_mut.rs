@@ -66,7 +66,7 @@ impl<'a> ChapterMut<'a> {
     }
 
     pub fn metadata(&mut self) -> DictionaryMut {
-        unsafe { DictionaryMut::wrap((*self.as_mut_ptr()).metadata) }
+        unsafe { DictionaryMut::from_raw((*self.as_mut_ptr()).metadata) }
     }
 }
 
