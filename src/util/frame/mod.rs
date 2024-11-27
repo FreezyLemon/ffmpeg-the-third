@@ -142,7 +142,7 @@ impl Frame {
 
     #[inline]
     pub fn metadata(&self) -> DictionaryRef {
-        unsafe { DictionaryRef::wrap((*self.as_ptr()).metadata) }
+        unsafe { DictionaryRef::from_raw((*self.as_ptr()).metadata) }
     }
 
     #[inline]

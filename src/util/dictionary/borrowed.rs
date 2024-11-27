@@ -10,7 +10,7 @@ pub struct DictionaryRef<'d> {
 }
 
 impl<'d> DictionaryRef<'d> {
-    pub unsafe fn wrap(ptr: *const AVDictionary) -> Self {
+    pub unsafe fn from_raw(ptr: *const AVDictionary) -> Self {
         DictionaryRef {
             ptr,
             _marker: PhantomData,

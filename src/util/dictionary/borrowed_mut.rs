@@ -25,7 +25,7 @@ impl<'d> DictionaryMut<'d> {
     }
 
     pub fn as_ref(&self) -> super::DictionaryRef<'d> {
-        unsafe { super::DictionaryRef::wrap(self.as_ptr()) }
+        unsafe { super::DictionaryRef::from_raw(self.as_ptr()) }
     }
 }
 
