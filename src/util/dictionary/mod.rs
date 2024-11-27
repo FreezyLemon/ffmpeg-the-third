@@ -7,7 +7,7 @@ mod borrowed;
 pub use self::borrowed::DictionaryRef;
 
 mod borrowed_mut;
-pub use self::borrowed_mut::DictionaryMut as Mut;
+pub use self::borrowed_mut::DictionaryMut;
 
 mod owned;
 pub use self::owned::Dictionary;
