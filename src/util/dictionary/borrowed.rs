@@ -46,7 +46,7 @@ impl<'a> Ref<'a> {
         unsafe { Iter::new(self.as_ptr()) }
     }
 
-    pub fn to_owned<'b>(&self) -> Owned<'b> {
+    pub fn to_owned(&self) -> Owned {
         self.iter().collect()
     }
 }

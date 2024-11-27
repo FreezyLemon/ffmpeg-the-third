@@ -3,12 +3,12 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::ops::Deref;
 
-use super::immutable;
+use super::borrowed;
 use crate::ffi::*;
 
 pub struct Ref<'a> {
     ptr: *mut AVDictionary,
-    imm: immutable::Ref<'a>,
+    imm: borrowed::Ref<'a>,
 
     _marker: PhantomData<&'a ()>,
 }
@@ -17,7 +17,7 @@ impl<'a> Ref<'a> {
     pub unsafe fn wrap(ptr: *mut AVDictionary) -> Self {
         Ref {
             ptr,
-            imm: immutable::Ref::wrap(ptr),
+            imm: borrowed::Ref::wrap(ptr),
             _marker: PhantomData,
         }
     }
@@ -39,13 +39,13 @@ impl<'a> Ref<'a> {
             }
 
             self.ptr = ptr;
-            self.imm = immutable::Ref::wrap(ptr);
+            self.imm = borrowed::Ref::wrap(ptr);
         }
     }
 }
 
 impl<'a> Deref for Ref<'a> {
-    type Target = immutable::Ref<'a>;
+    type Target = borrowed::Ref<'a>;
 
     fn deref(&self) -> &Self::Target {
         &self.imm
