@@ -51,6 +51,17 @@ impl_for_many! {
             // SAFETY: Returned lifetime is bounded by borrow on self
             unsafe { get(self.as_ptr(), key, flags) }
         }
+
+        /// Returns the number of entries in the dictionary.
+        pub fn len(&self) -> usize {
+            unsafe { av_dict_count(self.as_ptr()) as usize }
+        }
+
+        /// Returns `true` if the dictionary is empty.
+        pub fn is_empty(&self) -> bool {
+            self.as_ptr().is_null()
+        }
+
         /// Creates an iterator over all key-value pairs in the dictionary.
         pub fn iter(&self) -> Iter {
             Iter::new(self.as_ptr())
