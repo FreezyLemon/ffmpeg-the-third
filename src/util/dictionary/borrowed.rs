@@ -1,7 +1,7 @@
 use std::fmt;
 use std::marker::PhantomData;
 
-use super::{impls, Dictionary, Flags, Iter};
+use super::Iter;
 use crate::ffi::*;
 
 pub struct DictionaryRef<'d> {
@@ -19,20 +19,6 @@ impl<'d> DictionaryRef<'d> {
 
     pub fn as_ptr(&self) -> *const AVDictionary {
         self.ptr
-    }
-}
-
-impl<'d> DictionaryRef<'d> {
-    pub fn get(&self, key: &str) -> Option<&'d str> {
-        unsafe { impls::get(self.as_ptr(), key, Flags::empty()) }
-    }
-
-    pub fn iter(&self) -> Iter {
-        Iter::new(self.as_ptr())
-    }
-
-    pub fn to_owned(&self) -> Dictionary {
-        self.iter().collect()
     }
 }
 
