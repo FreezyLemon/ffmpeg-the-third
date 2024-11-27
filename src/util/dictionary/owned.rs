@@ -5,9 +5,8 @@ use libc::c_int;
 
 use crate::ffi::*;
 
-use super::{DictionaryRef, DictionaryMut};
 use super::flag::Flags;
-use super::impls;
+use super::{DictionaryMut, DictionaryRef};
 
 pub struct Dictionary {
     ptr: *mut AVDictionary,
@@ -53,24 +52,6 @@ impl Dictionary {
         Self {
             ptr: ptr::null_mut(),
         }
-    }
-
-    pub fn set(&mut self, key: &str, value: &str) {
-        impls::set(&mut self.ptr, key, value, Flags::empty())
-    }
-
-    pub fn set_with_flags(&mut self, key: &str, value: &str, flags: Flags) {
-        impls::set(&mut self.ptr, key, value, flags)
-    }
-
-    pub fn get<'d>(&'d self, key: &str) -> Option<&'d str> {
-        // SAFETY: Returned lifetime is bounded by borrow on self
-        unsafe { impls::get(self.as_ptr(), key, Flags::empty()) }
-    }
-
-    pub fn get_with_flags<'d>(&'d self, key: &str, flags: Flags) -> Option<&'d str> {
-        // SAFETY: Returned lifetime is bounded by borrow on self
-        unsafe { impls::get(self.as_ptr(), key, flags) }
     }
 }
 

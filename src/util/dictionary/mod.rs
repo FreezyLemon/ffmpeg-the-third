@@ -1,3 +1,7 @@
+//! Module containing wrappers for AVDictionary.
+// TODO: Add an example here after the codec rework, where a dictionary is used
+//       to pass information to avcodec_open2.
+
 mod flag;
 pub use flag::Flags;
 
