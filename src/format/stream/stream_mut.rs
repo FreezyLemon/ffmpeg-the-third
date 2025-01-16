@@ -67,10 +67,9 @@ impl<'a> StreamMut<'a> {
         }
     }
 
-    pub fn set_metadata(&mut self, metadata: Dictionary) {
+    pub fn set_metadata(&mut self, mut metadata: Dictionary) {
         unsafe {
-            let metadata = metadata.disown();
-            (*self.as_mut_ptr()).metadata = metadata;
+            (*self.as_mut_ptr()).metadata = metadata.as_mut_ptr();
         }
     }
 }

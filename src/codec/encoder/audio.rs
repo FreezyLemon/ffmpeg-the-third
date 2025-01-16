@@ -43,12 +43,9 @@ impl Audio {
         }
     }
 
-    pub fn open_with(mut self, options: Dictionary) -> Result<Encoder, Error> {
+    pub fn open_with(mut self, options: &mut Dictionary) -> Result<Encoder, Error> {
         unsafe {
-            let mut opts = options.disown();
-            let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut opts);
-
-            Dictionary::own(opts);
+            let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut options.as_mut_ptr());
 
             match res {
                 0 => Ok(Encoder(self)),
@@ -60,14 +57,11 @@ impl Audio {
     pub fn open_as_with<T, E: traits::Encoder<T>>(
         mut self,
         codec: E,
-        options: Dictionary,
+        options: &mut Dictionary,
     ) -> Result<Encoder, Error> {
         unsafe {
             if let Some(codec) = codec.encoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
+                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut options.as_mut_ptr());
 
                 match res {
                     0 => Ok(Encoder(self)),

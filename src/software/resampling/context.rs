@@ -136,7 +136,7 @@ impl Context {
             dst_format,
             dst_channel_layout,
             dst_rate,
-            Dictionary::new(),
+            &mut Dictionary::new(),
         )
     }
 
@@ -149,7 +149,7 @@ impl Context {
         dst_format: format::Sample,
         dst_channel_layout: ChannelLayout,
         dst_rate: u32,
-        options: Dictionary,
+        options: &mut Dictionary,
     ) -> Result<Self, Error> {
         unsafe {
             let mut context_ptr = ptr::null_mut();
@@ -169,9 +169,7 @@ impl Context {
                 return Err(Error::from(res));
             }
 
-            let mut opts = options.disown();
-            let res = av_opt_set_dict(context_ptr as *mut c_void, &mut opts);
-            Dictionary::own(opts);
+            let res = av_opt_set_dict(context_ptr as *mut c_void, &mut options.as_mut_ptr());
 
             if res != 0 {
                 return Err(Error::from(res));
