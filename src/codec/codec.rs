@@ -222,7 +222,6 @@ impl Codec<AudioType> {
         unsafe { ChannelLayoutMaskIter::from_raw((*self.as_ptr()).channel_layouts) }
     }
 
-    #[cfg(feature = "ffmpeg_5_1")]
     pub fn ch_layouts(&self) -> Option<ChannelLayoutIter> {
         unsafe { ChannelLayoutIter::from_raw((*self.as_ptr()).ch_layouts) }
     }
@@ -334,10 +333,8 @@ impl Iterator for ChannelLayoutMaskIter {
     }
 }
 
-#[cfg(feature = "ffmpeg_5_1")]
 pub use ch_layout::ChannelLayoutIter;
 
-#[cfg(feature = "ffmpeg_5_1")]
 mod ch_layout {
     use super::*;
     use crate::ChannelLayout;

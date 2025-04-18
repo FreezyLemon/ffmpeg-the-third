@@ -11,12 +11,8 @@ A word on versioning: The crate version includes the **maximum supported** FFmpe
 
 In addition to feature flags declared in `Cargo.toml`, this crate performs various compile-time version and feature detections and exposes the results in additional flags. These flags are briefly documented below; run `cargo build -vv` to view more details.
 
-- `ffmpeg_<x>_<y>` flags, e.g. `ffmpeg_4_4`, indicating the FFmpeg installation being compiled against is at least version `<x>.<y>`. Currently available:
+- `ffmpeg_<x>_<y>` flags, e.g. `ffmpeg_6_1`, indicating the FFmpeg installation being compiled against is at least version `<x>.<y>`. Currently available:
 
-  - "ffmpeg_4_3"
-  - "ffmpeg_4_4"
-  - "ffmpeg_5_0"
-  - "ffmpeg_5_1"
   - "ffmpeg_6_0"
   - "ffmpeg_6_1"
   - "ffmpeg_7_0"

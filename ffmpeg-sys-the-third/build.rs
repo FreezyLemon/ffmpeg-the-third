@@ -792,10 +792,7 @@ fn check_features(include_paths: &[PathBuf]) {
     }
 
     let ffmpeg_lavc_versions = [
-        ("ffmpeg_4_3", 58, 91),
-        ("ffmpeg_4_4", 58, 100),
-        ("ffmpeg_5_0", 59, 18),
-        ("ffmpeg_5_1", 59, 37),
+        // ("ffmpeg_5_1", 59, 37),
         ("ffmpeg_6_0", 60, 3),
         ("ffmpeg_6_1", 60, 31),
         ("ffmpeg_7_0", 61, 3),
@@ -808,8 +805,8 @@ fn check_features(include_paths: &[PathBuf]) {
 
     // This allows removing a lot of #[cfg] attributes.
     assert!(
-        lavc_version >= (58, 54),
-        "FFmpeg 4.2 or higher is required, but found avcodec version {lavc_version:?}"
+        lavc_version >= (59, 37),
+        "FFmpeg 5.1 or higher is required, but found avcodec version {lavc_version:?}"
     );
 
     for &(ffmpeg_version_flag, lavc_version_major, lavc_version_minor) in &ffmpeg_lavc_versions {

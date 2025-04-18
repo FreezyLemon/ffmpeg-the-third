@@ -19,8 +19,6 @@ pub struct Packet {
     pub position: i64,
     pub size: usize,
 
-    #[cfg(not(feature = "ffmpeg_5_0"))]
-    pub pts: i64,
     pub dts: i64,
 }
 
@@ -96,8 +94,6 @@ impl Frame {
                 position: (*self.as_ptr()).pkt_pos as i64,
                 size: (*self.as_ptr()).pkt_size as usize,
 
-                #[cfg(not(feature = "ffmpeg_5_0"))]
-                pts: (*self.as_ptr()).pkt_pts,
                 dts: (*self.as_ptr()).pkt_dts,
             }
         }
