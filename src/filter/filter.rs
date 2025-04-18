@@ -38,10 +38,7 @@ impl Filter {
             if ptr.is_null() {
                 None
             } else {
-                #[cfg(feature = "ffmpeg_5_0")]
                 let count = (*self.as_ptr()).nb_inputs as isize;
-                #[cfg(not(feature = "ffmpeg_5_0"))]
-                let count = avfilter_pad_count(ptr) as isize;
 
                 Some(PadIter::new(ptr, count))
             }
@@ -55,10 +52,7 @@ impl Filter {
             if ptr.is_null() {
                 None
             } else {
-                #[cfg(feature = "ffmpeg_5_0")]
                 let count = (*self.as_ptr()).nb_outputs as isize;
-                #[cfg(not(feature = "ffmpeg_5_0"))]
-                let count = avfilter_pad_count(ptr) as isize;
 
                 Some(PadIter::new(ptr, count))
             }

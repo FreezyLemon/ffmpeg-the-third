@@ -20,10 +20,8 @@ pub use crate::sys as ffi;
 
 #[macro_use]
 pub mod util;
-pub use crate::util::channel_layout::{self, ChannelLayoutMask};
-#[cfg(feature = "ffmpeg_5_1")]
 pub use crate::util::channel_layout::{
-    Channel, ChannelCustom, ChannelLayout, ChannelLayoutIter, ChannelOrder,
+    self, Channel, ChannelCustom, ChannelLayout, ChannelLayoutIter, ChannelLayoutMask, ChannelOrder,
 };
 pub use crate::util::chroma;
 pub use crate::util::color;
@@ -60,8 +58,6 @@ pub use crate::codec::discard::Discard;
 pub use crate::codec::field_order::FieldOrder;
 #[cfg(feature = "codec")]
 pub use crate::codec::packet::{self, Packet};
-#[cfg(all(feature = "codec", not(feature = "ffmpeg_5_0")))]
-pub use crate::codec::picture::Picture;
 #[cfg(feature = "codec")]
 pub use crate::codec::subtitle::{self, Subtitle};
 #[cfg(feature = "codec")]
@@ -100,19 +96,12 @@ fn init_device() {
 #[cfg(not(feature = "device"))]
 fn init_device() {}
 
-#[cfg(all(feature = "filter", not(feature = "ffmpeg_5_0")))]
-fn init_filter() {
-    filter::register_all();
-}
-
 #[cfg(not(feature = "filter"))]
 fn init_filter() {}
 
 pub fn init() -> Result<(), Error> {
     init_error();
     init_device();
-    #[cfg(not(feature = "ffmpeg_5_0"))]
-    init_filter();
 
     Ok(())
 }

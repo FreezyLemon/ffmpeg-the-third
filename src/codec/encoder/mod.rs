@@ -13,11 +13,6 @@ pub use self::subtitle::Encoder as Subtitle;
 pub mod motion_estimation;
 pub use self::motion_estimation::MotionEstimation;
 
-#[cfg(not(feature = "ffmpeg_5_0"))]
-pub mod prediction;
-#[cfg(not(feature = "ffmpeg_5_0"))]
-pub use self::prediction::Prediction;
-
 pub mod comparison;
 pub use self::comparison::Comparison;
 

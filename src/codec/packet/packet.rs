@@ -169,12 +169,6 @@ impl Packet {
     }
 
     #[inline]
-    #[cfg(not(feature = "ffmpeg_5_0"))]
-    pub fn convergence(&self) -> isize {
-        self.0.convergence_duration as isize
-    }
-
-    #[inline]
     pub fn side_data(&self) -> SideDataIter {
         SideDataIter::new(&self.0)
     }
