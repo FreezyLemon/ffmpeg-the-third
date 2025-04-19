@@ -88,11 +88,6 @@ impl AVFeature {
 }
 
 static AVUTIL_FEATURES: &[AVFeature] = &[
-    // before 5.0 (< v57)
-    AVFeature::new("VAAPI"),
-    AVFeature::new("PKT_PTS"),
-    AVFeature::new("ERROR_FRAME"),
-    AVFeature::new("FRAME_QP"),
     // before 6.0 (< v58)
     AVFeature::new("D2STR"),
     AVFeature::new("DECLARE_ALIGNED"),
@@ -121,17 +116,6 @@ static AVUTIL_FEATURES: &[AVFeature] = &[
 ];
 
 static AVCODEC_FEATURES: &[AVFeature] = &[
-    // before 5.0 (< v59)
-    AVFeature::new("LOWRES"),
-    AVFeature::new("CODED_FRAME"),
-    AVFeature::new("CONVERGENCE_DURATION"),
-    AVFeature::new("PRIVATE_OPT"),
-    AVFeature::new("CODER_TYPE"),
-    AVFeature::new("RTP_CALLBACK"),
-    AVFeature::new("STAT_BITS"),
-    AVFeature::new("VBV_DELAY"),
-    AVFeature::new("SIDEDATA_ONLY_PKT"),
-    AVFeature::new("AVPICTURE"),
     // before 6.0 (< v60)
     AVFeature::new("OPENH264_SLICE_MODE"),
     AVFeature::new("OPENH264_CABAC"),
@@ -174,9 +158,6 @@ static AVCODEC_FEATURES: &[AVFeature] = &[
 ];
 
 static AVFORMAT_FEATURES: &[AVFeature] = &[
-    // before 5.0 (< v59)
-    AVFeature::new("LAVF_AVCTX"),
-    AVFeature::new("OLD_OPEN_CALLBACKS"),
     // before 6.0 (< v60)
     AVFeature::new("LAVF_PRIV_OPT"),
     AVFeature::new("AVIOCONTEXT_WRITTEN"),
@@ -208,8 +189,6 @@ static AVDEVICE_FEATURES: &[AVFeature] = &[
 ];
 
 static AVFILTER_FEATURES: &[AVFeature] = &[
-    // before 5.0 (< v8)
-    AVFeature::new("OLD_FILTER_OPTS_ERROR"),
     // before 6.0 (< v9)
     AVFeature::new("SWS_PARAM_OPTION"),
     AVFeature::new("BUFFERSINK_ALLOC"),
