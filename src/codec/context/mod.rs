@@ -1,9 +1,7 @@
-use std::any::Any;
-use std::ptr;
-use std::rc::Rc;
+use std::marker::PhantomData;
+use std::ptr::NonNull;
 
-use super::decoder::Decoder;
-use super::encoder::Encoder;
+use super::codec::*;
 use super::{threading, Compliance, Debug, Flags, Id};
 use crate::ffi::*;
 use crate::media;
@@ -12,64 +10,120 @@ use crate::{AsMutPtr, AsPtr};
 use crate::{Codec, Error};
 use libc::c_int;
 
-pub struct Context {
-    ptr: *mut AVCodecContext,
-    owner: Option<Rc<dyn Any>>,
+pub struct Context<Action, CodecType, State = Closed>
+{
+    ptr: NonNull<AVCodecContext>,
+    _marker: PhantomData<(Action, Codec<CodecType>, State)>,
 }
 
-unsafe impl Send for Context {}
+pub struct Decoding;
+pub struct Encoding;
 
-impl Context {
-    pub unsafe fn wrap(ptr: *mut AVCodecContext, owner: Option<Rc<dyn Any>>) -> Self {
-        Context { ptr, owner }
-    }
+pub struct Closed;
+pub struct Opened;
 
-    pub unsafe fn as_ptr(&self) -> *const AVCodecContext {
-        self.ptr as *const _
-    }
+unsafe impl<A, C, S> Send for Context<A, C, S> {}
 
-    pub unsafe fn as_mut_ptr(&mut self) -> *mut AVCodecContext {
-        self.ptr
+fn new_context<A, C, S>(codec: Codec<C>) -> Context<A, C, S> {
+    let ptr = unsafe { avcodec_alloc_context3(codec.as_ptr()) };
+
+    Context {
+        ptr: NonNull::new(ptr).expect("can allocate codec context"),
+        _marker: PhantomData,
     }
 }
 
-impl Context {
-    pub fn new() -> Self {
-        unsafe {
-            Context {
-                ptr: avcodec_alloc_context3(ptr::null()),
-                owner: None,
-            }
+impl<A, C, S> Context<A, C, S> {
+    pub fn new_video_encoder(codec: Codec) -> Option<Context<Encoding, VideoType>> {
+        if codec.is_encoder() {
+            codec.video().map(new_context)
+        } else {
+            None
         }
     }
 
-    pub fn new_with_codec(codec: Codec) -> Self {
-        unsafe {
-            Context {
-                ptr: avcodec_alloc_context3(codec.as_ptr()),
-                owner: None,
-            }
+    pub fn new_video_decoder(codec: Codec) -> Option<Context<Decoding, VideoType>> {
+        if codec.is_decoder() {
+            codec.video().map(new_context)
+        } else {
+            None
         }
     }
 
-    pub fn from_parameters<P: AsPtr<AVCodecParameters>>(parameters: P) -> Result<Self, Error> {
-        let mut context = Self::new();
-
-        unsafe {
-            match avcodec_parameters_to_context(context.as_mut_ptr(), parameters.as_ptr()) {
-                e if e < 0 => Err(Error::from(e)),
-                _ => Ok(context),
-            }
+    pub fn new_audio_encoder(codec: Codec) -> Option<Context<Encoding, AudioType>> {
+        if codec.is_encoder() {
+            codec.audio().map(new_context)
+        } else {
+            None
         }
     }
 
-    pub fn decoder(self) -> Decoder {
-        Decoder(self)
+    pub fn new_audio_decoder(codec: Codec) -> Option<Context<Decoding, AudioType>> {
+        if codec.is_decoder() {
+            codec.audio().map(new_context)
+        } else {
+            None
+        }
     }
 
-    pub fn encoder(self) -> Encoder {
-        Encoder(self)
+    pub fn new_data_encoder(codec: Codec) -> Option<Context<Encoding, DataType>> {
+        if codec.is_encoder() {
+            codec.data().map(new_context)
+        } else {
+            None
+        }
     }
+
+    pub fn new_data_decoder(codec: Codec) -> Option<Context<Decoding, DataType>> {
+        if codec.is_decoder() {
+            codec.data().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_subtitle_encoder(codec: Codec) -> Option<Context<Encoding, SubtitleType>> {
+        if codec.is_encoder() {
+            codec.subtitle().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_subtitle_decoder(codec: Codec) -> Option<Context<Decoding, SubtitleType>> {
+        if codec.is_decoder() {
+            codec.subtitle().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_attachment_encoder(codec: Codec) -> Option<Context<Encoding, AttachmentType>> {
+        if codec.is_encoder() {
+            codec.attachment().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    pub fn new_attachment_decoder(codec: Codec) -> Option<Context<Decoding, AttachmentType>> {
+        if codec.is_decoder() {
+            codec.attachment().map(new_context)
+        } else {
+            None
+        }
+    }
+
+    // pub fn from_parameters<P: AsPtr<AVCodecParameters>>(parameters: P) -> Result<Self, Error> {
+    //     let mut context = Self::new();
+
+    //     unsafe {
+    //         match avcodec_parameters_to_context(context.as_mut_ptr(), parameters.as_ptr()) {
+    //             e if e < 0 => Err(Error::from(e)),
+    //             _ => Ok(context),
+    //         }
+    //     }
+    // }
 
     pub fn codec(&self) -> Option<Codec> {
         unsafe { Codec::from_raw((*self.as_ptr()).codec) }
@@ -136,50 +190,25 @@ impl Context {
     }
 }
 
-impl Default for Context {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Drop for Context {
+impl<A, C, S> Drop for Context<A, C, S> {
     fn drop(&mut self) {
         unsafe {
-            if self.owner.is_none() {
-                avcodec_free_context(&mut self.as_mut_ptr());
-            }
-        }
-    }
-}
-
-#[cfg(not(feature = "ffmpeg_5_0"))]
-impl Clone for Context {
-    fn clone(&self) -> Self {
-        let mut ctx = Context::new();
-        ctx.clone_from(self);
-
-        ctx
-    }
-
-    fn clone_from(&mut self, source: &Self) {
-        unsafe {
-            // Removed in ffmpeg >= 5.0.
-            avcodec_copy_context(self.as_mut_ptr(), source.as_ptr());
+            avcodec_free_context(&mut self.as_mut_ptr());
         }
     }
 }
 
 /// `AVCodecContext` in `Context` is the target of `option` operations.
-impl AsPtr<AVCodecContext> for Context {
+impl<A, C, S> AsPtr<AVCodecContext> for Context<A, C, S> {
     fn as_ptr(&self) -> *const AVCodecContext {
-        self.ptr as *const _
+        self.ptr.as_ptr()
     }
 }
 
-impl AsMutPtr<AVCodecContext> for Context {
+impl<A, C, S> AsMutPtr<AVCodecContext> for Context<A, C, S> {
     fn as_mut_ptr(&mut self) -> *mut AVCodecContext {
-        self.ptr as *mut _
+        self.ptr.as_ptr()
     }
 }
 
-impl option::Settable<AVCodecContext> for Context {}
+impl<A, C, S> option::Settable<AVCodecContext> for Context<A, C, S> {}
