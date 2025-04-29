@@ -9,50 +9,6 @@ use crate::{Dictionary, Discard, Error, Rational};
 pub struct Decoder(pub Context);
 
 impl Decoder {
-    pub fn open(mut self) -> Result<Opened, Error> {
-        unsafe {
-            match avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut()) {
-                0 => Ok(Opened(self)),
-                e => Err(Error::from(e)),
-            }
-        }
-    }
-
-    pub fn open_as<T, D: traits::Decoder<T>>(mut self, codec: D) -> Result<Opened, Error> {
-        unsafe {
-            if let Some(codec) = codec.decoder() {
-                match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
-                    0 => Ok(Opened(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::DecoderNotFound)
-            }
-        }
-    }
-
-    pub fn open_as_with<T, D: traits::Decoder<T>>(
-        mut self,
-        codec: D,
-        options: Dictionary,
-    ) -> Result<Opened, Error> {
-        unsafe {
-            if let Some(codec) = codec.decoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
-
-                match res {
-                    0 => Ok(Opened(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::DecoderNotFound)
-            }
-        }
-    }
-
     pub fn video(self) -> Result<Video, Error> {
         if let Some(codec) = super::find(self.id()) {
             self.open_as(codec).and_then(|o| o.video())
@@ -109,31 +65,5 @@ impl Decoder {
 
     pub fn time_base(&self) -> Rational {
         unsafe { Rational::from((*self.as_ptr()).time_base) }
-    }
-}
-
-impl Deref for Decoder {
-    type Target = Context;
-
-    fn deref(&self) -> &<Self as Deref>::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Decoder {
-    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
-    }
-}
-
-impl AsRef<Context> for Decoder {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Decoder {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
     }
 }

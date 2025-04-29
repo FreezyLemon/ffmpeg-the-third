@@ -1,54 +1,25 @@
-use std::ops::{Deref, DerefMut};
-
 #[cfg(not(feature = "ffmpeg_5_0"))]
-use crate::ffi::*;
+use crate::{
+    ffi::*,
+    frame,
+    packet,
+    Error
+};
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use libc::c_int;
-
-use super::Opened;
-use crate::codec::Context;
-#[cfg(not(feature = "ffmpeg_5_0"))]
-use crate::frame;
-use crate::util::format;
-use crate::AudioService;
-#[cfg(not(feature = "ffmpeg_5_0"))]
-use crate::{packet, Error};
-
-#[cfg(feature = "ffmpeg_5_1")]
-use crate::ChannelLayout;
 
 #[cfg(not(feature = "ffmpeg_7_0"))]
 use crate::ChannelLayoutMask;
 
-pub struct Audio(pub Opened);
+use super::AudioDecoder;
+use crate::{AsPtr, AsMutPtr};
+use crate::util::format;
+use crate::AudioService;
 
-impl Audio {
-    #[deprecated(
-        since = "4.4.0",
-        note = "Underlying API avcodec_decode_audio4 has been deprecated since FFmpeg 3.1; \
-        consider switching to send_packet() and receive_frame()"
-    )]
-    #[cfg(not(feature = "ffmpeg_5_0"))]
-    pub fn decode<P: packet::Ref>(
-        &mut self,
-        packet: &P,
-        out: &mut frame::Audio,
-    ) -> Result<bool, Error> {
-        unsafe {
-            let mut got: c_int = 0;
+#[cfg(feature = "ffmpeg_5_1")]
+use crate::ChannelLayout;
 
-            match avcodec_decode_audio4(
-                self.as_mut_ptr(),
-                out.as_mut_ptr(),
-                &mut got,
-                packet.as_ptr(),
-            ) {
-                e if e < 0 => Err(Error::from(e)),
-                _ => Ok(got != 0),
-            }
-        }
-    }
-
+impl<S> AudioDecoder<S> {
     pub fn rate(&self) -> u32 {
         unsafe { (*self.as_ptr()).sample_rate as u32 }
     }
@@ -130,31 +101,5 @@ impl Audio {
                 n => Some(n as usize),
             }
         }
-    }
-}
-
-impl Deref for Audio {
-    type Target = Opened;
-
-    fn deref(&self) -> &<Self as Deref>::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Audio {
-    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
-    }
-}
-
-impl AsRef<Context> for Audio {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Audio {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
     }
 }

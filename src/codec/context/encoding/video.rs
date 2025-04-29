@@ -1,83 +1,16 @@
-use std::ops::{Deref, DerefMut};
-use std::ptr;
-
-use crate::ffi::*;
-use libc::{c_float, c_int};
-
-use super::Encoder as Super;
-use super::{Comparison, Decision};
-#[cfg(not(feature = "ffmpeg_5_0"))]
-use super::{MotionEstimation, Prediction};
-use crate::codec::{traits, Context};
-use crate::{color, format, Dictionary, Error, Rational};
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::{frame, packet};
+#[cfg(not(feature = "ffmpeg_5_0"))]
+use super::{MotionEstimation, Prediction};
 
-pub struct Video(pub Super);
+use libc::{c_float, c_int};
 
-impl Video {
-    #[inline]
-    pub fn open(mut self) -> Result<Encoder, Error> {
-        unsafe {
-            match avcodec_open2(self.as_mut_ptr(), ptr::null(), ptr::null_mut()) {
-                0 => Ok(Encoder(self)),
-                e => Err(Error::from(e)),
-            }
-        }
-    }
+use super::VideoEncoder;
+use crate::{AsPtr, AsMutPtr};
+use crate::encoder::{Comparison, Decision};
+use crate::{color, format, Rational};
 
-    #[inline]
-    pub fn open_as<T, E: traits::Encoder<T>>(mut self, codec: E) -> Result<Encoder, Error> {
-        unsafe {
-            if let Some(codec) = codec.encoder() {
-                match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
-                    0 => Ok(Encoder(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::EncoderNotFound)
-            }
-        }
-    }
-
-    #[inline]
-    pub fn open_with(mut self, options: Dictionary) -> Result<Encoder, Error> {
-        unsafe {
-            let mut opts = options.disown();
-            let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut opts);
-
-            Dictionary::own(opts);
-
-            match res {
-                0 => Ok(Encoder(self)),
-                e => Err(Error::from(e)),
-            }
-        }
-    }
-
-    #[inline]
-    pub fn open_as_with<T, E: traits::Encoder<T>>(
-        mut self,
-        codec: E,
-        options: Dictionary,
-    ) -> Result<Encoder, Error> {
-        unsafe {
-            if let Some(codec) = codec.encoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
-
-                match res {
-                    0 => Ok(Encoder(self)),
-                    e => Err(Error::from(e)),
-                }
-            } else {
-                Err(Error::EncoderNotFound)
-            }
-        }
-    }
-
+impl<S> VideoEncoder<S> {
     #[inline]
     pub fn set_width(&mut self, value: u32) {
         unsafe {
@@ -355,127 +288,5 @@ impl Video {
     #[inline]
     pub fn color_range(&self) -> color::Range {
         unsafe { (*self.as_ptr()).color_range.into() }
-    }
-}
-
-impl Deref for Video {
-    type Target = Super;
-
-    #[inline(always)]
-    fn deref(&self) -> &<Self as Deref>::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Video {
-    #[inline(always)]
-    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
-    }
-}
-
-impl AsRef<Context> for Video {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Video {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
-    }
-}
-
-pub struct Encoder(pub Video);
-
-impl Encoder {
-    #[deprecated(
-        since = "4.4.0",
-        note = "Underlying API avcodec_encode_video2 has been deprecated since FFmpeg 3.1; \
-        consider switching to send_frame() and receive_packet()"
-    )]
-    #[inline]
-    #[cfg(not(feature = "ffmpeg_5_0"))]
-    pub fn encode<P: packet::Mut>(
-        &mut self,
-        frame: &frame::Video,
-        out: &mut P,
-    ) -> Result<bool, Error> {
-        unsafe {
-            if self.format() != frame.format()
-                || self.width() != frame.width()
-                || self.height() != frame.height()
-            {
-                return Err(Error::InvalidData);
-            }
-
-            let mut got: c_int = 0;
-
-            match avcodec_encode_video2(
-                self.0.as_mut_ptr(),
-                out.as_mut_ptr(),
-                frame.as_ptr(),
-                &mut got,
-            ) {
-                e if e < 0 => Err(Error::from(e)),
-                _ => Ok(got != 0),
-            }
-        }
-    }
-
-    #[deprecated(
-        since = "4.4.0",
-        note = "Underlying API avcodec_encode_video2 has been deprecated since FFmpeg 3.1; \
-        consider switching to send_frame() and receive_packet()"
-    )]
-    #[inline]
-    #[cfg(not(feature = "ffmpeg_5_0"))]
-    pub fn flush<P: packet::Mut>(&mut self, out: &mut P) -> Result<bool, Error> {
-        unsafe {
-            let mut got: c_int = 0;
-
-            match avcodec_encode_video2(
-                self.0.as_mut_ptr(),
-                out.as_mut_ptr(),
-                ptr::null(),
-                &mut got,
-            ) {
-                e if e < 0 => Err(Error::from(e)),
-                _ => Ok(got != 0),
-            }
-        }
-    }
-
-    #[inline]
-    pub fn frame_size(&self) -> u32 {
-        unsafe { (*self.as_ptr()).frame_size as u32 }
-    }
-}
-
-impl Deref for Encoder {
-    type Target = Video;
-
-    #[inline]
-    fn deref(&self) -> &<Self as Deref>::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Encoder {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
-    }
-}
-
-impl AsRef<Context> for Encoder {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Encoder {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
     }
 }

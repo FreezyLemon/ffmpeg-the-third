@@ -1,3 +1,6 @@
+mod decoding;
+mod encoding;
+
 use std::marker::PhantomData;
 use std::ptr::NonNull;
 

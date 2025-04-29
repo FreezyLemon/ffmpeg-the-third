@@ -92,37 +92,3 @@ impl Opened {
         }
     }
 }
-
-impl Drop for Opened {
-    fn drop(&mut self) {
-        unsafe {
-            avcodec_close(self.as_mut_ptr());
-        }
-    }
-}
-
-impl Deref for Opened {
-    type Target = Decoder;
-
-    fn deref(&self) -> &<Self as Deref>::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Opened {
-    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
-        &mut self.0
-    }
-}
-
-impl AsRef<Context> for Opened {
-    fn as_ref(&self) -> &Context {
-        self
-    }
-}
-
-impl AsMut<Context> for Opened {
-    fn as_mut(&mut self) -> &mut Context {
-        &mut self.0
-    }
-}
