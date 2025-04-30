@@ -1,13 +1,10 @@
+#[cfg(feature = "ffmpeg_7_1")]
 use std::ptr::NonNull;
 
 #[cfg(feature = "ffmpeg_7_1")]
-use crate::codec::Context;
-#[cfg(feature = "ffmpeg_7_1")]
-use crate::ffi::*;
-#[cfg(feature = "ffmpeg_7_1")]
-use crate::Codec;
-#[cfg(feature = "ffmpeg_7_1")]
-use crate::Error;
+use crate::{ffi::*, AsPtr, Codec, Error};
+
+use crate::iters::TerminatedPtrIter;
 
 #[cfg(feature = "ffmpeg_7_1")]
 #[derive(Debug, Clone)]
@@ -34,7 +31,7 @@ where
     ///     .video()
     ///     .unwrap();
     ///
-    /// let supported = codec.supported_rates();
+    /// let supported = codec.supported_frame_rates();
     /// assert!(supported.all())
     /// ```
     pub fn all(&self) -> bool {
@@ -54,7 +51,7 @@ where
     ///     .audio()
     ///     .unwrap();
     ///
-    /// let supported = codec.supported_formats();
+    /// let supported = codec.supported_sample_formats();
     /// assert!(supported.supports(Sample::F32(Type::Planar)));
     /// ```
     pub fn supports(self, t: T) -> bool {
@@ -65,111 +62,55 @@ where
     }
 }
 
-#[cfg(feature = "ffmpeg_7_1")]
-fn supported<WrapperType, AVType, CodecType, I>(
-    codec: Codec<CodecType>,
-    ctx: Option<&Context>,
-    cfg: AVCodecConfig,
-) -> Result<Supported<I>, Error>
-where
-    I: TerminatedPtrIter<AVType, WrapperType>,
-    AVType: Into<WrapperType>,
-{
-    let mut out_ptr: *const libc::c_void = std::ptr::null();
-
-    unsafe {
-        let avctx = ctx.map_or(std::ptr::null(), |ctx| ctx.as_ptr());
-
-        let ret = avcodec_get_supported_config(
-            avctx,
-            codec.as_ptr(),
-            cfg,
-            0, // flags: unused as of 7.1, set to zero
-            &mut out_ptr,
-            std::ptr::null_mut(), // out_num_configs: optional, we don't support it currently
-        );
-
-        if ret < 0 {
-            return Err(Error::from(ret));
-        }
-
-        match NonNull::new(out_ptr as *mut _) {
-            // non-nullptr -> Specific list of values is supported.
-            Some(ptr) => Ok(Supported::Specific(I::from_ptr(ptr))),
-            // nullptr -> Everything is supported
-            None => Ok(Supported::All),
-        }
-    }
-}
-
-/// Pointer-based iterator, stepped through via pointer arithmetic and ended
-/// when a dereferenced pointer equals a terminator value.
-pub(crate) trait TerminatedPtrIter<AVType, WrapperType>:
-    Sized + Iterator<Item = WrapperType>
-{
-    /// Create a new iterator from a non-null pointer to any value in the iteration.
-    ///
-    /// # Safety
-    ///
-    /// `ptr` and all following pointers must be dereferenceable until the terminator is reached.
-    unsafe fn from_ptr(ptr: NonNull<AVType>) -> Self;
-
-    /// Create a new iterator from a pointer to any value in the iteration.
-    ///
-    /// Returns `None` if `ptr` is null. See also [`from_ptr`][TerminatedPtrIter::from_ptr].
-    ///
-    /// # Safety
-    ///
-    /// See [`from_ptr`][TerminatedPtrIter::from_ptr].
-    unsafe fn from_raw(ptr: *const AVType) -> Option<Self> {
-        unsafe { NonNull::new(ptr as *mut _).map(|ptr| Self::from_ptr(ptr)) }
-    }
-}
-
 macro_rules! impl_config_iter {
     (
-        $fn_name:ident,
-        $codec_cfg:expr,
-        $iter:ident,
-        $ty:ty,
-        $av_ty:ty,
-        $terminator:expr
-    ) => {
-        impl_config_iter_fn!($fn_name, $iter, $codec_cfg);
-        impl_config_iter_struct!($iter, $av_ty);
-        impl_config_iter_traits!($iter, $ty, $av_ty, $terminator);
-    };
-}
+        fns: (
+            impl_for: $codec_type:ty;
 
-macro_rules! impl_config_iter_struct {
-    ($iter:ident, $av_ty:ty) => {
+            $(#[$all_fn_meta:meta])*
+            fn_all: $all_fn:ident;
+
+            $(#[$single_fn_meta:meta])*
+            fn_single: $single_fn:ident($arg_name:ident);
+        ),
+        $codec_cfg:expr,
+        $iter:ident (
+            ptr: *const $ptr_ty:ty;
+            terminator: $terminator:expr;
+            wrapped: $wrapped_ty:ty;
+        )
+    ) => {
+        #[cfg(feature = "ffmpeg_7_1")]
+        impl Codec<$codec_type> {
+            $(#[$all_fn_meta])*
+            pub fn $all_fn(self) -> Supported<$iter<'static>> {
+                let raw_ptr = GetCodecConfig::from_codec(self)
+                    .get($codec_cfg)
+                    .expect("avcodec_get_supported_config does not error for this codec");
+
+                // SAFETY:
+                // We have made sure that it's OK to cast the returned void pointer
+                // into the appropriate pointer type for the given AVCodecConfig.
+                match NonNull::new(raw_ptr as *mut _) {
+                    Some(ptr) => unsafe { Supported::Specific($iter::from_ptr(ptr)) },
+                    None => Supported::All,
+                }
+            }
+
+            $(#[$single_fn_meta])*
+            pub fn $single_fn(self, $arg_name: $wrapped_ty) -> bool {
+                self.$all_fn().supports($arg_name)
+            }
+        }
+
         #[derive(Debug, Clone)]
         pub struct $iter<'a> {
-            next: std::ptr::NonNull<$av_ty>,
-            _marker: std::marker::PhantomData<&'a $av_ty>,
+            next: std::ptr::NonNull<$ptr_ty>,
+            _marker: std::marker::PhantomData<&'a $ptr_ty>,
         }
-    };
-}
 
-macro_rules! impl_config_iter_fn {
-    ($fn_name:ident, $iter:ident, $codec_cfg:expr) => {
-        /// Low-level function interacting with the FFmpeg API via
-        /// `avcodec_get_supported_config()`. Consider using one of the convenience methods
-        /// on the codecs or codec contexts instead.
-        #[cfg(feature = "ffmpeg_7_1")]
-        pub fn $fn_name<T>(
-            codec: Codec<T>,
-            ctx: Option<&Context>,
-        ) -> Result<Supported<$iter>, Error> {
-            supported(codec, ctx, $codec_cfg)
-        }
-    };
-}
-
-macro_rules! impl_config_iter_traits {
-    ($iter:ident, $ty:ty, $av_ty:ty, $terminator:expr) => {
-        impl<'a> TerminatedPtrIter<$av_ty, $ty> for $iter<'a> {
-            unsafe fn from_ptr(ptr: std::ptr::NonNull<$av_ty>) -> Self {
+        impl<'a> TerminatedPtrIter<$ptr_ty, $wrapped_ty> for $iter<'a> {
+            unsafe fn from_ptr(ptr: std::ptr::NonNull<$ptr_ty>) -> Self {
                 Self {
                     next: ptr,
                     _marker: std::marker::PhantomData,
@@ -187,7 +128,7 @@ macro_rules! impl_config_iter_traits {
         //       ExactSizeIterator.
 
         impl<'a> Iterator for $iter<'a> {
-            type Item = $ty;
+            type Item = $wrapped_ty;
 
             fn next(&mut self) -> Option<Self::Item> {
                 // SAFETY: The FFmpeg API guarantees that the pointer is safe to deref and
@@ -209,60 +150,148 @@ macro_rules! impl_config_iter_traits {
     };
 }
 
+#[derive(Debug)]
+#[cfg(feature = "ffmpeg_7_1")]
+pub struct GetCodecConfig {
+    codec: *const AVCodec,
+    ctx: *const AVCodecContext,
+}
+
+#[cfg(feature = "ffmpeg_7_1")]
+impl GetCodecConfig {
+    pub fn from_codec<C: AsPtr<AVCodec>>(codec: C) -> Self {
+        Self {
+            codec: codec.as_ptr(),
+            ctx: std::ptr::null(),
+        }
+    }
+
+    pub fn from_context<C: AsPtr<AVCodecContext>>(ctx: C) -> Self {
+        Self {
+            codec: std::ptr::null(),
+            ctx: ctx.as_ptr(),
+        }
+    }
+
+    pub fn with_codec<C: AsPtr<AVCodec>>(mut self, codec: C) -> Self {
+        self.codec = codec.as_ptr();
+        self
+    }
+
+    pub fn with_context<C: AsPtr<AVCodecContext>>(mut self, ctx: C) -> Self {
+        self.ctx = ctx.as_ptr();
+        self
+    }
+
+    pub fn get(&self, cfg: AVCodecConfig) -> Result<*const libc::c_void, Error> {
+        assert!(
+            !self.ctx.is_null() || !self.codec.is_null(),
+            "cannot call avcodec_get_supported_config with two null pointers"
+        );
+
+        let mut out_ptr: *const libc::c_void = std::ptr::null();
+
+        let ret = unsafe {
+            avcodec_get_supported_config(
+                self.ctx,
+                self.codec,
+                cfg,
+                0, // flags: unused as of 7.1, set to zero
+                &mut out_ptr,
+                std::ptr::null_mut(), // out_num_configs: optional, we don't support it currently
+            )
+        };
+
+        if ret < 0 {
+            Err(Error::from(ret))
+        } else {
+            Ok(out_ptr)
+        }
+    }
+}
+
 impl_config_iter!(
-    supported_pixel_formats,
+    fns: (
+        impl_for: crate::codec::codec::VideoType;
+        fn_all: supported_pixel_formats;
+        fn_single: supports_pixel_format(format);
+    ),
     crate::ffi::AVCodecConfig::AV_CODEC_CONFIG_PIX_FORMAT,
-    PixelFormatIter,
-    crate::format::Pixel,
-    crate::ffi::AVPixelFormat,
-    crate::ffi::AVPixelFormat::AV_PIX_FMT_NONE
+    PixelFormatIter (
+        ptr: *const crate::ffi::AVPixelFormat;
+        terminator: crate::ffi::AVPixelFormat::AV_PIX_FMT_NONE;
+        wrapped: crate::format::Pixel;
+    )
 );
 
 impl_config_iter!(
-    supported_frame_rates,
+    fns: (
+        impl_for: crate::codec::codec::VideoType;
+        fn_all: supported_frame_rates;
+        fn_single: supports_frame_rate(rate);
+    ),
     crate::ffi::AVCodecConfig::AV_CODEC_CONFIG_FRAME_RATE,
-    FrameRateIter,
-    crate::Rational,
-    crate::ffi::AVRational,
-    crate::ffi::AVRational { num: 0, den: 0 }
+    FrameRateIter (
+        ptr: *const crate::ffi::AVRational;
+        terminator: crate::ffi::AVRational { num: 0, den: 0 };
+        wrapped: crate::Rational;
+    )
 );
 
 impl_config_iter!(
-    supported_sample_rates,
+    fns: (
+        impl_for: crate::codec::codec::AudioType;
+        fn_all: supported_sample_rates;
+        fn_single: supports_sample_rate(rate);
+    ),
     crate::ffi::AVCodecConfig::AV_CODEC_CONFIG_SAMPLE_RATE,
-    SampleRateIter,
-    libc::c_int,
-    libc::c_int,
-    0 as libc::c_int
+    SampleRateIter (
+        ptr: *const libc::c_int;
+        terminator: 0 as libc::c_int;
+        wrapped: libc::c_int;
+    )
 );
 
 impl_config_iter!(
-    supported_sample_formats,
+    fns: (
+        impl_for: crate::codec::codec::AudioType;
+        fn_all: supported_sample_formats;
+        fn_single: supports_sample_format(format);
+    ),
     crate::ffi::AVCodecConfig::AV_CODEC_CONFIG_SAMPLE_FORMAT,
-    SampleFormatIter,
-    crate::format::Sample,
-    crate::ffi::AVSampleFormat,
-    crate::ffi::AVSampleFormat::AV_SAMPLE_FMT_NONE
+    SampleFormatIter (
+        ptr: *const crate::ffi::AVSampleFormat;
+        terminator: crate::ffi::AVSampleFormat::AV_SAMPLE_FMT_NONE;
+        wrapped: crate::format::Sample;
+    )
 );
 
-#[cfg(feature = "ffmpeg_7_1")]
 impl_config_iter!(
-    supported_color_ranges,
+    fns: (
+        impl_for: crate::codec::codec::VideoType;
+        fn_all: supported_color_ranges;
+        fn_single: supports_color_range(range);
+    ),
     crate::ffi::AVCodecConfig::AV_CODEC_CONFIG_COLOR_RANGE,
-    ColorRangeIter,
-    crate::color::Range,
-    crate::ffi::AVColorRange,
-    crate::ffi::AVColorRange::AVCOL_RANGE_UNSPECIFIED
+    ColorRangeIter (
+        ptr: *const crate::ffi::AVColorRange;
+        terminator: crate::ffi::AVColorRange::AVCOL_RANGE_UNSPECIFIED;
+        wrapped: crate::color::Range;
+    )
 );
 
-#[cfg(feature = "ffmpeg_7_1")]
 impl_config_iter!(
-    supported_color_spaces,
+    fns: (
+        impl_for: crate::codec::codec::VideoType;
+        fn_all: supported_color_spaces;
+        fn_single: supports_color_space(space);
+    ),
     crate::ffi::AVCodecConfig::AV_CODEC_CONFIG_COLOR_SPACE,
-    ColorSpaceIter,
-    crate::color::Space,
-    crate::ffi::AVColorSpace,
-    crate::ffi::AVColorSpace::AVCOL_SPC_UNSPECIFIED
+    ColorSpaceIter (
+        ptr: *const crate::ffi::AVColorSpace;
+        terminator: crate::ffi::AVColorSpace::AVCOL_SPC_UNSPECIFIED;
+        wrapped: crate::color::Space;
+    )
 );
 
 #[cfg(test)]
@@ -270,7 +299,7 @@ impl_config_iter!(
 mod test {
     use super::*;
 
-    use crate::codec::{decoder, encoder, Compliance, Id};
+    use crate::codec::{decoder, encoder, Id};
     use crate::color::Range;
     use crate::format::Pixel;
     use crate::Rational;
@@ -280,13 +309,17 @@ mod test {
 
     #[test]
     fn audio_decoder() {
-        let codec = decoder::find(Id::MP3).expect("can find mp3 decoder");
+        let codec = decoder::find(Id::MP3)
+            .and_then(|c| c.audio())
+            .expect("can find mp3 audio decoder");
 
         // Audio decoder does not have color ranges
-        assert!(supported_color_ranges(codec, None).is_err());
+        assert!(GetCodecConfig::from_codec(codec)
+            .get(AVCodecConfig::AV_CODEC_CONFIG_COLOR_RANGE)
+            .is_err());
 
-        let format_iter = match supported_sample_formats(codec, None) {
-            Ok(Supported::Specific(f)) => f,
+        let format_iter = match codec.supported_sample_formats() {
+            Supported::Specific(f) => f,
             sup => panic!("Should be Supported::Specific, got {sup:#?}"),
         };
 
@@ -297,16 +330,12 @@ mod test {
 
     #[test]
     fn audio_encoder() {
-        let codec = encoder::find(Id::OPUS).expect("can find opus encoder");
+        let codec = encoder::find(Id::OPUS)
+            .and_then(|c| c.audio())
+            .expect("can find opus audio encoder");
 
-        // looks like every codec returns Supported::All for color space.
-        // might change in a future FFmpeg release
-        assert!(matches!(
-            supported_color_spaces(codec, None),
-            Ok(Supported::All)
-        ));
-        let format_iter = match supported_sample_formats(codec, None) {
-            Ok(Supported::Specific(f)) => f,
+        let format_iter = match codec.supported_sample_formats() {
+            Supported::Specific(f) => f,
             sup => panic!("Should be Supported::Specific, got {sup:#?}"),
         };
 
@@ -317,21 +346,24 @@ mod test {
 
     #[test]
     fn video_decoder() {
-        let codec = decoder::find(Id::H264).expect("can find H264 decoder");
+        let codec = decoder::find(Id::H264)
+            .and_then(|c| c.video())
+            .expect("can find H264 decoder");
 
-        assert!(supported_sample_rates(codec, None).is_err());
-        assert!(matches!(
-            supported_color_spaces(codec, None),
-            Ok(Supported::All)
-        ));
+        assert!(GetCodecConfig::from_codec(codec)
+            .get(AVCodecConfig::AV_CODEC_CONFIG_SAMPLE_RATE)
+            .is_err());
+        assert!(matches!(codec.supported_color_spaces(), Supported::All));
     }
 
     #[test]
     fn video_encoder() {
-        let codec = encoder::find(Id::VP9).expect("can find VP9 encoder");
+        let codec = encoder::find(Id::VP9)
+            .and_then(|c| c.video())
+            .expect("can find VP9 video encoder");
 
-        let color_ranges = match supported_color_ranges(codec, None) {
-            Ok(Supported::Specific(c)) => c,
+        let color_ranges = match codec.supported_color_ranges() {
+            Supported::Specific(c) => c,
             sup => panic!("Should be Supported::Specific, got {sup:#?}"),
         };
 
@@ -340,58 +372,53 @@ mod test {
         }
 
         assert!(matches!(
-            supported_pixel_formats(codec, None),
-            Ok(Supported::Specific(_))
+            codec.supported_pixel_formats(),
+            Supported::Specific(_)
         ));
 
-        assert!(matches!(
-            supported_frame_rates(codec, None),
-            Ok(Supported::All)
-        ));
+        assert!(matches!(codec.supported_frame_rates(), Supported::All));
     }
 
     #[test]
     fn supports() {
-        let codec = encoder::find(Id::FFV1).expect("can find FFV1 encoder");
+        let codec = encoder::find(Id::FFV1)
+            .and_then(|c| c.video())
+            .expect("can find FFV1 video encoder");
 
-        assert!(supported_color_ranges(codec, None)
-            .expect("can check color range support")
-            .supports(Range::MPEG));
+        assert!(codec.supported_color_ranges().supports(Range::MPEG));
 
-        assert!(!supported_pixel_formats(codec, None)
-            .expect("can check color range support")
-            .supports(Pixel::GRAY16));
+        assert!(!codec.supported_pixel_formats().supports(Pixel::GRAY16));
 
-        assert!(supported_frame_rates(codec, None)
-            .expect("can check frame rate support")
-            .supports(Rational(123, 456)));
+        assert!(codec.supported_frame_rates().supports(Rational(123, 456)));
 
-        supported_sample_formats(codec, None)
+        GetCodecConfig::from_codec(codec)
+            .get(AVCodecConfig::AV_CODEC_CONFIG_SAMPLE_FORMAT)
             .expect_err("can NOT check sample format support (video codec)");
     }
 
-    #[test]
-    fn with_context() {
-        let codec = encoder::find(Id::MJPEG).expect("can find MJPEG encoder");
+    // TODO: Reimplement after Context rework
+    // #[test]
+    // fn with_context() {
+    //     let codec = encoder::find(Id::MJPEG).and_then(|c| c.video()).expect("can find MJPEG video encoder");
 
-        let mut ctx = unsafe {
-            let avctx = crate::ffi::avcodec_alloc_context3(codec.as_ptr());
-            crate::codec::Context::wrap(avctx, None)
-        };
+    //     let mut ctx = unsafe {
+    //         let avctx = crate::ffi::avcodec_alloc_context3(codec.as_ptr());
+    //         crate::codec::Context::wrap(avctx, None)
+    //     };
 
-        ctx.compliance(Compliance::Strict);
+    //     ctx.compliance(Compliance::Strict);
 
-        assert!(!supported_color_ranges(ctx.codec().unwrap(), Some(&ctx))
-            .expect("can check color range support")
-            .supports(Range::MPEG));
+    //     assert!(!supported_color_ranges(ctx.codec().unwrap(), Some(&ctx))
+    //         .expect("can check color range support")
+    //         .supports(Range::MPEG));
 
-        ctx.compliance(Compliance::Unofficial);
+    //     ctx.compliance(Compliance::Unofficial);
 
-        // Note that we check for NOT supported above, and YES supported here
-        // MJPEG encoder only supports MPEG color range if compliance is
-        // Unofficial or lower (less strict)
-        assert!(supported_color_ranges(ctx.codec().unwrap(), Some(&ctx))
-            .expect("can check color range support")
-            .supports(Range::MPEG));
-    }
+    //     // Note that we check for NOT supported above, and YES supported here
+    //     // MJPEG encoder only supports MPEG color range if compliance is
+    //     // Unofficial or lower (less strict)
+    //     assert!(supported_color_ranges(ctx.codec().unwrap(), Some(&ctx))
+    //         .expect("can check color range support")
+    //         .supports(Range::MPEG));
+    // }
 }

@@ -1,17 +1,13 @@
 use std::marker::PhantomData;
 use std::ptr::NonNull;
 
-use super::config::{
-    FrameRateIter, PixelFormatIter, SampleFormatIter, SampleRateIter, TerminatedPtrIter,
-};
+use super::config::{FrameRateIter, PixelFormatIter, SampleFormatIter, SampleRateIter};
 use super::descriptor::{CodecDescriptor, CodecDescriptorIter};
 use super::profile::ProfileIter;
 use super::{Capabilities, Id};
-use crate::ffi::*;
+use crate::iters::TerminatedPtrIter;
+use crate::{ffi::*, AsMutPtr, AsPtr};
 use crate::{media, utils};
-
-#[cfg(feature = "ffmpeg_7_1")]
-use crate::codec::config::{ColorRangeIter, ColorSpaceIter, Supported};
 
 pub fn list_descriptors() -> CodecDescriptorIter {
     CodecDescriptorIter::new()
@@ -183,34 +179,8 @@ impl<T> Codec<T> {
 }
 
 impl Codec<AudioType> {
-    /// Checks if the given sample rate is supported by this audio codec.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supports_rate(self, rate: libc::c_int) -> bool {
-        self.supported_rates().supports(rate)
-    }
-
-    /// Returns a [`Supported`] representing the supported sample rates.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supported_rates(self) -> Supported<SampleRateIter<'static>> {
-        use super::config::supported_sample_rates;
-        supported_sample_rates(self, None).expect("audio codec returns supported sample rates")
-    }
-
     pub fn rates(&self) -> Option<SampleRateIter> {
         unsafe { SampleRateIter::from_raw((*self.as_ptr()).supported_samplerates) }
-    }
-
-    /// Checks if the given sample format is supported by this audio codec.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supports_format(self, format: crate::format::Sample) -> bool {
-        self.supported_formats().supports(format)
-    }
-
-    /// Returns a [`Supported`] representing the supported sample formats.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supported_formats(self) -> Supported<SampleFormatIter<'static>> {
-        use super::config::supported_sample_formats;
-        supported_sample_formats(self, None).expect("audio codec returns supported sample formats")
     }
 
     pub fn formats(&self) -> Option<SampleFormatIter> {
@@ -229,64 +199,12 @@ impl Codec<AudioType> {
 }
 
 impl Codec<VideoType> {
-    /// Checks if the given frame rate is supported by this video codec.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supports_rate(self, rate: crate::Rational) -> bool {
-        self.supported_rates().supports(rate)
-    }
-
-    /// Returns a [`Supported`] representing the supported frame rates.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supported_rates(self) -> Supported<FrameRateIter<'static>> {
-        use crate::codec::config::supported_frame_rates;
-        supported_frame_rates(self, None).expect("video codec returns supported frame rates")
-    }
-
     pub fn rates(&self) -> Option<FrameRateIter> {
         unsafe { FrameRateIter::from_raw((*self.as_ptr()).supported_framerates) }
     }
 
-    /// Checks if the given pixel format is supported by this video codec.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supports_format(self, format: crate::format::Pixel) -> bool {
-        self.supported_formats().supports(format)
-    }
-
-    /// Returns a [`Supported`] representing the supported pixel formats.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supported_formats(self) -> Supported<PixelFormatIter<'static>> {
-        use crate::codec::config::supported_pixel_formats;
-        supported_pixel_formats(self, None).expect("video codec returns supported pixel formats")
-    }
-
     pub fn formats(&self) -> Option<PixelFormatIter> {
         unsafe { PixelFormatIter::from_raw((*self.as_ptr()).pix_fmts) }
-    }
-
-    /// Checks if the given color space is supported by this video codec.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supports_color_space(self, space: crate::color::Space) -> bool {
-        self.supported_color_spaces().supports(space)
-    }
-
-    /// Returns a [`Supported`] representing the supported color spaces.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supported_color_spaces(self) -> Supported<ColorSpaceIter<'static>> {
-        use crate::codec::config::supported_color_spaces;
-        supported_color_spaces(self, None).expect("video codec returns supported color spaces")
-    }
-
-    /// Checks if the given color range is supported by this video codec.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supports_color_range(self, range: crate::color::Range) -> bool {
-        self.supported_color_ranges().supports(range)
-    }
-
-    /// Returns a [`Supported`] representing the supported color ranges.
-    #[cfg(feature = "ffmpeg_7_1")]
-    pub fn supported_color_ranges(self) -> Supported<ColorRangeIter<'static>> {
-        use crate::codec::config::supported_color_ranges;
-        supported_color_ranges(self, None).expect("video codec returns supported color ranges")
     }
 }
 
@@ -385,5 +303,17 @@ mod ch_layout {
     // TODO: Remove this with a const variable when zeroed() is const (1.75.0)
     unsafe fn zeroed_layout() -> AVChannelLayout {
         std::mem::zeroed()
+    }
+}
+
+impl<T> AsPtr<AVCodec> for Codec<T> {
+    fn as_ptr(&self) -> *const AVCodec {
+        self.ptr.as_ptr()
+    }
+}
+
+impl<T> AsMutPtr<AVCodec> for Codec<T> {
+    fn as_mut_ptr(&mut self) -> *mut AVCodec {
+        self.ptr.as_ptr()
     }
 }
