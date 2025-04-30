@@ -33,6 +33,9 @@ pub use self::parameters::{Parameters, ParametersMut, ParametersRef};
 pub mod audio_service;
 pub mod field_order;
 
+pub mod check;
+pub use self::check::Check;
+
 pub mod compliance;
 pub use self::compliance::Compliance;
 

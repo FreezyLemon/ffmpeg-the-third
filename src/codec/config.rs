@@ -270,7 +270,7 @@ impl_config_iter!(
 mod test {
     use super::*;
 
-    use crate::codec::{decoder, encoder, Compliance, Id};
+    use crate::codec::{self, decoder, encoder, Compliance, Id};
     use crate::color::Range;
     use crate::format::Pixel;
     use crate::Rational;
@@ -374,10 +374,7 @@ mod test {
     fn with_context() {
         let codec = encoder::find(Id::MJPEG).expect("can find MJPEG encoder");
 
-        let mut ctx = unsafe {
-            let avctx = crate::ffi::avcodec_alloc_context3(codec.as_ptr());
-            crate::codec::Context::wrap(avctx, None)
-        };
+        let mut ctx = codec::Context::new_video_encoder(codec).expect("mjpeg is video");
 
         ctx.compliance(Compliance::Strict);
 

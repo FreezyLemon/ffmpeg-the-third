@@ -61,7 +61,7 @@ impl<'a> StreamMut<'a> {
         }
     }
 
-    pub fn copy_parameters_from_context(&mut self, ctx: &codec::Context) {
+    pub fn copy_parameters_from_context<C: AsPtr<AVCodecContext>>(&mut self, ctx: &C) {
         unsafe {
             avcodec_parameters_from_context((*self.as_mut_ptr()).codecpar, ctx.as_ptr());
         }

@@ -2,7 +2,7 @@ use super::{Context, Flags};
 use crate::util::format;
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::Picture;
-use crate::{decoder, frame, Error};
+use crate::{frame, Error};
 
 #[cfg(not(feature = "ffmpeg_5_0"))]
 impl<'a> Picture<'a> {
@@ -61,7 +61,7 @@ impl frame::Video {
     }
 }
 
-impl decoder::Video {
+impl<S> crate::codec::context::decoding::VideoDecoder<S> {
     #[inline]
     pub fn scaler(&self, width: u32, height: u32, flags: Flags) -> Result<Context, Error> {
         Context::get(

@@ -1,6 +1,5 @@
 use std::ptr::NonNull;
 
-use crate::codec::Context;
 use crate::ffi::*;
 use crate::{AsMutPtr, AsPtr};
 
@@ -88,10 +87,9 @@ impl AsMutPtr<AVCodecParameters> for Parameters {
     }
 }
 
-impl<C: AsRef<Context>> From<C> for Parameters {
-    fn from(context: C) -> Parameters {
+impl<C: AsPtr<AVCodecContext>> From<C> for Parameters {
+    fn from(context: C) -> Self {
         let mut parameters = Parameters::new();
-        let context = context.as_ref();
         unsafe {
             avcodec_parameters_from_context(parameters.as_mut_ptr(), context.as_ptr());
         }

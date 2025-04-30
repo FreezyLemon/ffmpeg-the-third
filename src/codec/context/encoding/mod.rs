@@ -10,5 +10,7 @@ pub type SubtitleEncoder<State = Closed> = Encoder<SubtitleType, State>;
 pub type AttachmentEncoder<State = Closed> = Encoder<AttachmentType, State>;
 
 mod audio;
+mod common;
+mod opened;
 mod subtitle;
 mod video;

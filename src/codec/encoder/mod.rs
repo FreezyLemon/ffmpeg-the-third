@@ -1,15 +1,3 @@
-pub mod encoder;
-pub use self::encoder::Encoder;
-
-pub mod video;
-pub use self::video::Encoder as Video;
-
-pub mod audio;
-pub use self::audio::Encoder as Audio;
-
-pub mod subtitle;
-pub use self::subtitle::Encoder as Subtitle;
-
 pub mod motion_estimation;
 pub use self::motion_estimation::MotionEstimation;
 
@@ -26,14 +14,9 @@ pub use self::decision::Decision;
 
 use std::ffi::CString;
 
-use crate::codec::Context;
 use crate::codec::Id;
 use crate::ffi::*;
 use crate::Codec;
-
-pub fn new() -> Encoder {
-    Context::new().encoder()
-}
 
 pub fn find(id: Id) -> Option<Codec> {
     unsafe {

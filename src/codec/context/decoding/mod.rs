@@ -10,5 +10,7 @@ pub type SubtitleDecoder<State = Closed> = Decoder<SubtitleType, State>;
 pub type AttachmentDecoder<State = Closed> = Decoder<AttachmentType, State>;
 
 mod audio;
+mod common;
+mod opened;
 mod subtitle;
 mod video;

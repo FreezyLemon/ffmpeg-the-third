@@ -1,6 +1,6 @@
 use super::Context;
 use crate::util::format;
-use crate::{decoder, frame, Error};
+use crate::{frame, Error};
 
 #[cfg(feature = "ffmpeg_5_1")]
 use crate::ChannelLayout;
@@ -46,7 +46,7 @@ impl frame::Audio {
     }
 }
 
-impl decoder::Audio {
+impl<S> crate::codec::context::decoding::AudioDecoder<S> {
     #[cfg(not(feature = "ffmpeg_7_0"))]
     #[inline]
     pub fn resampler(
