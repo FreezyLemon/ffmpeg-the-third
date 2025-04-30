@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 use std::ptr;
 
 use super::{Audio, Check, Conceal, Opened, Subtitle, Video};
-use crate::codec::{traits, Context};
+use crate::codec::{traits, CodecType, Context};
 use crate::ffi::*;
 use crate::{Dictionary, Discard, Error, Rational};
 
@@ -18,7 +18,10 @@ impl Decoder {
         }
     }
 
-    pub fn open_as<T, D: traits::Decoder<T>>(mut self, codec: D) -> Result<Opened, Error> {
+    pub fn open_as<D: traits::Decoder<impl CodecType>>(
+        mut self,
+        codec: D,
+    ) -> Result<Opened, Error> {
         unsafe {
             if let Some(codec) = codec.decoder() {
                 match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
@@ -31,7 +34,7 @@ impl Decoder {
         }
     }
 
-    pub fn open_as_with<T, D: traits::Decoder<T>>(
+    pub fn open_as_with<D: traits::Decoder<impl CodecType>>(
         mut self,
         codec: D,
         options: Dictionary,

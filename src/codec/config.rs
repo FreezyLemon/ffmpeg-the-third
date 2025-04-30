@@ -3,9 +3,9 @@ use std::ptr::NonNull;
 #[cfg(feature = "ffmpeg_7_1")]
 use crate::codec::Context;
 #[cfg(feature = "ffmpeg_7_1")]
-use crate::ffi::*;
+use crate::codec::{Codec, CodecType};
 #[cfg(feature = "ffmpeg_7_1")]
-use crate::Codec;
+use crate::ffi::*;
 #[cfg(feature = "ffmpeg_7_1")]
 use crate::Error;
 
@@ -66,8 +66,8 @@ where
 }
 
 #[cfg(feature = "ffmpeg_7_1")]
-fn supported<WrapperType, AVType, CodecType, I>(
-    codec: Codec<CodecType>,
+fn supported<WrapperType, AVType, I>(
+    codec: Codec<impl CodecType>,
     ctx: Option<&Context>,
     cfg: AVCodecConfig,
 ) -> Result<Supported<I>, Error>
@@ -157,8 +157,8 @@ macro_rules! impl_config_iter_fn {
         /// `avcodec_get_supported_config()`. Consider using one of the convenience methods
         /// on the codecs or codec contexts instead.
         #[cfg(feature = "ffmpeg_7_1")]
-        pub fn $fn_name<T>(
-            codec: Codec<T>,
+        pub fn $fn_name(
+            codec: Codec<impl CodecType>,
             ctx: Option<&Context>,
         ) -> Result<Supported<$iter>, Error> {
             supported(codec, ctx, $codec_cfg)

@@ -6,6 +6,7 @@ use std::ptr;
 use super::common::Context;
 use super::destructor;
 use crate::codec::traits;
+use crate::codec::CodecType;
 use crate::ffi::*;
 use crate::{format, ChapterMut, Dictionary, Error, Rational, StreamMut};
 
@@ -68,7 +69,10 @@ impl Output {
         }
     }
 
-    pub fn add_stream<T, E: traits::Encoder<T>>(&mut self, codec: E) -> Result<StreamMut, Error> {
+    pub fn add_stream<E: traits::Encoder<impl CodecType>>(
+        &mut self,
+        codec: E,
+    ) -> Result<StreamMut, Error> {
         unsafe {
             let codec = codec.encoder();
             let codec = codec.map_or(ptr::null(), |c| c.as_ptr());

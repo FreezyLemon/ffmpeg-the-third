@@ -1,9 +1,8 @@
 use super::codec::UnknownType;
 use super::{decoder, encoder};
-use crate::codec::Id;
-use crate::Codec;
+use crate::codec::{Codec, CodecType, Id};
 
-pub trait Decoder<T> {
+pub trait Decoder<T: CodecType> {
     fn decoder(self) -> Option<Codec<T>>;
 }
 
@@ -19,7 +18,7 @@ impl Decoder<UnknownType> for Id {
     }
 }
 
-impl<T> Decoder<T> for Codec<T> {
+impl<T: CodecType> Decoder<T> for Codec<T> {
     fn decoder(self) -> Option<Codec<T>> {
         if self.is_decoder() {
             Some(self)
@@ -29,13 +28,13 @@ impl<T> Decoder<T> for Codec<T> {
     }
 }
 
-impl<T> Decoder<T> for Option<Codec<T>> {
+impl<T: CodecType> Decoder<T> for Option<Codec<T>> {
     fn decoder(self) -> Option<Codec<T>> {
         self.and_then(|c| c.decoder())
     }
 }
 
-pub trait Encoder<T> {
+pub trait Encoder<T: CodecType> {
     fn encoder(self) -> Option<Codec<T>>;
 }
 
@@ -51,7 +50,7 @@ impl Encoder<UnknownType> for Id {
     }
 }
 
-impl<T> Encoder<T> for Codec<T> {
+impl<T: CodecType> Encoder<T> for Codec<T> {
     fn encoder(self) -> Option<Codec<T>> {
         if self.is_encoder() {
             Some(self)
@@ -61,7 +60,7 @@ impl<T> Encoder<T> for Codec<T> {
     }
 }
 
-impl<T> Encoder<T> for Option<Codec<T>> {
+impl<T: CodecType> Encoder<T> for Option<Codec<T>> {
     fn encoder(self) -> Option<Codec<T>> {
         self.and_then(|c| c.encoder())
     }

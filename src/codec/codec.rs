@@ -24,10 +24,19 @@ pub type Subtitle = Codec<SubtitleType>;
 pub type Attachment = Codec<AttachmentType>;
 
 #[derive(PartialEq, Eq, Copy, Clone)]
-pub struct Codec<Type = UnknownType> {
+pub struct Codec<Type: CodecType = UnknownType> {
     ptr: NonNull<AVCodec>,
     _marker: PhantomData<Type>,
 }
+
+pub trait CodecType: private::Sealed {}
+
+impl CodecType for UnknownType {}
+impl CodecType for VideoType {}
+impl CodecType for AudioType {}
+impl CodecType for DataType {}
+impl CodecType for SubtitleType {}
+impl CodecType for AttachmentType {}
 
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct UnknownType;
@@ -42,8 +51,8 @@ pub struct SubtitleType;
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct AttachmentType;
 
-unsafe impl<T> Send for Codec<T> {}
-unsafe impl<T> Sync for Codec<T> {}
+unsafe impl<T: CodecType> Send for Codec<T> {}
+unsafe impl<T: CodecType> Sync for Codec<T> {}
 
 impl Codec<UnknownType> {
     /// Create a new reference to a codec from a raw pointer.
@@ -59,7 +68,7 @@ impl Codec<UnknownType> {
     // Helper function to easily convert to another codec type.
     // TODO: Does this need to be unsafe?
     /// Ensure that `self.medium()` is correct for `Codec<U>`.
-    fn as_other_codec<U>(self) -> Codec<U> {
+    fn as_other_codec<U: CodecType>(self) -> Codec<U> {
         Codec {
             ptr: self.ptr,
             _marker: PhantomData,
@@ -127,7 +136,7 @@ impl Codec<UnknownType> {
     }
 }
 
-impl<T> Codec<T> {
+impl<T: CodecType> Codec<T> {
     pub fn as_ptr(&self) -> *const AVCodec {
         self.ptr.as_ptr()
     }
@@ -386,4 +395,15 @@ mod ch_layout {
     unsafe fn zeroed_layout() -> AVChannelLayout {
         std::mem::zeroed()
     }
+}
+
+mod private {
+    pub trait Sealed {}
+
+    impl Sealed for super::UnknownType {}
+    impl Sealed for super::VideoType {}
+    impl Sealed for super::AudioType {}
+    impl Sealed for super::DataType {}
+    impl Sealed for super::SubtitleType {}
+    impl Sealed for super::AttachmentType {}
 }

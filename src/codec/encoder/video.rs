@@ -8,7 +8,7 @@ use super::Encoder as Super;
 use super::{Comparison, Decision};
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use super::{MotionEstimation, Prediction};
-use crate::codec::{traits, Context};
+use crate::codec::{traits, CodecType, Context};
 use crate::{color, format, Dictionary, Error, Rational};
 #[cfg(not(feature = "ffmpeg_5_0"))]
 use crate::{frame, packet};
@@ -27,7 +27,10 @@ impl Video {
     }
 
     #[inline]
-    pub fn open_as<T, E: traits::Encoder<T>>(mut self, codec: E) -> Result<Encoder, Error> {
+    pub fn open_as<E: traits::Encoder<impl CodecType>>(
+        mut self,
+        codec: E,
+    ) -> Result<Encoder, Error> {
         unsafe {
             if let Some(codec) = codec.encoder() {
                 match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
@@ -56,7 +59,7 @@ impl Video {
     }
 
     #[inline]
-    pub fn open_as_with<T, E: traits::Encoder<T>>(
+    pub fn open_as_with<E: traits::Encoder<impl CodecType>>(
         mut self,
         codec: E,
         options: Dictionary,
