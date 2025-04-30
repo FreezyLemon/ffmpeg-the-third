@@ -82,7 +82,7 @@ impl<T: CodecType> Codec<UnknownAction, T> {
         unsafe { av_codec_is_encoder(self.as_ptr()) != 0 }
     }
 
-    pub fn as_encoder(self) -> Option<Codec<EncodingAction, T>> {
+    pub fn as_encoder(&self) -> Option<Codec<EncodingAction, T>> {
         if self.is_encoder() {
             Some(Codec {
                 ptr: self.ptr,
@@ -97,7 +97,7 @@ impl<T: CodecType> Codec<UnknownAction, T> {
         unsafe { av_codec_is_decoder(self.as_ptr()) != 0 }
     }
 
-    pub fn as_decoder(self) -> Option<Codec<DecodingAction, T>> {
+    pub fn as_decoder(&self) -> Option<Codec<DecodingAction, T>> {
         if self.is_decoder() {
             Some(Codec {
                 ptr: self.ptr,
@@ -125,7 +125,7 @@ impl<A: CodecAction> Codec<A, UnknownType> {
     // Helper function to easily convert to another codec type.
     // TODO: Does this need to be unsafe?
     /// Ensure that `self.medium()` is correct for `Codec<U>`.
-    fn as_other_codec<U: CodecType>(self) -> Codec<A, U> {
+    fn as_other_codec<U: CodecType>(&self) -> Codec<A, U> {
         Codec {
             ptr: self.ptr,
             _marker: PhantomData,

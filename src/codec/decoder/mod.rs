@@ -36,7 +36,7 @@ pub fn new() -> Decoder {
 pub fn find(id: Id) -> Option<UnknownDecoder> {
     unsafe {
         let ptr = avcodec_find_decoder(id.into());
-        Codec::from_raw(ptr).and_then(Codec::as_decoder)
+        Codec::from_raw(ptr).and_then(|c| c.as_decoder())
     }
 }
 
@@ -45,6 +45,6 @@ pub fn find_by_name(name: &str) -> Option<UnknownDecoder> {
         let name = CString::new(name).unwrap();
         let ptr = avcodec_find_decoder_by_name(name.as_ptr());
 
-        Codec::from_raw(ptr).and_then(Codec::as_decoder)
+        Codec::from_raw(ptr).and_then(|c| c.as_decoder())
     }
 }
