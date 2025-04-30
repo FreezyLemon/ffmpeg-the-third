@@ -17,16 +17,26 @@ pub fn list_descriptors() -> CodecDescriptorIter {
     CodecDescriptorIter::new()
 }
 
-pub type Audio = Codec<AudioType>;
-pub type Video = Codec<VideoType>;
-pub type Data = Codec<DataType>;
-pub type Subtitle = Codec<SubtitleType>;
-pub type Attachment = Codec<AttachmentType>;
+pub type Decoder<T> = Codec<DecodingAction, T>;
+pub type UnknownDecoder = Codec<DecodingAction, UnknownType>;
+pub type AudioDecoder = Codec<DecodingAction, AudioType>;
+pub type VideoDecoder = Codec<DecodingAction, VideoType>;
+pub type DataDecoder = Codec<DecodingAction, DataType>;
+pub type SubtitleDecoder = Codec<DecodingAction, SubtitleType>;
+pub type AttachmentDecoder = Codec<DecodingAction, AttachmentType>;
+
+pub type Encoder<T> = Codec<EncodingAction, T>;
+pub type UnknownEncoder = Codec<EncodingAction, UnknownType>;
+pub type AudioEncoder = Codec<EncodingAction, AudioType>;
+pub type VideoEncoder = Codec<EncodingAction, VideoType>;
+pub type DataEncoder = Codec<EncodingAction, DataType>;
+pub type SubtitleEncoder = Codec<EncodingAction, SubtitleType>;
+pub type AttachmentEncoder = Codec<EncodingAction, AttachmentType>;
 
 #[derive(PartialEq, Eq, Copy, Clone)]
-pub struct Codec<Type: CodecType = UnknownType> {
+pub struct Codec<Action: CodecAction, Type: CodecType> {
     ptr: NonNull<AVCodec>,
-    _marker: PhantomData<Type>,
+    _marker: PhantomData<(Action, Type)>,
 }
 
 pub trait CodecType: private::Sealed {}
@@ -51,10 +61,55 @@ pub struct SubtitleType;
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub struct AttachmentType;
 
-unsafe impl<T: CodecType> Send for Codec<T> {}
-unsafe impl<T: CodecType> Sync for Codec<T> {}
+pub trait CodecAction: private::Sealed {}
 
-impl Codec<UnknownType> {
+impl CodecAction for UnknownAction {}
+impl CodecAction for DecodingAction {}
+impl CodecAction for EncodingAction {}
+
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub struct UnknownAction;
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub struct DecodingAction;
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub struct EncodingAction;
+
+unsafe impl<A: CodecAction, T: CodecType> Send for Codec<A, T> {}
+unsafe impl<A: CodecAction, T: CodecType> Sync for Codec<A, T> {}
+
+impl<T: CodecType> Codec<UnknownAction, T> {
+    pub fn is_encoder(&self) -> bool {
+        unsafe { av_codec_is_encoder(self.as_ptr()) != 0 }
+    }
+
+    pub fn as_encoder(self) -> Option<Codec<EncodingAction, T>> {
+        if self.is_encoder() {
+            Some(Codec {
+                ptr: self.ptr,
+                _marker: PhantomData,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn is_decoder(&self) -> bool {
+        unsafe { av_codec_is_decoder(self.as_ptr()) != 0 }
+    }
+
+    pub fn as_decoder(self) -> Option<Codec<DecodingAction, T>> {
+        if self.is_decoder() {
+            Some(Codec {
+                ptr: self.ptr,
+                _marker: PhantomData,
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl Codec<UnknownAction, UnknownType> {
     /// Create a new reference to a codec from a raw pointer.
     ///
     /// Returns `None` if `ptr` is null.
@@ -64,11 +119,13 @@ impl Codec<UnknownType> {
             _marker: PhantomData,
         })
     }
+}
 
+impl<A: CodecAction> Codec<A, UnknownType> {
     // Helper function to easily convert to another codec type.
     // TODO: Does this need to be unsafe?
     /// Ensure that `self.medium()` is correct for `Codec<U>`.
-    fn as_other_codec<U: CodecType>(self) -> Codec<U> {
+    fn as_other_codec<U: CodecType>(self) -> Codec<A, U> {
         Codec {
             ptr: self.ptr,
             _marker: PhantomData,
@@ -79,7 +136,7 @@ impl Codec<UnknownType> {
         self.medium() == media::Type::Video
     }
 
-    pub fn video(self) -> Option<Video> {
+    pub fn video(self) -> Option<Codec<A, VideoType>> {
         if self.is_video() {
             Some(self.as_other_codec())
         } else {
@@ -91,7 +148,7 @@ impl Codec<UnknownType> {
         self.medium() == media::Type::Audio
     }
 
-    pub fn audio(self) -> Option<Audio> {
+    pub fn audio(self) -> Option<Codec<A, AudioType>> {
         if self.is_audio() {
             Some(self.as_other_codec())
         } else {
@@ -103,7 +160,7 @@ impl Codec<UnknownType> {
         self.medium() == media::Type::Data
     }
 
-    pub fn data(self) -> Option<Data> {
+    pub fn data(self) -> Option<Codec<A, DataType>> {
         if self.is_data() {
             Some(self.as_other_codec())
         } else {
@@ -115,7 +172,7 @@ impl Codec<UnknownType> {
         self.medium() == media::Type::Subtitle
     }
 
-    pub fn subtitle(self) -> Option<Subtitle> {
+    pub fn subtitle(self) -> Option<Codec<A, SubtitleType>> {
         if self.is_subtitle() {
             Some(self.as_other_codec())
         } else {
@@ -127,7 +184,7 @@ impl Codec<UnknownType> {
         self.medium() == media::Type::Attachment
     }
 
-    pub fn attachment(self) -> Option<Attachment> {
+    pub fn attachment(self) -> Option<Codec<A, AttachmentType>> {
         if self.is_attachment() {
             Some(self.as_other_codec())
         } else {
@@ -136,17 +193,9 @@ impl Codec<UnknownType> {
     }
 }
 
-impl<T: CodecType> Codec<T> {
+impl<A: CodecAction, T: CodecType> Codec<A, T> {
     pub fn as_ptr(&self) -> *const AVCodec {
         self.ptr.as_ptr()
-    }
-
-    pub fn is_encoder(&self) -> bool {
-        unsafe { av_codec_is_encoder(self.as_ptr()) != 0 }
-    }
-
-    pub fn is_decoder(&self) -> bool {
-        unsafe { av_codec_is_decoder(self.as_ptr()) != 0 }
     }
 
     pub fn name(&self) -> &str {
@@ -191,7 +240,7 @@ impl<T: CodecType> Codec<T> {
     }
 }
 
-impl Codec<AudioType> {
+impl<A: CodecAction> Codec<A, AudioType> {
     /// Checks if the given sample rate is supported by this audio codec.
     #[cfg(feature = "ffmpeg_7_1")]
     pub fn supports_rate(self, rate: libc::c_int) -> bool {
@@ -237,7 +286,7 @@ impl Codec<AudioType> {
     }
 }
 
-impl Codec<VideoType> {
+impl<A: CodecAction> Codec<A, VideoType> {
     /// Checks if the given frame rate is supported by this video codec.
     #[cfg(feature = "ffmpeg_7_1")]
     pub fn supports_rate(self, rate: crate::Rational) -> bool {
@@ -406,4 +455,8 @@ mod private {
     impl Sealed for super::DataType {}
     impl Sealed for super::SubtitleType {}
     impl Sealed for super::AttachmentType {}
+
+    impl Sealed for super::UnknownAction {}
+    impl Sealed for super::DecodingAction {}
+    impl Sealed for super::EncodingAction {}
 }

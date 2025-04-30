@@ -5,8 +5,8 @@ use std::ptr;
 
 use super::common::Context;
 use super::destructor;
-use crate::codec::traits;
-use crate::codec::CodecType;
+use crate::codec::codec;
+use crate::codec::codec::CodecType;
 use crate::ffi::*;
 use crate::{format, ChapterMut, Dictionary, Error, Rational, StreamMut};
 
@@ -69,14 +69,12 @@ impl Output {
         }
     }
 
-    pub fn add_stream<E: traits::Encoder<impl CodecType>>(
+    pub fn add_stream(
         &mut self,
-        codec: E,
+        codec: codec::Encoder<impl CodecType>,
     ) -> Result<StreamMut, Error> {
         unsafe {
-            let codec = codec.encoder();
-            let codec = codec.map_or(ptr::null(), |c| c.as_ptr());
-            let ptr = avformat_new_stream(self.as_mut_ptr(), codec);
+            let ptr = avformat_new_stream(self.as_mut_ptr(), codec.as_ptr());
 
             if ptr.is_null() {
                 return Err(Error::Unknown);

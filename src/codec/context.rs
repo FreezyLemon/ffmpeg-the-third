@@ -2,6 +2,7 @@ use std::any::Any;
 use std::ptr;
 use std::rc::Rc;
 
+use super::codec::{CodecAction, CodecType};
 use super::decoder::Decoder;
 use super::encoder::Encoder;
 use super::{threading, Compliance, Debug, Flags, Id};
@@ -43,7 +44,7 @@ impl Context {
         }
     }
 
-    pub fn new_with_codec(codec: Codec) -> Self {
+    pub fn new_with_codec(codec: Codec<impl CodecAction, impl CodecType>) -> Self {
         unsafe {
             Context {
                 ptr: avcodec_alloc_context3(codec.as_ptr()),
@@ -71,7 +72,7 @@ impl Context {
         Encoder(self)
     }
 
-    pub fn codec(&self) -> Option<Codec> {
+    pub fn codec(&self) -> Option<Codec<impl CodecAction, impl CodecType>> {
         unsafe { Codec::from_raw((*self.as_ptr()).codec) }
     }
 
