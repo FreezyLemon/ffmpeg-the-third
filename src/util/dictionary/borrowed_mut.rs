@@ -1,26 +1,21 @@
 use core::fmt;
-use std::marker::PhantomData;
 
 use crate::ffi::*;
 
 pub struct DictionaryMut<'d> {
-    ptr: *mut AVDictionary,
-    _marker: PhantomData<&'d mut AVDictionary>,
+    ptr: &'d mut *mut AVDictionary,
 }
 
 impl<'d> DictionaryMut<'d> {
-    pub unsafe fn from_raw(ptr: *mut AVDictionary) -> Self {
-        DictionaryMut {
-            ptr,
-            _marker: PhantomData,
-        }
+    pub unsafe fn from_raw(ptr: &'d mut *mut AVDictionary) -> Self {
+        DictionaryMut { ptr }
     }
 
     pub fn as_ptr(&self) -> *const AVDictionary {
-        self.ptr
+        *self.ptr
     }
 
-    pub fn as_mut_ptr(&mut self) -> *mut AVDictionary {
+    pub fn as_mut_ptr(&mut self) -> &mut *mut AVDictionary {
         self.ptr
     }
 

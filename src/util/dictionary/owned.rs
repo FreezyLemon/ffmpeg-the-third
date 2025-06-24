@@ -34,8 +34,8 @@ impl Dictionary {
         self.ptr
     }
 
-    pub fn as_mut_ptr(&mut self) -> *mut AVDictionary {
-        self.ptr
+    pub fn as_mut_ptr(&mut self) -> &mut *mut AVDictionary {
+        &mut self.ptr
     }
 
     pub fn as_ref(&self) -> DictionaryRef {

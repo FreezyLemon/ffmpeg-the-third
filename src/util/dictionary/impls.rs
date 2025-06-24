@@ -77,7 +77,7 @@ impl_for_many! {
         /// for the given key. If you want to customize the way FFmpeg inserts
         /// the new value, see [`set_with_flags`][Self::set_with_flags].
         pub fn set(&mut self, key: &str, value: &str) {
-            set(&mut self.as_mut_ptr(), key, value, Flags::empty())
+            set(self.as_mut_ptr(), key, value, Flags::empty())
         }
 
         /// Set a value for the given key, using custom flags.
@@ -86,7 +86,7 @@ impl_for_many! {
         /// Using [`Flags::DONT_STRDUP_KEY`] or [`Flags::DONT_STRDUP_VAL`] is
         /// heavily discouraged unless you know what you are doing.
         pub fn set_with_flags(&mut self, key: &str, value: &str, flags: Flags) {
-            set(&mut self.as_mut_ptr(), key, value, flags)
+            set(self.as_mut_ptr(), key, value, flags)
         }
     }
 }
