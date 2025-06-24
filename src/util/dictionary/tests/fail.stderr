@@ -1,0 +1,28 @@
+error[E0505]: cannot move out of `dict` because it is borrowed
+ --> src/util/dictionary/tests/fail.rs:8:10
+  |
+6 |     let dict = Dictionary::new();
+  |         ---- binding `dict` declared here
+7 |     let dict_ref = dict.as_ref();
+  |                    ---- borrow of `dict` occurs here
+8 |     drop(dict);
+  |          ^^^^ move out of `dict` occurs here
+9 |     println!("len: {}", dict_ref.len());
+  |                         -------- borrow later used here
+  |
+help: consider cloning the value if the performance cost is acceptable
+  |
+7 |     let dict_ref = dict.clone().as_ref();
+  |                        ++++++++
+
+error[E0505]: cannot move out of `dict` because it is borrowed
+  --> src/util/dictionary/tests/fail.rs:15:10
+   |
+13 |     let mut dict = Dictionary::new();
+   |         -------- binding `dict` declared here
+14 |     let dict_mut = dict.as_mut();
+   |                    ---- borrow of `dict` occurs here
+15 |     drop(dict);
+   |          ^^^^ move out of `dict` occurs here
+16 |     println!("len: {}", dict_mut.len());
+   |                         -------- borrow later used here
