@@ -17,6 +17,14 @@ pub fn set(dict: &mut *mut AVDictionary, key: &str, value: &str, flags: Flags) {
     }
 }
 
+pub fn unset(dict: &mut *mut AVDictionary, key: &str, flags: Flags) {
+    let key = CString::new(key).unwrap();
+
+    unsafe {
+        av_dict_set(dict, key.as_ptr(), std::ptr::null(), flags.bits());
+    }
+}
+
 // Safety: Ensure the returned lifetime 'd is bounded to a borrow on dict
 pub unsafe fn get<'d>(dict: *const AVDictionary, key: &str, flags: Flags) -> Option<&'d str> {
     let key = CString::new(key).unwrap();
@@ -87,6 +95,23 @@ impl_for_many! {
         /// heavily discouraged unless you know what you are doing.
         pub fn set_with_flags(&mut self, key: &str, value: &str, flags: Flags) {
             set(self.as_mut_ptr(), key, value, flags)
+        }
+
+        /// Remove a value from the dictionary for the given key.
+        ///
+        /// If you want to customize the way FFmpeg searches for the key,
+        /// see [`unset_with_flags`][Self::unset_with_flags].
+        pub fn unset(&mut self, key: &str) {
+            unset(self.as_mut_ptr(), key, Flags::empty());
+        }
+
+        /// Remove a value from the dictionary for the given key, using custom flags.
+        ///
+        /// See [Flags][crate::dictionary::Flags] to see how each flag works.
+        /// Using [`Flags::DONT_STRDUP_KEY`] or [`Flags::DONT_STRDUP_VAL`] is
+        /// heavily discouraged unless you know what you are doing.
+        pub fn unset_with_flags(&mut self, key: &str, flags: Flags) {
+            unset(self.as_mut_ptr(), key, flags);
         }
     }
 }
