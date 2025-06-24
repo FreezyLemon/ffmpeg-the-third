@@ -133,3 +133,6 @@ build-lib-ssh = ["ffmpeg-sys-the-third/build-lib-ssh"]
 
 # platforms
 rpi = []
+
+[dev-dependencies]
+trybuild = "1"
