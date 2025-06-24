@@ -19,6 +19,9 @@ pub use self::owned::Dictionary;
 mod iter;
 pub use self::iter::Iter;
 
+#[cfg(test)]
+mod tests;
+
 #[macro_export]
 macro_rules! dict {
     ( $($key:expr => $value:expr),* $(,)*) => ({
