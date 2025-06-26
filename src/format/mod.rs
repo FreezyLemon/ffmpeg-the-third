@@ -24,7 +24,7 @@ use std::ptr;
 
 use crate::ffi::*;
 use crate::utils;
-use crate::{Dictionary, Error};
+use crate::{AsMutPtr, Error};
 
 pub fn version() -> u32 {
     unsafe { avformat_version() }
@@ -62,17 +62,20 @@ pub fn input<P: AsRef<Path>>(path: P) -> Result<context::Input, Error> {
     }
 }
 
-pub fn input_with_dictionary<P: AsRef<Path>>(
-    path: P,
-    options: Dictionary,
-) -> Result<context::Input, Error> {
+pub fn input_with_dictionary<P, Dict>(path: P, mut options: Dict) -> Result<context::Input, Error>
+where
+    Dict: AsMutPtr<*mut AVDictionary>,
+    P: AsRef<Path>,
+{
     unsafe {
         let mut ps = ptr::null_mut();
         let path = from_path(path);
-        let mut opts = options.disown();
-        let res = avformat_open_input(&mut ps, path.as_ptr(), ptr::null_mut(), &mut opts);
-
-        Dictionary::own(opts);
+        let res = avformat_open_input(
+            &mut ps,
+            path.as_ptr(),
+            ptr::null_mut(),
+            options.as_mut_ptr(),
+        );
 
         match res {
             0 => match avformat_find_stream_info(ps, ptr::null_mut()) {
@@ -127,11 +130,14 @@ pub fn output<P: AsRef<Path>>(path: P) -> Result<context::Output, Error> {
     }
 }
 
-pub fn output_with<P: AsRef<Path>>(path: P, options: Dictionary) -> Result<context::Output, Error> {
+pub fn output_with<P, Dict>(path: P, mut options: Dict) -> Result<context::Output, Error>
+where
+    P: AsRef<Path>,
+    Dict: AsMutPtr<*mut AVDictionary>,
+{
     unsafe {
         let mut ps = ptr::null_mut();
         let path = from_path(path);
-        let mut opts = options.disown();
 
         match avformat_alloc_output_context2(&mut ps, ptr::null_mut(), ptr::null(), path.as_ptr()) {
             0 => {
@@ -140,10 +146,8 @@ pub fn output_with<P: AsRef<Path>>(path: P, options: Dictionary) -> Result<conte
                     path.as_ptr(),
                     AVIO_FLAG_WRITE,
                     ptr::null(),
-                    &mut opts,
+                    options.as_mut_ptr(),
                 );
-
-                Dictionary::own(opts);
 
                 match res {
                     0 => Ok(context::Output::wrap(ps)),
@@ -178,16 +182,19 @@ pub fn output_as<P: AsRef<Path>>(path: P, format: &str) -> Result<context::Outpu
     }
 }
 
-pub fn output_as_with<P: AsRef<Path>>(
+pub fn output_as_with<P, Dict>(
     path: P,
     format: &str,
-    options: Dictionary,
-) -> Result<context::Output, Error> {
+    mut options: Dict,
+) -> Result<context::Output, Error>
+where
+    P: AsRef<Path>,
+    Dict: AsMutPtr<*mut AVDictionary>,
+{
     unsafe {
         let mut ps = ptr::null_mut();
         let path = from_path(path);
         let format = CString::new(format).unwrap();
-        let mut opts = options.disown();
 
         match avformat_alloc_output_context2(
             &mut ps,
@@ -201,10 +208,8 @@ pub fn output_as_with<P: AsRef<Path>>(
                     path.as_ptr(),
                     AVIO_FLAG_WRITE,
                     ptr::null(),
-                    &mut opts,
+                    options.as_mut_ptr(),
                 );
-
-                Dictionary::own(opts);
 
                 match res {
                     0 => Ok(context::Output::wrap(ps)),

@@ -4,7 +4,7 @@ use std::ptr;
 use super::{Audio, Check, Conceal, Opened, Subtitle, Video};
 use crate::codec::{traits, Context};
 use crate::ffi::*;
-use crate::{Dictionary, Discard, Error, Rational};
+use crate::{AsMutPtr, Discard, Error, Rational};
 
 pub struct Decoder(pub Context);
 
@@ -18,7 +18,10 @@ impl Decoder {
         }
     }
 
-    pub fn open_as<T, D: traits::Decoder<T>>(mut self, codec: D) -> Result<Opened, Error> {
+    pub fn open_as<T, Dec>(mut self, codec: Dec) -> Result<Opened, Error>
+    where
+        Dec: traits::Decoder<T>,
+    {
         unsafe {
             if let Some(codec) = codec.decoder() {
                 match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
@@ -31,17 +34,18 @@ impl Decoder {
         }
     }
 
-    pub fn open_as_with<T, D: traits::Decoder<T>>(
+    pub fn open_as_with<T, Dec, Dict>(
         mut self,
-        codec: D,
-        options: Dictionary,
-    ) -> Result<Opened, Error> {
+        codec: Dec,
+        mut options: Dict,
+    ) -> Result<Opened, Error>
+    where
+        Dec: traits::Decoder<T>,
+        Dict: AsMutPtr<*mut AVDictionary>,
+    {
         unsafe {
             if let Some(codec) = codec.decoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
+                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), options.as_mut_ptr());
 
                 match res {
                     0 => Ok(Opened(self)),

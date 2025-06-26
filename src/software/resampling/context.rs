@@ -3,6 +3,7 @@ use std::ptr;
 use super::Delay;
 use crate::ffi::*;
 use crate::util::format;
+use crate::AsMutPtr;
 use crate::Dictionary;
 use crate::{frame, ChannelLayoutMask, Error};
 use libc::c_int;
@@ -62,15 +63,18 @@ impl Context {
 
     /// Create a resampler with the given definitions and custom options dictionary.
     #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn get_with(
+    pub fn get_with<Dict>(
         src_format: format::Sample,
         src_channel_layout: ChannelLayoutMask,
         src_rate: u32,
         dst_format: format::Sample,
         dst_channel_layout: ChannelLayoutMask,
         dst_rate: u32,
-        options: Dictionary,
-    ) -> Result<Self, Error> {
+        mut options: Dict,
+    ) -> Result<Self, Error>
+    where
+        Dict: AsMutPtr<*mut AVDictionary>,
+    {
         unsafe {
             let ptr = swr_alloc_set_opts(
                 ptr::null_mut(),
@@ -84,9 +88,7 @@ impl Context {
                 ptr::null_mut(),
             );
 
-            let mut opts = options.disown();
-            let res = av_opt_set_dict(ptr as *mut c_void, &mut opts);
-            Dictionary::own(opts);
+            let res = av_opt_set_dict(ptr as *mut c_void, options.as_mut_ptr());
 
             if res != 0 {
                 return Err(Error::from(res));
@@ -139,15 +141,18 @@ impl Context {
     }
 
     /// Create a resampler with the given definitions and custom options dictionary.
-    pub fn get_with2(
+    pub fn get_with2<Dict>(
         src_format: format::Sample,
         src_channel_layout: ChannelLayout,
         src_rate: u32,
         dst_format: format::Sample,
         dst_channel_layout: ChannelLayout,
         dst_rate: u32,
-        options: Dictionary,
-    ) -> Result<Self, Error> {
+        mut options: Dict,
+    ) -> Result<Self, Error>
+    where
+        Dict: AsMutPtr<*mut AVDictionary>,
+    {
         unsafe {
             let mut context_ptr = ptr::null_mut();
             let res = swr_alloc_set_opts2(
@@ -166,9 +171,7 @@ impl Context {
                 return Err(Error::from(res));
             }
 
-            let mut opts = options.disown();
-            let res = av_opt_set_dict(context_ptr as *mut c_void, &mut opts);
-            Dictionary::own(opts);
+            let res = av_opt_set_dict(context_ptr as *mut c_void, options.as_mut_ptr());
 
             if res != 0 {
                 return Err(Error::from(res));

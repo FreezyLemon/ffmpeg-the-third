@@ -6,7 +6,9 @@ use super::common::Context;
 use super::destructor;
 use crate::codec::traits;
 use crate::ffi::*;
-use crate::{format, ChapterMut, Dictionary, Error, Rational, StreamMut};
+use crate::{
+    format, AsMutPtr, ChapterMut, DictionaryMut, DictionaryRef, Error, Rational, StreamMut,
+};
 
 pub struct Output {
     ptr: *mut AVFormatContext,
@@ -46,13 +48,15 @@ impl Output {
         }
     }
 
-    pub fn write_header_with(&mut self, options: Dictionary) -> Result<Dictionary<'_>, Error> {
+    pub fn write_header_with<Dict>(&mut self, mut options: Dict) -> Result<Dict, Error>
+    where
+        Dict: AsMutPtr<*mut AVDictionary>,
+    {
         unsafe {
-            let mut opts = options.disown();
-            let res = avformat_write_header(self.as_mut_ptr(), &mut opts);
+            let res = avformat_write_header(self.as_mut_ptr(), options.as_mut_ptr());
 
             match res {
-                0 => Ok(Dictionary::own(opts)),
+                0 => Ok(options),
                 e => Err(Error::from(e)),
             }
         }
@@ -141,15 +145,17 @@ impl Output {
         chapter.set_time_base(time_base);
         chapter.set_start(start);
         chapter.set_end(end);
-        chapter.set_metadata("title", title);
+        chapter.metadata_mut().set("title", title);
 
         Ok(chapter)
     }
 
-    pub fn set_metadata(&mut self, dictionary: Dictionary) {
-        unsafe {
-            (*self.as_mut_ptr()).metadata = dictionary.disown();
-        }
+    pub fn metadata(&self) -> DictionaryRef<'_> {
+        unsafe { DictionaryRef::from_raw((*self.as_ptr()).metadata) }
+    }
+
+    pub fn metadata_mut(&mut self) -> DictionaryMut<'_> {
+        unsafe { DictionaryMut::from_raw(&mut (*self.as_mut_ptr()).metadata) }
     }
 }
 
