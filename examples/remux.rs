@@ -39,7 +39,7 @@ fn main() {
         }
     }
 
-    octx.set_metadata(ictx.metadata().to_owned());
+    octx.metadata_mut().replace_with(ictx.metadata().to_owned());
     octx.write_header().unwrap();
 
     for (stream, mut packet) in ictx.packets().filter_map(Result::ok) {

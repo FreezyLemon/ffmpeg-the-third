@@ -30,6 +30,11 @@ impl Dictionary {
         result
     }
 
+    pub fn replace_with(&mut self, new: Self) {
+        unsafe { av_dict_free(&mut self.ptr) };
+        self.ptr = new.into_raw();
+    }
+
     pub fn as_ptr(&self) -> *const AVDictionary {
         self.ptr
     }

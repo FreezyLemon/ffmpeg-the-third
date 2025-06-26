@@ -154,7 +154,7 @@ impl Transcoder {
     }
 }
 
-fn parse_opts<'a>(s: String) -> Option<Dictionary<'a>> {
+fn parse_opts<'a>(s: String) -> Option<Dictionary> {
     let mut dict = Dictionary::new();
     for keyval in s.split_terminator(',') {
         let tokens: Vec<&str> = keyval.split('=').collect();
@@ -233,7 +233,7 @@ fn main() {
         ost_index += 1;
     }
 
-    octx.set_metadata(ictx.metadata().to_owned());
+    octx.metadata_mut().replace_with(ictx.metadata().to_owned());
     format::context::output::dump(&octx, 0, Some(&output_file));
     octx.write_header().unwrap();
 
