@@ -243,8 +243,7 @@ impl<'a> SideData<'a> {
         unsafe { slice::from_raw_parts((*self.as_ptr()).data, (*self.as_ptr()).size as usize) }
     }
 
-    #[inline]
     pub fn metadata(&self) -> DictionaryRef {
-        unsafe { DictionaryRef::wrap((*self.as_ptr()).metadata) }
+        unsafe { DictionaryRef::from_raw((*self.as_ptr()).metadata) }
     }
 }

@@ -36,14 +36,11 @@ impl Subtitle {
     pub fn open_as_with<T, E: traits::Encoder<T>>(
         mut self,
         codec: E,
-        options: Dictionary,
+        mut options: Dictionary,
     ) -> Result<Encoder, Error> {
         unsafe {
             if let Some(codec) = codec.encoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
+                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), options.as_mut_ptr());
 
                 match res {
                     0 => Ok(Encoder(self)),

@@ -34,14 +34,11 @@ impl Decoder {
     pub fn open_as_with<T, D: traits::Decoder<T>>(
         mut self,
         codec: D,
-        options: Dictionary,
+        mut options: Dictionary,
     ) -> Result<Opened, Error> {
         unsafe {
             if let Some(codec) = codec.decoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
+                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), options.as_mut_ptr());
 
                 match res {
                     0 => Ok(Opened(self)),

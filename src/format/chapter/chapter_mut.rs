@@ -4,7 +4,7 @@ use std::ops::Deref;
 use super::Chapter;
 use crate::ffi::*;
 use crate::format::context::common::Context;
-use crate::{Dictionary, DictionaryMut, Rational};
+use crate::{DictionaryMut, Rational};
 
 // WARNING: index refers to the offset in the chapters array (starting from 0)
 // it is not necessarly equal to the id (which may start at 1)
@@ -55,18 +55,8 @@ impl<'a> ChapterMut<'a> {
         }
     }
 
-    pub fn set_metadata<K: AsRef<str>, V: AsRef<str>>(&mut self, key: K, value: V) {
-        // dictionary.set() allocates the AVDictionary the first time a key/value is inserted
-        // so we want to update the metadata dictionary afterwards
-        unsafe {
-            let mut dictionary = Dictionary::own(self.metadata().as_mut_ptr());
-            dictionary.set(key.as_ref(), value.as_ref());
-            (*self.as_mut_ptr()).metadata = dictionary.disown();
-        }
-    }
-
-    pub fn metadata(&mut self) -> DictionaryMut {
-        unsafe { DictionaryMut::wrap((*self.as_mut_ptr()).metadata) }
+    pub fn metadata_mut(&mut self) -> DictionaryMut {
+        unsafe { DictionaryMut::from_raw(&mut (*self.as_mut_ptr()).metadata) }
     }
 }
 

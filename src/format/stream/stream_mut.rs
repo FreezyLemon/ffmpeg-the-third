@@ -5,7 +5,7 @@ use super::Stream;
 use crate::ffi::*;
 use crate::format::context::common::Context;
 use crate::AsPtr;
-use crate::{codec, Dictionary, Rational};
+use crate::{codec, DictionaryMut, Rational};
 
 pub struct StreamMut<'a> {
     context: &'a mut Context,
@@ -67,11 +67,8 @@ impl<'a> StreamMut<'a> {
         }
     }
 
-    pub fn set_metadata(&mut self, metadata: Dictionary) {
-        unsafe {
-            let metadata = metadata.disown();
-            (*self.as_mut_ptr()).metadata = metadata;
-        }
+    pub fn metadata_mut(&mut self) -> DictionaryMut {
+        unsafe { DictionaryMut::from_raw(&mut (*self.as_mut_ptr()).metadata) }
     }
 }
 

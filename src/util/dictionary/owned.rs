@@ -19,11 +19,11 @@ impl Default for Dictionary {
 }
 
 impl Dictionary {
-    pub unsafe fn own(ptr: *mut AVDictionary) -> Self {
+    pub unsafe fn from_raw(ptr: *mut AVDictionary) -> Self {
         Self { ptr }
     }
 
-    pub unsafe fn disown(mut self) -> *mut AVDictionary {
+    pub fn into_raw(mut self) -> *mut AVDictionary {
         let result = self.ptr;
         self.ptr = ptr::null_mut();
 

@@ -11,7 +11,7 @@ pub mod flag;
 pub use self::flag::Flags;
 
 use crate::ffi::*;
-use crate::{Dictionary, DictionaryRef};
+use crate::{DictionaryMut, DictionaryRef};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub struct Packet {
@@ -140,14 +140,12 @@ impl Frame {
         unsafe { Flags::from_bits_truncate((*self.as_ptr()).flags) }
     }
 
-    #[inline]
     pub fn metadata(&self) -> DictionaryRef {
-        unsafe { DictionaryRef::wrap((*self.as_ptr()).metadata) }
+        unsafe { DictionaryRef::from_raw((*self.as_ptr()).metadata) }
     }
 
-    #[inline]
-    pub fn set_metadata(&mut self, value: Dictionary) {
-        unsafe { (*self.as_mut_ptr()).metadata = value.disown() }
+    pub fn metadata_mut(&mut self) -> DictionaryMut {
+        unsafe { DictionaryMut::from_raw(&mut (*self.as_mut_ptr()).metadata) }
     }
 
     #[inline]
