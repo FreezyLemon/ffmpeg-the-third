@@ -17,14 +17,13 @@ pub use iter::Iter;
 
 #[macro_export]
 macro_rules! dict {
-	( $($key:expr => $value:expr),* $(,)*) => ({
-			let mut dict = ::ffmpeg::Dictionary::new();
+    ($($key:expr => $value:expr),* $(,)*) => ({
+        let mut dict = ::ffmpeg::Dictionary::new();
 
-			$(
-				dict.set($key, $value);
-			)*
+        $(
+            dict.set($key, $value);
+        )*
 
-			dict
-		}
-	);
+        dict
+    });
 }
