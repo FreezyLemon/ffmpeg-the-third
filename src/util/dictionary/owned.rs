@@ -1,110 +1,79 @@
 use std::fmt;
-use std::ops::{Deref, DerefMut};
 use std::ptr;
 
-use super::mutable;
+use libc::c_int;
+
 use crate::ffi::*;
 
-pub struct Owned<'a> {
-    inner: mutable::Ref<'a>,
+use super::flag::Flags;
+use super::{DictionaryMut, DictionaryRef};
+
+pub struct Dictionary {
+    ptr: *mut AVDictionary,
 }
 
-impl<'a> Default for Owned<'a> {
+impl Default for Dictionary {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<'a> Owned<'a> {
+impl Dictionary {
     pub unsafe fn own(ptr: *mut AVDictionary) -> Self {
-        Owned {
-            inner: mutable::Ref::wrap(ptr),
-        }
+        Self { ptr }
     }
 
     pub unsafe fn disown(mut self) -> *mut AVDictionary {
-        let result = self.inner.as_mut_ptr();
-        self.inner = mutable::Ref::wrap(ptr::null_mut());
+        let result = self.ptr;
+        self.ptr = ptr::null_mut();
 
         result
     }
+
+    pub fn as_ptr(&self) -> *const AVDictionary {
+        self.ptr
+    }
+
+    pub fn as_mut_ptr(&mut self) -> &mut *mut AVDictionary {
+        &mut self.ptr
+    }
+
+    pub fn as_ref(&self) -> DictionaryRef {
+        unsafe { DictionaryRef::from_raw(self.as_ptr()) }
+    }
+
+    pub fn as_mut(&mut self) -> DictionaryMut {
+        unsafe { DictionaryMut::from_raw(self.as_mut_ptr()) }
+    }
 }
 
-impl<'a> Owned<'a> {
+impl Dictionary {
     pub fn new() -> Self {
-        unsafe {
-            Owned {
-                inner: mutable::Ref::wrap(ptr::null_mut()),
-            }
+        Self {
+            ptr: ptr::null_mut(),
         }
     }
 }
 
-impl<'a, 'b> FromIterator<(&'b str, &'b str)> for Owned<'a> {
-    fn from_iter<T: IntoIterator<Item = (&'b str, &'b str)>>(iterator: T) -> Self {
-        let mut result = Owned::new();
+impl<S, U> FromIterator<(S, U)> for Dictionary
+where
+    S: AsRef<str>,
+    U: AsRef<str>,
+{
+    fn from_iter<T: IntoIterator<Item = (S, U)>>(iter: T) -> Self {
+        let mut result = Dictionary::new();
 
-        for (key, value) in iterator {
-            result.set(key, value);
-        }
-
-        result
-    }
-}
-
-impl<'a, 'b> FromIterator<&'b (&'b str, &'b str)> for Owned<'a> {
-    fn from_iter<T: IntoIterator<Item = &'b (&'b str, &'b str)>>(iterator: T) -> Self {
-        let mut result = Owned::new();
-
-        for &(key, value) in iterator {
-            result.set(key, value);
+        for (key, value) in iter {
+            result.set(key.as_ref(), value.as_ref())
         }
 
         result
     }
 }
 
-impl<'a> FromIterator<(String, String)> for Owned<'a> {
-    fn from_iter<T: IntoIterator<Item = (String, String)>>(iterator: T) -> Self {
-        let mut result = Owned::new();
-
-        for (key, value) in iterator {
-            result.set(&key, &value);
-        }
-
-        result
-    }
-}
-
-impl<'a, 'b> FromIterator<&'b (String, String)> for Owned<'a> {
-    fn from_iter<T: IntoIterator<Item = &'b (String, String)>>(iterator: T) -> Self {
-        let mut result = Owned::new();
-
-        for (key, value) in iterator {
-            result.set(key, value);
-        }
-
-        result
-    }
-}
-
-impl<'a> Deref for Owned<'a> {
-    type Target = mutable::Ref<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<'a> DerefMut for Owned<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-
-impl<'a> Clone for Owned<'a> {
+impl Clone for Dictionary {
     fn clone(&self) -> Self {
-        let mut dictionary = Owned::new();
+        let mut dictionary = Dictionary::new();
         dictionary.clone_from(self);
 
         dictionary
@@ -112,23 +81,25 @@ impl<'a> Clone for Owned<'a> {
 
     fn clone_from(&mut self, source: &Self) {
         unsafe {
-            let mut ptr = self.as_mut_ptr();
-            av_dict_copy(&mut ptr, source.as_ptr(), 0);
-            self.inner = mutable::Ref::wrap(ptr);
+            av_dict_copy(
+                &mut self.ptr,
+                source.as_ptr(),
+                Flags::MULTIKEY.bits() as c_int,
+            );
         }
     }
 }
 
-impl<'a> Drop for Owned<'a> {
+impl Drop for Dictionary {
     fn drop(&mut self) {
         unsafe {
-            av_dict_free(&mut self.inner.as_mut_ptr());
+            av_dict_free(&mut self.ptr);
         }
     }
 }
 
-impl<'a> fmt::Debug for Owned<'a> {
+impl fmt::Debug for Dictionary {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        self.inner.fmt(fmt)
+        self.as_ref().fmt(fmt)
     }
 }

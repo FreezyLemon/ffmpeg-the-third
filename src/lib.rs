@@ -18,9 +18,7 @@ pub use crate::util::channel_layout::{
 pub use crate::util::{
     channel_layout::{self, ChannelLayoutMask},
     chroma, color, dictionary,
-    dictionary::Mut as DictionaryMut,
-    dictionary::Owned as Dictionary,
-    dictionary::Ref as DictionaryRef,
+    dictionary::{Dictionary, DictionaryMut, DictionaryRef},
     error::{self, Error},
     frame::{self, Frame},
     log,
