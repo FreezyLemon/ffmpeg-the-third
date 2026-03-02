@@ -12,8 +12,6 @@ bitflags::bitflags! {
         const PASS2           = AV_CODEC_FLAG_PASS2;
         const GRAY            = AV_CODEC_FLAG_GRAY;
         const PSNR            = AV_CODEC_FLAG_PSNR;
-        #[cfg(not(feature = "ffmpeg_6_0"))]
-        const TRUNCATED       = AV_CODEC_FLAG_TRUNCATED;
         const INTERLACED_DCT  = AV_CODEC_FLAG_INTERLACED_DCT;
         const LOW_DELAY       = AV_CODEC_FLAG_LOW_DELAY;
         const GLOBAL_HEADER   = AV_CODEC_FLAG_GLOBAL_HEADER;

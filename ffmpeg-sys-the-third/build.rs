@@ -61,12 +61,12 @@ impl Library {
 }
 
 static LIBRARIES: &[Library] = &[
-    Library::required("avutil", AVUTIL_FEATURES, AVUTIL_HEADERS, 57),
-    Library::optional("avcodec", AVCODEC_FEATURES, AVCODEC_HEADERS, 59),
-    Library::optional("avformat", AVFORMAT_FEATURES, AVFORMAT_HEADERS, 59),
-    Library::optional("avdevice", AVDEVICE_FEATURES, AVDEVICE_HEADERS, 59),
-    Library::optional("avfilter", AVFILTER_FEATURES, AVFILTER_HEADERS, 8),
-    Library::optional("swscale", SWSCALE_FEATURES, SWSCALE_HEADERS, 6),
+    Library::required("avutil", AVUTIL_FEATURES, AVUTIL_HEADERS, 58),
+    Library::optional("avcodec", AVCODEC_FEATURES, AVCODEC_HEADERS, 60),
+    Library::optional("avformat", AVFORMAT_FEATURES, AVFORMAT_HEADERS, 60),
+    Library::optional("avdevice", AVDEVICE_FEATURES, AVDEVICE_HEADERS, 60),
+    Library::optional("avfilter", AVFILTER_FEATURES, AVFILTER_HEADERS, 9),
+    Library::optional("swscale", SWSCALE_FEATURES, SWSCALE_HEADERS, 7),
     Library::optional("swresample", SWRESAMPLE_FEATURES, SWRESAMPLE_HEADERS, 4),
 ];
 
@@ -82,11 +82,6 @@ impl AVFeature {
 }
 
 static AVUTIL_FEATURES: &[AVFeature] = &[
-    // before 6.0 (< v58)
-    AVFeature::new("D2STR"),
-    AVFeature::new("DECLARE_ALIGNED"),
-    AVFeature::new("COLORSPACE_NAME"),
-    AVFeature::new("AV_MALLOCZ_ARRAY"),
     // before 7.0 (< v59)
     AVFeature::new("XVMC"),
     AVFeature::new("FIFO_PEEK2"),
@@ -118,17 +113,6 @@ static AVUTIL_FEATURES: &[AVFeature] = &[
 ];
 
 static AVCODEC_FEATURES: &[AVFeature] = &[
-    // before 6.0 (< v60)
-    AVFeature::new("OPENH264_SLICE_MODE"),
-    AVFeature::new("OPENH264_CABAC"),
-    AVFeature::new("UNUSED_CODEC_CAPS"),
-    AVFeature::new("THREAD_SAFE_CALLBACKS"),
-    AVFeature::new("DEBUG_MV"),
-    AVFeature::new("GET_FRAME_CLASS"),
-    AVFeature::new("AUTO_THREADS"),
-    AVFeature::new("AVCTX_TIMEBASE"),
-    AVFeature::new("FLAG_TRUNCATED"),
-    AVFeature::new("SUB_TEXT_FORMAT"),
     // before 7.0 (< v61)
     AVFeature::new("IDCT_NONE"),
     AVFeature::new("SVTAV1_OPTS"),
@@ -163,9 +147,6 @@ static AVCODEC_FEATURES: &[AVFeature] = &[
 ];
 
 static AVFORMAT_FEATURES: &[AVFeature] = &[
-    // before 6.0 (< v60)
-    AVFeature::new("LAVF_PRIV_OPT"),
-    AVFeature::new("AVIOCONTEXT_WRITTEN"),
     // before 7.0 (< v61)
     AVFeature::new("GET_END_PTS"),
     AVFeature::new("AVIODIRCONTEXT"),
@@ -187,8 +168,6 @@ static AVFORMAT_FEATURES: &[AVFeature] = &[
 ];
 
 static AVDEVICE_FEATURES: &[AVFeature] = &[
-    // before 6.0 (< v60)
-    AVFeature::new("DEVICE_CAPABILITIES"),
     // before 8.0 (< v62)
     AVFeature::new("BKTR_DEVICE"),
     AVFeature::new("OPENGL_DEVICE"),
@@ -198,10 +177,6 @@ static AVDEVICE_FEATURES: &[AVFeature] = &[
 ];
 
 static AVFILTER_FEATURES: &[AVFeature] = &[
-    // before 6.0 (< v9)
-    AVFeature::new("SWS_PARAM_OPTION"),
-    AVFeature::new("BUFFERSINK_ALLOC"),
-    AVFeature::new("PAD_COUNT"),
     // before 7.0 (< v10)
     AVFeature::new("LIBPLACEBO_OPTS"),
     // before 8.0 (< v11)
@@ -792,7 +767,6 @@ fn check_features(include_paths: &[PathBuf]) -> u64 {
     }
 
     let ffmpeg_lavc_versions = [
-        ("ffmpeg_6_0", 60, 3),
         ("ffmpeg_6_1", 60, 31),
         ("ffmpeg_7_0", 61, 3),
         ("ffmpeg_7_1", 61, 19),
@@ -806,8 +780,8 @@ fn check_features(include_paths: &[PathBuf]) -> u64 {
 
     // This allows removing a lot of #[cfg] attributes.
     assert!(
-        lavc_version >= (59, 37),
-        "FFmpeg 5.1 or higher is required, but found avcodec version {lavc_version:?}"
+        lavc_version >= (60, 3),
+        "FFmpeg 6.0 or higher is required, but found avcodec version {lavc_version:?}"
     );
 
     for &(ffmpeg_version_flag, lavc_version_major, lavc_version_minor) in &ffmpeg_lavc_versions {
