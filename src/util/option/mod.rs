@@ -30,8 +30,6 @@ bitflags::bitflags! {
         const VIDEO_RATE        = AVOptionType::AV_OPT_TYPE_VIDEO_RATE.0 as c_uint;
         const DURATION          = AVOptionType::AV_OPT_TYPE_DURATION.0 as c_uint;
         const COLOR             = AVOptionType::AV_OPT_TYPE_COLOR.0 as c_uint;
-        #[cfg(not(feature = "ffmpeg_7_0"))]
-        const CHANNEL_LAYOUT    = AVOptionType::AV_OPT_TYPE_CHANNEL_LAYOUT.0 as c_uint;
         const CHLAYOUT          = AVOptionType::AV_OPT_TYPE_CHLAYOUT.0 as c_uint;
         const C_ULONG           = AVOptionType::AV_OPT_TYPE_UINT64.0 as c_uint;
         const BOOL              = AVOptionType::AV_OPT_TYPE_BOOL.0 as c_uint;
@@ -43,7 +41,6 @@ bitflags::bitflags! {
         /// corresponding to the option type. The pointer should be immediately
         /// followed by an unsigned int that will store the number of elements
         /// in the array.
-        #[cfg(feature = "ffmpeg_7_0")]
         const FLAG_ARRAY        = AVOptionType::AV_OPT_TYPE_FLAG_ARRAY.0 as c_uint;
     }
 }

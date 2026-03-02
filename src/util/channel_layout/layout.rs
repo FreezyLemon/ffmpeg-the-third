@@ -3,7 +3,6 @@ use std::borrow::Cow;
 use std::ffi::CString;
 
 use crate::ffi::*;
-#[cfg(feature = "ffmpeg_7_0")]
 use crate::Error;
 use libc::{c_int, c_uint};
 
@@ -265,7 +264,6 @@ impl<'a> ChannelLayout<'a> {
     /// - [`Ok`] if the conversion succeeded. The contained [`ChannelRetypeKind`] indicates
     ///   whether the conversion was lossless or not.
     /// - [`Err`] if the conversion failed. The original layout is untouched in this case.
-    #[cfg(feature = "ffmpeg_7_0")]
     pub fn retype(&mut self, target: ChannelRetypeTarget) -> Result<ChannelRetypeKind, Error> {
         use std::cmp::Ordering;
         use ChannelRetypeTarget as Target;
@@ -290,7 +288,6 @@ impl<'a> ChannelLayout<'a> {
 }
 
 /// Whether the retyping was lossless or not.
-#[cfg(feature = "ffmpeg_7_0")]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChannelRetypeKind {
     Lossless,
@@ -299,7 +296,6 @@ pub enum ChannelRetypeKind {
 
 /// The possible targets for retyping channel layouts. See [`ChannelLayout::retype`]
 /// for more information.
-#[cfg(feature = "ffmpeg_7_0")]
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ChannelRetypeTarget {
@@ -370,9 +366,7 @@ impl<'a> ChannelLayout<'a> {
     pub const _7POINT1POINT2: Scl = ChannelLayout(Cow::Owned(AV_CHANNEL_LAYOUT_7POINT1POINT2));
     pub const _7POINT1POINT4_BACK: Scl =
         ChannelLayout(Cow::Owned(AV_CHANNEL_LAYOUT_7POINT1POINT4_BACK));
-    #[cfg(feature = "ffmpeg_7_0")]
     pub const _7POINT2POINT3: Scl = ChannelLayout(Cow::Owned(AV_CHANNEL_LAYOUT_7POINT2POINT3));
-    #[cfg(feature = "ffmpeg_7_0")]
     pub const _9POINT1POINT4_BACK: Scl =
         ChannelLayout(Cow::Owned(AV_CHANNEL_LAYOUT_9POINT1POINT4_BACK));
     pub const HEXADECAGONAL: Scl = ChannelLayout(Cow::Owned(AV_CHANNEL_LAYOUT_HEXADECAGONAL));
@@ -534,7 +528,6 @@ mod test {
         }
     }
 
-    #[cfg(feature = "ffmpeg_7_0")]
     #[test]
     fn retype() {
         use ChannelLayout as Layout;

@@ -78,7 +78,6 @@ impl fmt::Debug for AVChannelLayout {
                     );
                 }
                 // Not part of public API, but we have to exhaustively match
-                #[cfg(feature = "ffmpeg_7_0")]
                 AVChannelOrder::FF_CHANNEL_ORDER_NB => {}
             }
         }
@@ -200,10 +199,8 @@ pub const AV_CH_LAYOUT_7POINT1POINT2: u64 =
     AV_CH_LAYOUT_7POINT1 | AV_CH_TOP_FRONT_LEFT | AV_CH_TOP_FRONT_RIGHT;
 pub const AV_CH_LAYOUT_7POINT1POINT4_BACK: u64 =
     AV_CH_LAYOUT_7POINT1POINT2 | AV_CH_TOP_BACK_LEFT | AV_CH_TOP_BACK_RIGHT;
-#[cfg(feature = "ffmpeg_7_0")]
 pub const AV_CH_LAYOUT_7POINT2POINT3: u64 =
     AV_CH_LAYOUT_7POINT1POINT2 | AV_CH_TOP_BACK_CENTER | AV_CH_LOW_FREQUENCY_2;
-#[cfg(feature = "ffmpeg_7_0")]
 pub const AV_CH_LAYOUT_9POINT1POINT4_BACK: u64 =
     AV_CH_LAYOUT_7POINT1POINT4_BACK | AV_CH_FRONT_LEFT_OF_CENTER | AV_CH_FRONT_RIGHT_OF_CENTER;
 #[cfg(feature = "ffmpeg_8_0")]
@@ -313,10 +310,8 @@ pub const AV_CHANNEL_LAYOUT_7POINT1POINT2: AVChannelLayout =
     AV_CHANNEL_LAYOUT_MASK(10, AV_CH_LAYOUT_7POINT1POINT2);
 pub const AV_CHANNEL_LAYOUT_7POINT1POINT4_BACK: AVChannelLayout =
     AV_CHANNEL_LAYOUT_MASK(12, AV_CH_LAYOUT_7POINT1POINT4_BACK);
-#[cfg(feature = "ffmpeg_7_0")]
 pub const AV_CHANNEL_LAYOUT_7POINT2POINT3: AVChannelLayout =
     AV_CHANNEL_LAYOUT_MASK(12, AV_CH_LAYOUT_7POINT2POINT3);
-#[cfg(feature = "ffmpeg_7_0")]
 pub const AV_CHANNEL_LAYOUT_9POINT1POINT4_BACK: AVChannelLayout =
     AV_CHANNEL_LAYOUT_MASK(14, AV_CH_LAYOUT_9POINT1POINT4_BACK);
 #[cfg(feature = "ffmpeg_8_0")]

@@ -202,10 +202,6 @@ pub enum Pixel {
 
     VIDEOTOOLBOX,
 
-    // --- defaults
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    XVMC,
-
     RGB32,
     RGB32_1,
     BGR32,
@@ -347,7 +343,6 @@ pub enum Pixel {
     GBRAP14BE,
     GBRAP14LE,
 
-    #[cfg(feature = "ffmpeg_7_0")]
     D3D12,
 
     #[cfg(feature = "ffmpeg_8_0")]
@@ -525,8 +520,6 @@ impl From<AVPixelFormat> for Pixel {
             AV_PIX_FMT_YUVJ420P => Pixel::YUVJ420P,
             AV_PIX_FMT_YUVJ422P => Pixel::YUVJ422P,
             AV_PIX_FMT_YUVJ444P => Pixel::YUVJ444P,
-            #[cfg(not(feature = "ffmpeg_7_0"))]
-            AV_PIX_FMT_XVMC => Pixel::XVMC,
             AV_PIX_FMT_UYVY422 => Pixel::UYVY422,
             AV_PIX_FMT_UYYVYY411 => Pixel::UYYVYY411,
             AV_PIX_FMT_BGR8 => Pixel::BGR8,
@@ -776,7 +769,6 @@ impl From<AVPixelFormat> for Pixel {
             AV_PIX_FMT_GBRAP14BE => Pixel::GBRAP14BE,
             AV_PIX_FMT_GBRAP14LE => Pixel::GBRAP14LE,
 
-            #[cfg(feature = "ffmpeg_7_0")]
             AV_PIX_FMT_D3D12 => Pixel::D3D12,
 
             #[cfg(feature = "ffmpeg_8_0")]
@@ -1083,10 +1075,6 @@ impl From<Pixel> for AVPixelFormat {
 
             Pixel::VIDEOTOOLBOX => AV_PIX_FMT_VIDEOTOOLBOX,
 
-            // --- defaults
-            #[cfg(not(feature = "ffmpeg_7_0"))]
-            Pixel::XVMC => AV_PIX_FMT_XVMC,
-
             Pixel::RGB32 => AV_PIX_FMT_RGB32,
             Pixel::RGB32_1 => AV_PIX_FMT_RGB32_1,
             Pixel::BGR32 => AV_PIX_FMT_BGR32,
@@ -1228,7 +1216,6 @@ impl From<Pixel> for AVPixelFormat {
             Pixel::GBRAP14BE => AV_PIX_FMT_GBRAP14BE,
             Pixel::GBRAP14LE => AV_PIX_FMT_GBRAP14LE,
 
-            #[cfg(feature = "ffmpeg_7_0")]
             Pixel::D3D12 => AV_PIX_FMT_D3D12,
 
             #[cfg(feature = "ffmpeg_8_0")]

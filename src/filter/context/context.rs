@@ -6,9 +6,6 @@ use crate::{format, option, AsMutPtr, AsPtr};
 
 use crate::ChannelLayout;
 
-#[cfg(not(feature = "ffmpeg_7_0"))]
-use crate::ChannelLayoutMask;
-
 pub struct Context<'a> {
     ptr: *mut AVFilterContext,
 
@@ -51,11 +48,6 @@ impl<'a> Context<'a> {
 
     pub fn set_sample_rate(&mut self, value: u32) {
         let _ = option::Settable::set(self, "sample_rates", &i64::from(value));
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn set_channel_layout(&mut self, value: ChannelLayoutMask) {
-        let _ = option::Settable::set(self, "channel_layouts", &value.bits());
     }
 
     pub fn set_ch_layout(&mut self, value: ChannelLayout) {

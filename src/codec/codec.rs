@@ -217,11 +217,6 @@ impl Codec<AudioType> {
         unsafe { SampleFormatIter::from_raw((*self.as_ptr()).sample_fmts) }
     }
 
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn channel_layouts(&self) -> Option<ChannelLayoutMaskIter> {
-        unsafe { ChannelLayoutMaskIter::from_raw((*self.as_ptr()).channel_layouts) }
-    }
-
     pub fn ch_layouts(&self) -> Option<ChannelLayoutIter<'_>> {
         unsafe { ChannelLayoutIter::from_raw((*self.as_ptr()).ch_layouts) }
     }
@@ -286,48 +281,6 @@ impl Codec<VideoType> {
     pub fn supported_color_ranges(self) -> Supported<ColorRangeIter<'static>> {
         use crate::codec::config::supported_color_ranges;
         supported_color_ranges(self, None).expect("video codec returns supported color ranges")
-    }
-}
-
-#[cfg(not(feature = "ffmpeg_7_0"))]
-use crate::ChannelLayoutMask;
-
-#[cfg(not(feature = "ffmpeg_7_0"))]
-pub struct ChannelLayoutMaskIter {
-    ptr: NonNull<u64>,
-}
-
-#[cfg(not(feature = "ffmpeg_7_0"))]
-impl ChannelLayoutMaskIter {
-    pub fn from_raw(ptr: *const u64) -> Option<Self> {
-        NonNull::new(ptr as *mut _).map(|ptr| Self { ptr })
-    }
-
-    pub fn best(self, max: i32) -> ChannelLayoutMask {
-        self.fold(ChannelLayoutMask::MONO, |acc, cur| {
-            if cur.channels() > acc.channels() && cur.channels() <= max {
-                cur
-            } else {
-                acc
-            }
-        })
-    }
-}
-
-#[cfg(not(feature = "ffmpeg_7_0"))]
-impl Iterator for ChannelLayoutMaskIter {
-    type Item = ChannelLayoutMask;
-
-    fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        unsafe {
-            let ptr = self.ptr.as_ptr();
-            if *ptr == 0 {
-                return None;
-            }
-
-            self.ptr = self.ptr.add(1);
-            Some(ChannelLayoutMask::from_bits_truncate(*ptr))
-        }
     }
 }
 
