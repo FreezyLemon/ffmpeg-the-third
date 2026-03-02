@@ -48,7 +48,6 @@ pub enum Type {
 
     AMBIENT_VIEWING_ENVIRONMENT,
 
-    #[cfg(feature = "ffmpeg_6_1")]
     VIDEO_HINT,
 
     #[cfg(feature = "ffmpeg_7_1")]
@@ -107,7 +106,6 @@ impl From<AVFrameSideDataType> for Type {
 
             AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT => Type::AMBIENT_VIEWING_ENVIRONMENT,
 
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_FRAME_DATA_VIDEO_HINT => Type::VIDEO_HINT,
 
             #[cfg(feature = "ffmpeg_7_1")]
@@ -164,7 +162,6 @@ impl From<Type> for AVFrameSideDataType {
 
             Type::AMBIENT_VIEWING_ENVIRONMENT => AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT,
 
-            #[cfg(feature = "ffmpeg_6_1")]
             Type::VIDEO_HINT => AV_FRAME_DATA_VIDEO_HINT,
 
             #[cfg(feature = "ffmpeg_7_1")]

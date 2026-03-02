@@ -8,7 +8,6 @@ bitflags::bitflags! {
         const LOSSY      = AV_CODEC_PROP_LOSSY;
         const LOSSLESS   = AV_CODEC_PROP_LOSSLESS;
         const REORDER    = AV_CODEC_PROP_REORDER;
-        #[cfg(feature = "ffmpeg_6_1")]
         const FIELDS     = AV_CODEC_PROP_FIELDS;
 
         const BITMAP_SUB = AV_CODEC_PROP_BITMAP_SUB;

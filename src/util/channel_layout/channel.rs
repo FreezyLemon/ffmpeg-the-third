@@ -76,11 +76,8 @@ impl Channel {
 
             match usize::try_from(ret_val) {
                 Ok(out_len) if out_len > 0 => {
-                    #[cfg(feature = "ffmpeg_6_1")]
-                    // 6.1 changed out_len to include the NUL byte, which we don't want
-                    let out_len = out_len - 1;
-
-                    buf.truncate(out_len);
+                    // out_len includes the NUL byte, which we don't want
+                    buf.truncate(out_len - 1);
                     String::from_utf8_unchecked(buf)
                 }
                 // `av_channel_name` returned an error, or 0 bytes written.
@@ -99,11 +96,8 @@ impl Channel {
 
             match usize::try_from(ret_val) {
                 Ok(out_len) if out_len > 0 => {
-                    #[cfg(feature = "ffmpeg_6_1")]
-                    // 6.1 changed out_len to include the NUL byte, which we don't want
-                    let out_len = out_len - 1;
-
-                    buf.truncate(out_len);
+                    // out_len includes the NUL byte, which we don't want
+                    buf.truncate(out_len - 1);
                     String::from_utf8_unchecked(buf)
                 }
                 // `av_channel_description` returned an error, or 0 bytes written.

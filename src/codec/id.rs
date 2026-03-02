@@ -565,25 +565,18 @@ pub enum Id {
     VNULL,
     ANULL,
 
-    #[cfg(feature = "ffmpeg_6_1")]
     PDV,
-    #[cfg(feature = "ffmpeg_6_1")]
     EVC,
-    #[cfg(feature = "ffmpeg_6_1")]
     RTV1,
-    #[cfg(feature = "ffmpeg_6_1")]
     VMIX,
     #[cfg(feature = "ffmpeg_7_0")]
     LEAD,
-    #[cfg(feature = "ffmpeg_6_1")]
     AC4,
-    #[cfg(feature = "ffmpeg_6_1")]
     OSQ,
     #[cfg(feature = "ffmpeg_7_0")]
     QOA,
     #[cfg(feature = "ffmpeg_7_1")]
     LC3,
-    #[cfg(feature = "ffmpeg_6_1")]
     SMPTE_2038,
     #[cfg(feature = "ffmpeg_7_1")]
     LCEVC,
@@ -1176,25 +1169,18 @@ impl From<AVCodecID> for Id {
             AV_CODEC_ID_VNULL => Id::VNULL,
             AV_CODEC_ID_ANULL => Id::ANULL,
 
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_CODEC_ID_PDV => Id::PDV,
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_CODEC_ID_EVC => Id::EVC,
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_CODEC_ID_RTV1 => Id::RTV1,
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_CODEC_ID_VMIX => Id::VMIX,
             #[cfg(feature = "ffmpeg_7_0")]
             AV_CODEC_ID_LEAD => Id::LEAD,
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_CODEC_ID_AC4 => Id::AC4,
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_CODEC_ID_OSQ => Id::OSQ,
             #[cfg(feature = "ffmpeg_7_0")]
             AV_CODEC_ID_QOA => Id::QOA,
             #[cfg(feature = "ffmpeg_7_1")]
             AV_CODEC_ID_LC3 => Id::LC3,
-            #[cfg(feature = "ffmpeg_6_1")]
             AV_CODEC_ID_SMPTE_2038 => Id::SMPTE_2038,
             #[cfg(feature = "ffmpeg_7_1")]
             AV_CODEC_ID_LCEVC => Id::LCEVC,
@@ -1784,25 +1770,18 @@ impl From<Id> for AVCodecID {
             Id::RKA => AV_CODEC_ID_RKA,
             Id::VNULL => AV_CODEC_ID_VNULL,
             Id::ANULL => AV_CODEC_ID_ANULL,
-            #[cfg(feature = "ffmpeg_6_1")]
             Id::PDV => AV_CODEC_ID_PDV,
-            #[cfg(feature = "ffmpeg_6_1")]
             Id::EVC => AV_CODEC_ID_EVC,
-            #[cfg(feature = "ffmpeg_6_1")]
             Id::RTV1 => AV_CODEC_ID_RTV1,
-            #[cfg(feature = "ffmpeg_6_1")]
             Id::VMIX => AV_CODEC_ID_VMIX,
             #[cfg(feature = "ffmpeg_7_0")]
             Id::LEAD => AV_CODEC_ID_LEAD,
-            #[cfg(feature = "ffmpeg_6_1")]
             Id::AC4 => AV_CODEC_ID_AC4,
-            #[cfg(feature = "ffmpeg_6_1")]
             Id::OSQ => AV_CODEC_ID_OSQ,
             #[cfg(feature = "ffmpeg_7_0")]
             Id::QOA => AV_CODEC_ID_QOA,
             #[cfg(feature = "ffmpeg_7_1")]
             Id::LC3 => AV_CODEC_ID_LC3,
-            #[cfg(feature = "ffmpeg_6_1")]
             Id::SMPTE_2038 => AV_CODEC_ID_SMPTE_2038,
             #[cfg(feature = "ffmpeg_7_1")]
             Id::LCEVC => AV_CODEC_ID_LCEVC,
