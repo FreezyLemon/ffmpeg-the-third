@@ -10,9 +10,6 @@ use libc::c_int;
 
 use crate::ChannelLayout;
 
-#[cfg(not(feature = "ffmpeg_7_0"))]
-use libc::c_ulonglong;
-
 #[derive(PartialEq, Eq)]
 pub struct Audio(Frame);
 
@@ -31,9 +28,6 @@ impl Audio {
     ) {
         self.set_format(format);
         self.set_samples(samples);
-        #[cfg(not(feature = "ffmpeg_7_0"))]
-        self.set_channel_layout(layout);
-        #[cfg(feature = "ffmpeg_7_0")]
         self.set_ch_layout(ChannelLayout::from_mask(layout).unwrap());
 
         av_frame_get_buffer(self.as_mut_ptr(), 0);
@@ -76,22 +70,6 @@ impl Audio {
         }
     }
 
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    #[inline]
-    pub fn channel_layout(&self) -> ChannelLayoutMask {
-        unsafe {
-            ChannelLayoutMask::from_bits_truncate((*self.as_ptr()).channel_layout as c_ulonglong)
-        }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    #[inline]
-    pub fn set_channel_layout(&mut self, value: ChannelLayoutMask) {
-        unsafe {
-            (*self.as_mut_ptr()).channel_layout = value.bits() as u64;
-        }
-    }
-
     #[inline]
     pub fn ch_layout(&self) -> ChannelLayout<'_> {
         unsafe { ChannelLayout::from(&self.as_ref().unwrap().ch_layout) }
@@ -101,20 +79,6 @@ impl Audio {
     pub fn set_ch_layout(&mut self, value: ChannelLayout) {
         unsafe {
             self.as_mut().unwrap().ch_layout = value.into_owned();
-        }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    #[inline]
-    pub fn channels(&self) -> u16 {
-        unsafe { (*self.as_ptr()).channels as u16 }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    #[inline]
-    pub fn set_channels(&mut self, value: u16) {
-        unsafe {
-            (*self.as_mut_ptr()).channels = i32::from(value);
         }
     }
 

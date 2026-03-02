@@ -7,19 +7,11 @@ use crate::AudioService;
 
 use crate::ChannelLayout;
 
-#[cfg(not(feature = "ffmpeg_7_0"))]
-use crate::ChannelLayoutMask;
-
 pub struct Audio(pub Opened);
 
 impl Audio {
     pub fn rate(&self) -> u32 {
         unsafe { (*self.as_ptr()).sample_rate as u32 }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn channels(&self) -> u16 {
-        unsafe { (*self.as_ptr()).channels as u16 }
     }
 
     pub fn format(&self) -> format::Sample {
@@ -32,32 +24,8 @@ impl Audio {
         }
     }
 
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn frames(&self) -> usize {
-        unsafe { (*self.as_ptr()).frame_number as usize }
-    }
-
     pub fn align(&self) -> usize {
         unsafe { (*self.as_ptr()).block_align as usize }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn channel_layout(&self) -> ChannelLayoutMask {
-        unsafe { ChannelLayoutMask::from_bits_truncate((*self.as_ptr()).channel_layout) }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn set_channel_layout(&mut self, value: ChannelLayoutMask) {
-        unsafe {
-            (*self.as_mut_ptr()).channel_layout = value.bits();
-        }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    pub fn request_channel_layout(&mut self, value: ChannelLayoutMask) {
-        unsafe {
-            (*self.as_mut_ptr()).request_channel_layout = value.bits();
-        }
     }
 
     pub fn ch_layout(&self) -> ChannelLayout<'_> {

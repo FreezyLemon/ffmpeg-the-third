@@ -8,9 +8,6 @@ use crate::util::format;
 use crate::{AsMutPtr, AsPtr, Error, Rational};
 use libc::c_int;
 
-#[cfg(not(feature = "ffmpeg_7_0"))]
-use crate::ChannelLayoutMask;
-
 macro_rules! check {
     ($expr:expr) => {
         match $expr {
@@ -123,20 +120,6 @@ pub trait Settable<T>: AsPtr<T> + AsMutPtr<T> {
                 self.as_mut_ptr() as *mut _,
                 name.as_ptr(),
                 format.into(),
-                AV_OPT_SEARCH_CHILDREN
-            ))
-        }
-    }
-
-    #[cfg(not(feature = "ffmpeg_7_0"))]
-    fn set_channel_layout(&mut self, name: &str, layout: ChannelLayoutMask) -> Result<(), Error> {
-        unsafe {
-            let name = CString::new(name).unwrap();
-
-            check!(av_opt_set_channel_layout(
-                self.as_mut_ptr() as *mut _,
-                name.as_ptr(),
-                layout.bits() as i64,
                 AV_OPT_SEARCH_CHILDREN
             ))
         }
