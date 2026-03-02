@@ -46,7 +46,6 @@ pub enum Type {
 
     DYNAMIC_HDR_VIVID,
 
-    #[cfg(feature = "ffmpeg_6_0")]
     AMBIENT_VIEWING_ENVIRONMENT,
 
     #[cfg(feature = "ffmpeg_6_1")]
@@ -106,7 +105,6 @@ impl From<AVFrameSideDataType> for Type {
 
             AV_FRAME_DATA_DYNAMIC_HDR_VIVID => Type::DYNAMIC_HDR_VIVID,
 
-            #[cfg(feature = "ffmpeg_6_0")]
             AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT => Type::AMBIENT_VIEWING_ENVIRONMENT,
 
             #[cfg(feature = "ffmpeg_6_1")]
@@ -164,7 +162,6 @@ impl From<Type> for AVFrameSideDataType {
 
             Type::DYNAMIC_HDR_VIVID => AV_FRAME_DATA_DYNAMIC_HDR_VIVID,
 
-            #[cfg(feature = "ffmpeg_6_0")]
             Type::AMBIENT_VIEWING_ENVIRONMENT => AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT,
 
             #[cfg(feature = "ffmpeg_6_1")]

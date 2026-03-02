@@ -7,8 +7,6 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     pub kind: Type,
     pub count: usize,
-    #[cfg(not(feature = "ffmpeg_6_0"))]
-    pub safe: bool,
 }
 
 impl Config {
@@ -25,14 +23,6 @@ impl Config {
             ..Default::default()
         }
     }
-
-    #[cfg(not(feature = "ffmpeg_6_0"))]
-    pub fn safe(value: bool) -> Self {
-        Config {
-            safe: value,
-            ..Default::default()
-        }
-    }
 }
 
 impl Default for Config {
@@ -40,8 +30,6 @@ impl Default for Config {
         Config {
             kind: Type::None,
             count: 0,
-            #[cfg(not(feature = "ffmpeg_6_0"))]
-            safe: false,
         }
     }
 }

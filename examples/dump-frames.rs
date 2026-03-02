@@ -25,8 +25,6 @@ fn main() -> Result<(), ffmpeg::Error> {
             context_decoder.set_threading(ffmpeg::threading::Config {
                 kind: ffmpeg::threading::Type::Frame,
                 count: parallelism.get(),
-                #[cfg(not(feature = "ffmpeg_6_0"))]
-                safe: false,
             });
         }
 

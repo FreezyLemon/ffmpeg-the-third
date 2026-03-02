@@ -46,7 +46,6 @@ impl Location {
 
     /// Returns the swscale (x, y) chroma positions for this chroma location.
     /// Will panic if `self` is [`Unspecified`][Location::Unspecified].
-    #[cfg(feature = "ffmpeg_6_0")]
     pub fn pos(self) -> (i32, i32) {
         let mut xpos = 0;
         let mut ypos = 0;
@@ -57,7 +56,6 @@ impl Location {
     }
 
     /// Returns a chroma location for the given swscale chroma position.
-    #[cfg(feature = "ffmpeg_6_0")]
     pub fn from_pos(x: i32, y: i32) -> Self {
         unsafe {
             Self::from(av_chroma_location_pos_to_enum(
@@ -131,7 +129,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "ffmpeg_6_0")]
     fn pos() {
         assert_eq!(Location::BottomLeft.pos(), (0, 256));
         assert_eq!(Location::Left.pos(), (0, 128));
@@ -139,7 +136,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(feature = "ffmpeg_6_0")]
     fn from_pos() {
         assert_eq!(Location::from_pos(0, 128), Location::Left);
         assert_eq!(Location::from_pos(128, 0), Location::Top);

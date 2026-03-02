@@ -105,10 +105,6 @@ impl Context {
         unsafe {
             (*self.as_mut_ptr()).thread_type = config.kind.into();
             (*self.as_mut_ptr()).thread_count = config.count as c_int;
-            #[cfg(not(feature = "ffmpeg_6_0"))]
-            {
-                (*self.as_mut_ptr()).thread_safe_callbacks = i32::from(config.safe);
-            }
         }
     }
 
@@ -117,8 +113,6 @@ impl Context {
             threading::Config {
                 kind: threading::Type::from((*self.as_ptr()).active_thread_type),
                 count: (*self.as_ptr()).thread_count as usize,
-                #[cfg(not(feature = "ffmpeg_6_0"))]
-                safe: (*self.as_ptr()).thread_safe_callbacks != 0,
             }
         }
     }
