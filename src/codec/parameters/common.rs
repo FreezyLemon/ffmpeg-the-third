@@ -63,7 +63,6 @@ impl_for_many! {
         }
 
         /// Video only
-        #[cfg(feature = "ffmpeg_6_1")]
         pub fn framerate(&self) -> Rational {
             unsafe { (*self.as_ptr()).framerate.into() }
         }

@@ -180,11 +180,8 @@ impl<'a> ChannelLayout<'a> {
 
             match usize::try_from(ret_val) {
                 Ok(out_len) if out_len > 0 => {
-                    #[cfg(feature = "ffmpeg_6_1")]
-                    // 6.1 changed out_len to include the NUL byte, which we don't want
-                    let out_len = out_len - 1;
-
-                    buf.truncate(out_len);
+                    // out_len includes the NUL byte, which we don't want
+                    buf.truncate(out_len - 1);
                     String::from_utf8_unchecked(buf)
                 }
                 // `av_channel_layout_describe` returned an error, or 0 bytes written.
@@ -525,13 +522,7 @@ mod test {
                 Layout::from_mask(Mask::FRONT_RIGHT_OF_CENTER).unwrap(),
                 "1 channels (FRC)",
             ),
-            #[cfg(feature = "ffmpeg_6_1")]
             (Layout::_7POINT1POINT4_BACK, "7.1.4"),
-            #[cfg(not(feature = "ffmpeg_6_1"))]
-            (
-                Layout::_7POINT1POINT4_BACK,
-                "12 channels (FL+FR+FC+LFE+BL+BR+SL+SR+TFL+TFR+TBL+TBR)",
-            ),
         ];
 
         for (layout, expected) in tests {
