@@ -367,7 +367,7 @@ mod ch_layout {
         fn next(&mut self) -> Option<Self::Item> {
             unsafe {
                 let curr = self.next;
-                if *curr == zeroed_layout() {
+                if *curr == std::mem::zeroed() {
                     return None;
                 }
 
@@ -377,10 +377,5 @@ mod ch_layout {
                 Some(ChannelLayout::from(curr))
             }
         }
-    }
-
-    // TODO: Remove this with a const variable when zeroed() is const (1.75.0)
-    unsafe fn zeroed_layout() -> AVChannelLayout {
-        std::mem::zeroed()
     }
 }
