@@ -7,7 +7,8 @@ use libc::{c_float, c_int};
 use super::Encoder as Super;
 use super::{Comparison, Decision};
 use crate::codec::{traits, Context};
-use crate::{color, format, Dictionary, Error, Rational};
+use crate::{color, format};
+use crate::{AsMutPtr, Error, Rational};
 
 pub struct Video(pub Super);
 
@@ -23,7 +24,10 @@ impl Video {
     }
 
     #[inline]
-    pub fn open_as<T, E: traits::Encoder<T>>(mut self, codec: E) -> Result<Encoder, Error> {
+    pub fn open_as<T, Enc>(mut self, codec: Enc) -> Result<Encoder, Error>
+    where
+        Enc: traits::Encoder<T>,
+    {
         unsafe {
             if let Some(codec) = codec.encoder() {
                 match avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), ptr::null_mut()) {
@@ -37,12 +41,12 @@ impl Video {
     }
 
     #[inline]
-    pub fn open_with(mut self, options: Dictionary) -> Result<Encoder, Error> {
+    pub fn open_with<Dict>(mut self, mut options: Dict) -> Result<Encoder, Error>
+    where
+        Dict: AsMutPtr<*mut AVDictionary>,
+    {
         unsafe {
-            let mut opts = options.disown();
-            let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), &mut opts);
-
-            Dictionary::own(opts);
+            let res = avcodec_open2(self.as_mut_ptr(), ptr::null(), options.as_mut_ptr());
 
             match res {
                 0 => Ok(Encoder(self)),
@@ -52,17 +56,18 @@ impl Video {
     }
 
     #[inline]
-    pub fn open_as_with<T, E: traits::Encoder<T>>(
+    pub fn open_as_with<T, Enc, Dict>(
         mut self,
-        codec: E,
-        options: Dictionary,
-    ) -> Result<Encoder, Error> {
+        codec: Enc,
+        mut options: Dict,
+    ) -> Result<Encoder, Error>
+    where
+        Enc: traits::Encoder<T>,
+        Dict: AsMutPtr<*mut AVDictionary>,
+    {
         unsafe {
             if let Some(codec) = codec.encoder() {
-                let mut opts = options.disown();
-                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), &mut opts);
-
-                Dictionary::own(opts);
+                let res = avcodec_open2(self.as_mut_ptr(), codec.as_ptr(), options.as_mut_ptr());
 
                 match res {
                     0 => Ok(Encoder(self)),

@@ -1,25 +1,32 @@
+mod flag;
+pub use flag::Flags;
+
 mod immutable;
-pub use self::immutable::Ref;
+pub use immutable::DictionaryRef;
+
+mod impls;
 
 mod mutable;
-pub use self::mutable::Ref as Mut;
+pub use mutable::DictionaryMut;
 
 mod owned;
-pub use self::owned::Owned;
+pub use owned::Dictionary;
 
 mod iter;
-pub use self::iter::Iter;
+pub use iter::Iter;
+
+#[cfg(test)]
+mod tests;
 
 #[macro_export]
 macro_rules! dict {
-	( $($key:expr => $value:expr),* $(,)*) => ({
-			let mut dict = ::ffmpeg::Dictionary::new();
+    ($($key:expr => $value:expr),* $(,)*) => ({
+        let mut dict = $crate::Dictionary::new();
 
-			$(
-				dict.set($key, $value);
-			)*
+        $(
+            dict.set($key, $value);
+        )*
 
-			dict
-		}
-	);
+        dict
+    });
 }

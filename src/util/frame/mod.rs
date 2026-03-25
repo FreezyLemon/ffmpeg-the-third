@@ -13,7 +13,7 @@ pub use self::flag::Flags;
 use crate::ffi::*;
 #[cfg(feature = "ffmpeg_8_1")]
 use crate::format::AlphaMode;
-use crate::{Dictionary, DictionaryRef};
+use crate::{DictionaryMut, DictionaryRef};
 
 #[derive(PartialEq, Eq)]
 pub struct Frame {
@@ -114,14 +114,12 @@ impl Frame {
         unsafe { Flags::from_bits_truncate((*self.as_ptr()).flags) }
     }
 
-    #[inline]
     pub fn metadata(&self) -> DictionaryRef<'_> {
-        unsafe { DictionaryRef::wrap((*self.as_ptr()).metadata) }
+        unsafe { DictionaryRef::from_raw((*self.as_ptr()).metadata) }
     }
 
-    #[inline]
-    pub fn set_metadata(&mut self, value: Dictionary) {
-        unsafe { (*self.as_mut_ptr()).metadata = value.disown() }
+    pub fn metadata_mut(&mut self) -> DictionaryMut<'_> {
+        unsafe { DictionaryMut::from_raw(&mut (*self.as_mut_ptr()).metadata) }
     }
 
     #[inline]
