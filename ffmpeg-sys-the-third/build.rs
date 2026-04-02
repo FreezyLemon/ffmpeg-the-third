@@ -292,6 +292,7 @@ static AVUTIL_HEADERS: &[AVHeader] = &[
 ];
 static AVCODEC_HEADERS: &[AVHeader] = &[
     AVHeader::new("avcodec.h"),
+    AVHeader::new("bsf.h"),
     AVHeader::new("dv_profile.h"),
     AVHeader::new("avfft.h").to_ver(61), // pre-8.0
     AVHeader::new("vorbis_parser.h"),
@@ -570,6 +571,8 @@ fn link_to_libraries(libraries: &[Library], statik: bool) {
 }
 
 fn main() {
+    println!("cargo::rerun-if-env-changed=FFMPEG_DIR");
+
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let statik = cargo_feature_enabled("static");
 
