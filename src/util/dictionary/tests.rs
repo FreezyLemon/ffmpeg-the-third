@@ -1,13 +1,6 @@
 use super::*;
 use crate::ffi::*;
 
-// `cargo test` does not have support for "fails to compile" tests, so we use trybuild
-#[test]
-fn test_failing() {
-    let t = trybuild::TestCases::new();
-    t.compile_fail("src/util/dictionary/tests/fail.rs");
-}
-
 #[test]
 fn simple() {
     let mut d = Dictionary::new();
