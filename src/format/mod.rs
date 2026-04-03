@@ -16,6 +16,9 @@ pub mod format;
 pub use self::format::{flag, Flags};
 pub use self::format::{Input, Output};
 
+pub mod io;
+pub use self::io::{InputContext, OutputContext};
+
 pub mod network;
 
 use std::ffi::{CString, OsStr};
