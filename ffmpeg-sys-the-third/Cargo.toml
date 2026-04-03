@@ -1,6 +1,6 @@
 [package]
 name = "ffmpeg-sys-the-third"
-version = "4.1.0+ffmpeg-8.0"
+version = "5.0.0+ffmpeg-8.1"
 links = "ffmpeg"
 edition = "2021"
 
@@ -11,7 +11,7 @@ authors = [
 ]
 license = "WTFPL"
 
-include = ["LICENSE", "build.rs", "src/"]
+include = ["LICENSE", "build.rs", "src/", "build/compile.rs"]
 
 description = "FFI bindings to FFmpeg"
 repository = "https://github.com/shssoichiro/ffmpeg-the-third"

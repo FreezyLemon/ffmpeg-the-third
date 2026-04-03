@@ -1,5 +1,21 @@
 # Changelog
 
+## Version 5.0.0
+
+- [Breaking] Switch to newtype enums for AV/sys types to avoid UB with unexpected FFmpeg values (#127)
+- [Breaking] Drop support for FFmpeg versions lower than 5.1 (#130)
+- [Breaking] Rewrite Dictionary types with proper ownership management (#137)
+- [MSRV] Raise minimum Rust version to 1.80 (#131)
+- [Feature] Add FFmpeg 8.1 support (#133)
+- [Feature] Add Error::HttpTooManyRequests variant (#142)
+- [Feature] Merge upstream changes to format::input/output functions (#141)
+- fix: Remove unsafe operations from safe Rust functions
+- fix: Fix data races in Display/Debug implementations for util::Error (#129)
+- build: Update build script with wrapper.h approach and jobserver support (#135)
+- build: Misc. build script improvements from upstream (#144)
+- refactor: Elide lifetimes where unambiguous
+- refactor: Use C-string literals
+
 ## Version 4.1.0
 
 - [Feature] Add Stream{,Mut}::sample_aspect_ratio
