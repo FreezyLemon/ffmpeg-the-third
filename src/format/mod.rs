@@ -44,6 +44,42 @@ pub fn input<'d, P: AsRef<OsStr>>(path_or_url: P) -> InputBuilder<'d> {
     InputBuilder::new(path_or_url)
 }
 
+pub fn input_from_read<R: std::io::Read>(r: R) -> Result<(context::Input, InputContext<R>), Error> {
+    unsafe {
+        let mut ps = avformat_alloc_context();
+        if ps.is_null() {
+            return Err(Error::Other {
+                errno: libc::ENOMEM,
+            });
+        }
+
+        let mut io = match io::IOContextBuilder::new_input(32 * 1024, Box::new(r))
+            .with_default_read_fn()
+            .build()
+        {
+            Ok(io) => io,
+            Err(e) => {
+                avformat_free_context(ps);
+                return Err(e);
+            }
+        };
+
+        (*ps).pb = io.as_mut_ptr();
+
+        match avformat_open_input(&mut ps, ptr::null(), ptr::null(), ptr::null_mut()) {
+            0 => match avformat_find_stream_info(ps, ptr::null_mut()) {
+                r if r >= 0 => Ok((context::Input::from_raw(ps).expect("ps non-null"), io)),
+                e => {
+                    avformat_close_input(&mut ps);
+                    Err(Error::from(e))
+                }
+            },
+
+            e => Err(Error::from(e)),
+        }
+    }
+}
+
 pub fn input_with_interrupt<P, F>(path_or_url: P, closure: F) -> Result<context::Input, Error>
 where
     P: AsRef<OsStr>,
@@ -76,6 +112,45 @@ pub fn output<P: AsRef<OsStr>>(path_or_url: P) -> Result<context::Output, Error>
     let mut ctx = context::Output::from_filename(&path_or_url)?;
     ctx.open_file(path_or_url)?;
     Ok(ctx)
+}
+
+pub fn output_from_write<W: std::io::Write>(
+    w: W,
+    oformat: Output,
+) -> Result<context::Output, Error> {
+    if oformat.flags().contains(Flags::NO_FILE) {
+        // An AVFMT_NOFILE format handles IO itself.
+        return Err(Error::Other {
+            errno: libc::EINVAL,
+        });
+    }
+
+    // custom IO can't use avformat_alloc_output_context2
+    unsafe {
+        let ps = avformat_alloc_context();
+        if ps.is_null() {
+            return Err(Error::Other {
+                errno: libc::ENOMEM,
+            });
+        }
+
+        let mut io = match io::IOContextBuilder::new_output(32 * 1024, Box::new(w))
+            .with_default_write_fn()
+            .build()
+        {
+            Ok(io) => io,
+            Err(e) => {
+                avformat_free_context(ps);
+                return Err(e);
+            }
+        };
+
+        // Formats are 'static, so just using .as_ptr() to copy the *const ptr is fine.
+        (*ps).oformat = oformat.as_ptr();
+        (*ps).pb = io.as_mut_ptr();
+
+        Ok(context::Output::from_raw(ps).expect("ps non-null"))
+    }
 }
 
 pub fn output_with<P, Dict>(path_or_url: P, options: Dict) -> Result<context::Output, Error>
