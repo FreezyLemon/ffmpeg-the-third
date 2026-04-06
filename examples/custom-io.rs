@@ -1,0 +1,66 @@
+use ffmpeg_the_third as ffmpeg;
+
+use std::env;
+use std::fs::File;
+
+use crate::ffmpeg::{codec, encoder, format, log, media, Rational};
+
+// Like remux.rs, but with our own IO contexts.
+
+fn main() -> Result<(), ffmpeg::Error> {
+    let input_file = env::args().nth(1).expect("missing input file");
+    let output_file = env::args().nth(2).expect("missing output file");
+
+    ffmpeg::init().unwrap();
+    log::set_level(log::Level::Warning);
+
+    let input = File::open(&input_file).expect("can read input file");
+    let (mut ictx, io) = format::input_from_read(input)?;
+
+    let mut octx = format::output(&output_file).unwrap();
+
+    let mut stream_mapping = vec![0; ictx.nb_streams() as _];
+    let mut ist_time_bases = vec![Rational(0, 1); ictx.nb_streams() as _];
+    let mut ost_index = 0;
+    for (ist_index, ist) in ictx.streams().enumerate() {
+        let ist_medium = ist.parameters().medium();
+        if ist_medium != media::Type::Audio
+            && ist_medium != media::Type::Video
+            && ist_medium != media::Type::Subtitle
+        {
+            stream_mapping[ist_index] = -1;
+            continue;
+        }
+        stream_mapping[ist_index] = ost_index;
+        ist_time_bases[ist_index] = ist.time_base();
+        ost_index += 1;
+        let mut ost = octx.add_stream(encoder::find(codec::Id::None)).unwrap();
+        ost.set_parameters(ist.parameters());
+        // We need to set codec_tag to 0 lest we run into incompatible codec tag
+        // issues when muxing into a different container format. Unfortunately
+        // there's no high level API to do this (yet).
+        unsafe {
+            (*ost.parameters_mut().as_mut_ptr()).codec_tag = 0;
+        }
+    }
+
+    octx.metadata_mut().replace_with(ictx.metadata().to_owned());
+    octx.write_header().unwrap();
+
+    for (stream, mut packet) in ictx.packets().filter_map(Result::ok) {
+        let ist_index = stream.index();
+        let ost_index = stream_mapping[ist_index];
+        if ost_index < 0 {
+            continue;
+        }
+        let ost = octx.stream(ost_index as _).unwrap();
+        packet.rescale_ts(ist_time_bases[ist_index], ost.time_base());
+        packet.set_position(-1);
+        packet.set_stream(ost_index as _);
+        packet.write_interleaved(&mut octx).unwrap();
+    }
+
+    let _ = io;
+
+    octx.write_trailer()
+}
